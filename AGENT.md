@@ -86,8 +86,11 @@ tell what the push already applied.
 ```
 src/
   app/
-    landing-page/
-      layout.tsx            # <html lang="vi">, metadataBase, Organization JSON-LD
+    landing-page/           # locale vi — layout passes locale="vi"
+    landing-page-en/        # locale en — one thin folder per locale so the
+                            # locale is a build-time constant and pages stay
+                            # statically prerendered
+      layout.tsx            # renders LocaleLayout; metadataBase lands in T-09
       page.tsx              # home
       [slug]/page.tsx       # CMS pages
       dich-vu/[slug]/page.tsx

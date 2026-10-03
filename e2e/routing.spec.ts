@@ -80,8 +80,15 @@ test.describe('authenticated admin', () => {
       (await (await request.get(path)).text()).match(/<title>([^<]*)<\/title>/)?.[1]
 
     expect(await titleOf('/admin')).toContain('Dashboard')
-    expect(await titleOf('/admin/collections/users')).toContain('Người dùng')
     expect(await titleOf('/admin/account')).toContain('Account')
+
+    // The Users label is a { vi, en } pair since T-04A, so this asserts the
+    // right *view* rendered rather than which language won. Payload resolves
+    // the language for API requests to 'en' regardless of the payload-lng
+    // cookie, the Accept-Language header or i18n.fallbackLanguage — measured,
+    // and noted in the T-04A task file as unresolved.
+    expect(await titleOf('/admin/collections/users')).toMatch(/Người dùng|Users/)
+
     // A client-supplied __p must not override the view the URL names.
     expect(await titleOf('/admin?__p=collections/users')).toContain('Dashboard')
   })
@@ -301,8 +308,13 @@ test.describe('the last administrator cannot be removed', () => {
       const response = await admin.patch(`/api/users/${id}`, { data: { role: 'editor' } })
 
       // 400 and a readable message, not a 500 "Something went wrong."
+      // Either translation is accepted: the message comes from the catalog
+      // keyed by the language Payload resolves, and for API requests that is
+      // always 'en' in this version (see T-04A notes).
       expect(response.status()).toBe(400)
-      expect((await response.json()).errors[0].message).toContain('quản trị viên cuối cùng')
+      expect((await response.json()).errors[0].message).toMatch(
+        /quản trị viên cuối cùng|last administrator/,
+      )
 
       const after = await admin.get(`/api/users/${id}`)
       expect((await after.json()).role).toBe('admin')
@@ -319,7 +331,9 @@ test.describe('the last administrator cannot be removed', () => {
       const response = await admin.delete(`/api/users/${id}`)
 
       expect(response.status()).toBe(400)
-      expect((await response.json()).errors[0].message).toContain('quản trị viên cuối cùng')
+      expect((await response.json()).errors[0].message).toMatch(
+        /quản trị viên cuối cùng|last administrator/,
+      )
 
       expect((await admin.get(`/api/users/${id}`)).status()).toBe(200)
     } finally {
@@ -346,6 +360,81 @@ test.describe('the last administrator cannot be removed', () => {
       // Allowed now, because it is no longer the last one.
       expect((await admin.patch(`/api/users/${doc.id}`, { data: { role: 'editor' } })).status()).toBe(200)
       expect((await admin.delete(`/api/users/${doc.id}`)).status()).toBe(200)
+    } finally {
+      await admin.dispose()
+    }
+  })
+})
+
+test.describe('locales', () => {
+  test('each locale is served with its own lang attribute', async ({ request }) => {
+    const vi = await request.get('/')
+    expect(vi.status()).toBe(200)
+    expect(await vi.text()).toContain('<html lang="vi"')
+
+    const en = await request.get('/en')
+    expect(en.status()).toBe(200)
+    expect(await en.text()).toContain('<html lang="en"')
+  })
+
+  test('internal locale folders redirect out, so no page has two URLs', async ({ request }) => {
+    const pairs: Array<[string, string]> = [
+      ['/landing-page', '/'],
+      ['/landing-page-en', '/en'],
+    ]
+
+    for (const [internal, publicPath] of pairs) {
+      const response = await request.get(internal, { maxRedirects: 0 })
+      expect(response.status()).toBe(308)
+      expect(new URL(response.headers().location ?? '', 'http://x').pathname).toBe(publicPath)
+    }
+  })
+
+  test('the two locales render different copy', async ({ request }) => {
+    const vi = await (await request.get('/')).text()
+    const en = await (await request.get('/en')).text()
+
+    // Both are placeholders until T-23, but they must not be the same string:
+    // that would mean the locale is not reaching the page.
+    const extract = (html: string) => html.match(/TODO\(copy\)[^<]*/)?.[0]
+    expect(extract(vi)).toBeTruthy()
+    expect(extract(en)).toBeTruthy()
+    expect(extract(vi)).not.toBe(extract(en))
+  })
+
+  test('localized fields are stored per locale, not shared', async ({ playwright }) => {
+    const email = process.env.E2E_ADMIN_EMAIL
+    const password = process.env.E2E_ADMIN_PASSWORD
+    test.skip(!email || !password, 'set E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD')
+
+    const admin = await playwright.request.newContext({ baseURL })
+
+    try {
+      expect((await admin.post('/api/users/login', { data: { email, password } })).status()).toBe(200)
+
+      const created = await admin.post('/api/media?locale=vi', {
+        multipart: {
+          file: { name: 'locale-fixture.png', mimeType: 'image/png', buffer: FIXTURE_PNG },
+          _payload: JSON.stringify({ alt: 'Mô tả tiếng Việt' }),
+        },
+      })
+      expect(created.status()).toBe(201)
+      const { doc } = await created.json()
+
+      // Write the English alt only.
+      expect(
+        (await admin.patch(`/api/media/${doc.id}?locale=en`, {
+          data: { alt: 'English description' },
+        })).status(),
+      ).toBe(200)
+
+      const altFor = async (locale: string) =>
+        (await (await admin.get(`/api/media/${doc.id}?locale=${locale}&depth=0`)).json()).alt
+
+      expect(await altFor('en')).toBe('English description')
+      // The Vietnamese value must be untouched — this is what a shared column
+      // would get wrong.
+      expect(await altFor('vi')).toBe('Mô tả tiếng Việt')
     } finally {
       await admin.dispose()
     }

@@ -7,6 +7,7 @@ import type {
 
 import { APIError } from 'payload'
 
+import { adminMessage } from '../i18n/admin-translations'
 import { canUseAdminPanel, isAdmin, isAdminFieldLevel, isAdminOrSelf } from '../lib/access'
 
 const countAdmins = async (req: PayloadRequest): Promise<number> => {
@@ -60,14 +61,10 @@ const keepLastAdminOnChange: CollectionBeforeChangeHook = async ({
     data.role !== 'admin'
 
   if (isDemotion && (await countAdmins(req)) <= 1) {
-    // APIError with isPublic, not a bare Error: a bare throw surfaces as a
-    // 500 "Something went wrong." and the editor never sees why.
-    throw new APIError(
-      'Không thể đổi vai trò của quản trị viên cuối cùng. Hãy tạo một quản trị viên khác trước.',
-      400,
-      null,
-      true,
-    )
+    // Resolved per the editor's panel language. APIError with isPublic, not
+    // a bare Error: a bare throw surfaces as a 500 "Something went wrong."
+    // and the reason is swallowed (AGENT.md 5.6).
+    throw new APIError(adminMessage(req, 'lastAdminCannotChangeRole'), 400, null, true)
   }
 
   return data
@@ -78,12 +75,7 @@ const keepLastAdminOnDelete: CollectionBeforeDeleteHook = async ({ id, req }) =>
   const doomed = await req.payload.findByID({ collection: 'users', id, depth: 0, req })
 
   if (doomed?.role === 'admin' && (await countAdmins(req)) <= 1) {
-    throw new APIError(
-      'Không thể xoá quản trị viên cuối cùng. Hãy tạo một quản trị viên khác trước.',
-      400,
-      null,
-      true,
-    )
+    throw new APIError(adminMessage(req, 'lastAdminCannotBeDeleted'), 400, null, true)
   }
 }
 
@@ -98,8 +90,8 @@ const keepLastAdminOnDelete: CollectionBeforeDeleteHook = async ({ id, req }) =>
 export const Users: CollectionConfig = {
   slug: 'users',
   labels: {
-    singular: 'Người dùng',
-    plural: 'Người dùng',
+    singular: { en: 'User', vi: 'Người dùng' },
+    plural: { en: 'Users', vi: 'Người dùng' },
   },
   auth: true,
   access: {
@@ -136,10 +128,10 @@ export const Users: CollectionConfig = {
       type: 'select',
       required: true,
       defaultValue: 'editor',
-      label: 'Vai trò',
+      label: { en: 'Role', vi: 'Vai trò' },
       options: [
-        { label: 'Quản trị viên', value: 'admin' },
-        { label: 'Biên tập viên', value: 'editor' },
+        { label: { en: 'Administrator', vi: 'Quản trị viên' }, value: 'admin' },
+        { label: { en: 'Editor', vi: 'Biên tập viên' }, value: 'editor' },
       ],
       access: {
         // Not `read`: a user may see their own role. Only an admin may set
@@ -148,9 +140,14 @@ export const Users: CollectionConfig = {
         update: isAdminFieldLevel,
       },
       admin: {
-        description:
-          'Quản trị viên: toàn quyền, kể cả xoá và quản lý người dùng. ' +
-          'Biên tập viên: thêm và sửa nội dung, không xoá được.',
+        description: {
+          en:
+            'Administrator: full access, including deleting and managing users. ' +
+            'Editor: add and edit content, cannot delete.',
+          vi:
+            'Quản trị viên: toàn quyền, kể cả xoá và quản lý người dùng. ' +
+            'Biên tập viên: thêm và sửa nội dung, không xoá được.',
+        },
       },
     },
   ],

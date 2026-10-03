@@ -9,7 +9,9 @@ import sharp from 'sharp'
 
 import { Media } from './collections/Media'
 import { Users } from './collections/Users'
+import { adminTranslations } from './i18n/admin-translations'
 import { requireEnv } from './lib/env'
+import { DEFAULT_LOCALE, LOCALES } from './lib/locales'
 import { resolveR2Config } from './lib/r2'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -30,6 +32,33 @@ export default buildConfig({
     },
   },
   collections: [Media, Users],
+  /**
+   * Content localization. Which fields are localized is a schema decision —
+   * Payload stores localized values in separate tables — so this must be in
+   * place before the collections are built (Design.md section 1.1a, T-04A).
+   */
+  localization: {
+    locales: LOCALES.map((code) => ({
+      code,
+      label: { en: code === 'vi' ? 'Vietnamese' : 'English', vi: code === 'vi' ? 'Tiếng Việt' : 'Tiếng Anh' },
+    })),
+    defaultLocale: DEFAULT_LOCALE,
+    /**
+     * Field-level fallback, so a half-translated document still renders.
+     * It is NOT permission to publish an untranslated page: the noindex
+     * guard in T-08 keeps those out of the index.
+     */
+    fallback: true,
+  },
+  /**
+   * Admin panel language. Independent of the content locale being edited —
+   * a Vietnamese-speaking editor translating into English should not have to
+   * read the CMS chrome in English to do it.
+   */
+  i18n: {
+    fallbackLanguage: DEFAULT_LOCALE,
+    translations: adminTranslations,
+  },
   db: postgresAdapter({
     pool: {
       connectionString: requireEnv('DATABASE_URI'),
