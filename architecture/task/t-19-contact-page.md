@@ -1,0 +1,117 @@
+# T-19 · Contact page
+
+| | |
+| --- | --- |
+| Phase | 3 — Interface |
+| Branch | `t-19-contact-page` |
+| Depends on | T-05, T-17 |
+| Blocks | T-20, T-21, T-23 |
+| Critical path | no |
+
+## Goal
+
+`/lien-he` for someone who is about to drive over (Design.md section 3).
+Address and directions come first; the form is secondary. The map must not
+cost LCP — an eagerly loaded Google Maps iframe is the single easiest way
+to fail Gate 3.
+
+## Scope
+
+**In scope**
+
+- Address, phone, Zalo and opening hours from `BusinessInfo`.
+- **Above the fold:** a call button (`tel:`) and a directions button
+  (Google Maps link built from `lat`/`lng`), both plain links, both wired
+  to fire GA4 events.
+- Contact form: React Hook Form + Zod, with the **same Zod schema**
+  validating on the client and in the route handler.
+- Lazily loaded Google Maps embed: `loading="lazy"`, below the fold, with
+  an explicit `width`/`height` or aspect-ratio box so it reserves space and
+  contributes no CLS.
+- `src/app/api/contact/route.ts` handling the submission.
+- Success and error states in Vietnamese.
+
+**Out of scope**
+
+- GA4 setup itself (T-21). This task adds the event calls and the data
+  attributes; T-21 makes the measurement ID real and verifies DebugView.
+- Booking (out of scope for the repo).
+- Storing submissions in Payload unless a destination is specified — see
+  Flags.
+
+## Steps
+
+1. Build the page as a Server Component. Only the form is a client leaf.
+2. Define the Zod schema once in `src/lib/validation/contact.ts`; import it
+   into both the form and the route handler. One schema, two call sites.
+3. Call and directions buttons are `<a href="tel:...">` and
+   `<a href="https://www.google.com/maps/dir/?api=1&destination=lat,lng">`
+   — real links, so they work with JavaScript off, with an `onClick` that
+   fires the GA4 event as an enhancement.
+4. Put the map in an aspect-ratio container with `loading="lazy"` and a
+   `title` on the iframe for accessibility. Consider rendering a static
+   placeholder that swaps to the iframe on interaction if LCP is tight.
+5. Route handler: validate, rate-limit lightly, return a typed result. Do
+   not echo the submitted values back into the HTML.
+6. Measure LCP before and after adding the map and record both in the PR.
+
+## Files
+
+```
+src/app/landing-page/lien-he/page.tsx
+src/components/ContactForm.tsx          # 'use client' — the form only
+src/components/MapEmbed.tsx
+src/lib/validation/contact.ts
+src/app/api/contact/route.ts
+```
+
+## Acceptance criteria
+
+Inherits AGENT.md section 8. In addition:
+
+- [ ] The map iframe is `loading="lazy"` and does not affect LCP —
+      LCP element is not the map, and LCP is unchanged within noise versus
+      the page without it.
+- [ ] Call and directions clicks appear in GA4 DebugView (verify after
+      T-21; until then, verify the event call fires in the console).
+- [ ] Both buttons are above the fold on a 390px-wide viewport.
+- [ ] Both work as plain links with JavaScript disabled.
+- [ ] The same Zod schema validates client-side and server-side; a
+      handcrafted POST with invalid data is rejected by the route handler.
+- [ ] Address, phone and hours come from `BusinessInfo`.
+- [ ] `'use client'` appears only on the form.
+- [ ] The map reserves its space — CLS contribution 0.
+- [ ] Form errors and success messages are in Vietnamese.
+
+## Verification
+
+```bash
+npm run build && npm run start &
+curl -s localhost:3000/lien-he | grep -oE '<iframe[^>]*'           # loading="lazy", title, dimensions
+curl -s localhost:3000/lien-he | grep -oE 'href="tel:[^"]*"|href="https://www.google.com/maps[^"]*"'
+grep -rln "'use client'" src/components | grep -v ContactForm       # expect only earlier leaves
+# server-side validation must stand alone
+curl -s -o /dev/null -w 'invalid post: %{http_code}\n' -X POST \
+  -H 'content-type: application/json' -d '{"name":"","phone":"x"}' localhost:3000/api/contact
+npx lighthouse http://localhost:3000/lien-he --only-categories=performance \
+  --form-factor=mobile --output=json --output-path=/tmp/lh-contact.json --quiet
+python3 -c "import json;d=json.load(open('/tmp/lh-contact.json'));a=d['audits'];print('LCP',a['largest-contentful-paint']['displayValue'],'CLS',a['cumulative-layout-shift']['displayValue']);print('LCP el',a['largest-contentful-paint-element']['details']['items'][0]['items'][0]['node']['snippet'][:120])"
+```
+
+Expect the invalid POST to be 400 and the LCP element not to be the iframe.
+
+## Notes
+
+- Client-side Zod validation is a convenience. The route handler is the
+  control; test it with `curl`, bypassing the form entirely.
+
+## Flags
+
+- **Where do form submissions go?** Email, a Payload collection, or a
+  third-party endpoint — this is not specified in Design.md. Pick the
+  lowest-risk default (store in a Payload collection, `admin`-read-only),
+  flag it, and ask before wiring an external service.
+- Google Maps embed may need an API key depending on the embed form used.
+  If so, add it to `.env.example` in the same commit and flag it.
+- Form field labels, validation messages and the success message are
+  user-facing Vietnamese: `TODO(copy)` unless supplied.
