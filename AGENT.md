@@ -230,6 +230,7 @@ style preferences.
 | `R2_PUBLIC_URL` | Public base URL images are served from; also feeds `images.remotePatterns` |
 | `MEDIA_LOCAL_DISK` | Development only: store uploads on disk instead of R2 |
 | `E2E_ADMIN_EMAIL` / `E2E_ADMIN_PASSWORD` | Optional: a local admin account for the login specs in `e2e/` |
+| `E2E_EDITOR_EMAIL` / `E2E_EDITOR_PASSWORD` | Optional: a local editor account for the access-control specs |
 
 Add any new variable to `.env.example` in the same commit.
 

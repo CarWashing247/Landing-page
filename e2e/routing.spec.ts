@@ -1,4 +1,12 @@
-import { type APIRequestContext, expect, test } from '@playwright/test'
+import {
+  type APIRequestContext,
+  type PlaywrightWorkerArgs,
+  expect,
+  test,
+} from '@playwright/test'
+
+/** The `playwright` fixture, used to build isolated request contexts. */
+type PlaywrightFixture = PlaywrightWorkerArgs['playwright']
 
 import { FIXTURE_PNG } from './fixture-image'
 
@@ -150,5 +158,196 @@ test.describe('media', () => {
     const doc = await upload(request)
 
     expect(doc.sizes?.og).toMatchObject({ width: 1200, height: 630 })
+  })
+})
+
+test.describe('roles and access control', () => {
+  const adminEmail = process.env.E2E_ADMIN_EMAIL
+  const adminPassword = process.env.E2E_ADMIN_PASSWORD
+  const editorEmail = process.env.E2E_EDITOR_EMAIL
+  const editorPassword = process.env.E2E_EDITOR_PASSWORD
+
+  test.skip(
+    !adminEmail || !adminPassword || !editorEmail || !editorPassword,
+    'set E2E_ADMIN_* and E2E_EDITOR_* credentials',
+  )
+
+  const signIn = async (context: APIRequestContext, email?: string, password?: string) => {
+    const response = await context.post('/api/users/login', { data: { email, password } })
+    expect(response.status(), `${email} must be able to log in`).toBe(200)
+  }
+
+  test('an editor sees only its own account, never other users', async ({ playwright }) => {
+    const editor = await playwright.request.newContext({ baseURL })
+
+    try {
+      await signIn(editor, editorEmail, editorPassword)
+
+      const list = await editor.get('/api/users')
+      expect(list.status()).toBe(200)
+
+      const body = await list.json()
+      expect(body.totalDocs).toBe(1)
+      expect(body.docs.map((d: { email: string }) => d.email)).toEqual([editorEmail])
+    } finally {
+      await editor.dispose()
+    }
+  })
+
+  test('an editor cannot create, delete or promote accounts', async ({ playwright }) => {
+    const editor = await playwright.request.newContext({ baseURL })
+    const admin = await playwright.request.newContext({ baseURL })
+
+    try {
+      await signIn(editor, editorEmail, editorPassword)
+      await signIn(admin, adminEmail, adminPassword)
+
+      const self = (await (await editor.get('/api/users')).json()).docs[0]
+
+      expect((await editor.post('/api/users', {
+        data: { email: 'intruder@example.com', password: 'Whatever123!' },
+      })).status()).toBe(403)
+
+      expect((await editor.delete(`/api/users/${self.id}`)).status()).toBe(403)
+
+      // Payload strips a field the user may not write rather than rejecting
+      // the request, so this returns 200. What matters is that the role did
+      // not change — assert the stored value, not the status code.
+      await editor.patch(`/api/users/${self.id}`, { data: { role: 'admin' } })
+
+      const after = await admin.get(`/api/users/${self.id}`)
+      expect((await after.json()).role).toBe('editor')
+    } finally {
+      await editor.dispose()
+      await admin.dispose()
+    }
+  })
+
+  test('an editor may manage media but never delete it', async ({ playwright }) => {
+    const editor = await playwright.request.newContext({ baseURL })
+
+    try {
+      await signIn(editor, editorEmail, editorPassword)
+
+      // Uploading is a create: without it an editor could change a page's
+      // words but not its pictures.
+      const upload = await editor.post('/api/media', {
+        multipart: {
+          file: { name: 'editor-upload.png', mimeType: 'image/png', buffer: FIXTURE_PNG },
+          _payload: JSON.stringify({ alt: 'Biên tập viên tải lên' }),
+        },
+      })
+      expect(upload.status()).toBe(201)
+
+      const { doc } = await upload.json()
+
+      expect((await editor.patch(`/api/media/${doc.id}`, {
+        data: { alt: 'Đã sửa mô tả' },
+      })).status()).toBe(200)
+
+      // Deleting an image breaks every page using it, with no undo.
+      expect((await editor.delete(`/api/media/${doc.id}`)).status()).toBe(403)
+    } finally {
+      await editor.dispose()
+    }
+  })
+
+  test('anonymous requests cannot read accounts', async ({ playwright }) => {
+    const anonymous = await playwright.request.newContext({ baseURL })
+
+    try {
+      expect((await anonymous.get('/api/users')).status()).toBe(403)
+    } finally {
+      await anonymous.dispose()
+    }
+  })
+})
+
+test.describe('the last administrator cannot be removed', () => {
+  const adminEmail = process.env.E2E_ADMIN_EMAIL
+  const adminPassword = process.env.E2E_ADMIN_PASSWORD
+
+  test.skip(!adminEmail || !adminPassword, 'set E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD')
+
+  /**
+   * Losing the last admin bricks the deployment: `role` is admin-only at
+   * field level and Users is hidden from editors, so nobody can promote
+   * anyone and only SQL can undo it. Both routes to that state are blocked.
+   */
+  const asAdmin = async (playwright: PlaywrightFixture) => {
+    const context = await playwright.request.newContext({ baseURL })
+    const login = await context.post('/api/users/login', {
+      data: { email: adminEmail, password: adminPassword },
+    })
+    expect(login.status()).toBe(200)
+
+    return context
+  }
+
+  const soleAdminId = async (context: APIRequestContext) => {
+    const admins = (await (await context.get('/api/users?limit=100&depth=0')).json()).docs.filter(
+      (user: { role: string }) => user.role === 'admin',
+    )
+    expect(admins, 'this spec assumes exactly one admin').toHaveLength(1)
+
+    return admins[0].id as number
+  }
+
+  test('demoting the last admin is refused, with a reason', async ({ playwright }) => {
+    const admin = await asAdmin(playwright)
+
+    try {
+      const id = await soleAdminId(admin)
+      const response = await admin.patch(`/api/users/${id}`, { data: { role: 'editor' } })
+
+      // 400 and a readable message, not a 500 "Something went wrong."
+      expect(response.status()).toBe(400)
+      expect((await response.json()).errors[0].message).toContain('quản trị viên cuối cùng')
+
+      const after = await admin.get(`/api/users/${id}`)
+      expect((await after.json()).role).toBe('admin')
+    } finally {
+      await admin.dispose()
+    }
+  })
+
+  test('deleting the last admin is refused, with a reason', async ({ playwright }) => {
+    const admin = await asAdmin(playwright)
+
+    try {
+      const id = await soleAdminId(admin)
+      const response = await admin.delete(`/api/users/${id}`)
+
+      expect(response.status()).toBe(400)
+      expect((await response.json()).errors[0].message).toContain('quản trị viên cuối cùng')
+
+      expect((await admin.get(`/api/users/${id}`)).status()).toBe(200)
+    } finally {
+      await admin.dispose()
+    }
+  })
+
+  test('a second admin may be demoted and deleted', async ({ playwright }) => {
+    const admin = await asAdmin(playwright)
+
+    try {
+      const created = await admin.post('/api/users', {
+        data: {
+          email: `e2e-second-admin-${Date.now()}@autowash247.local`,
+          password: 'SecondAdmin123!',
+          role: 'admin',
+        },
+      })
+      expect(created.status()).toBe(201)
+
+      const { doc } = await created.json()
+      expect(doc.role).toBe('admin')
+
+      // Allowed now, because it is no longer the last one.
+      expect((await admin.patch(`/api/users/${doc.id}`, { data: { role: 'editor' } })).status()).toBe(200)
+      expect((await admin.delete(`/api/users/${doc.id}`)).status()).toBe(200)
+    } finally {
+      await admin.dispose()
+    }
   })
 })

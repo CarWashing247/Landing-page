@@ -68,11 +68,31 @@ src/payload-types.ts            # generated
 Inherits AGENT.md section 8. In addition:
 
 - [ ] An `editor` test account does not see the Users collection in the
-      admin sidebar and gets 403 from `/api/users`.
+      admin sidebar, and `/api/users` returns only their own account —
+      `totalDocs` of 1. **Not** 403: a flat admin-only `read` makes
+      `/admin/account` return 500, so an editor cannot change their own
+      password. Read and update are scoped to the user's own document
+      instead, which keeps other accounts invisible.
+- [ ] An `editor` fetching another user by id gets 404, and patching one
+      gets 403.
+- [ ] The **last** administrator cannot be demoted or deleted. Both return
+      400 with a Vietnamese reason, not a 500. Without this guard the sole
+      admin could set its own role to `editor`, get a 200, and leave zero
+      admins — after which nobody can promote anyone, because `role` is
+      admin-only at field level and the collection is hidden from editors.
+      Only SQL recovers from that.
+- [ ] A hook that refuses an operation throws `APIError(msg, 400, null,
+      true)`, not a bare `Error`. A bare throw surfaces as a 500
+      "Something went wrong." and the reason never reaches the editor.
+- [ ] On an empty database the create-first-user flow produces an **admin**.
+      `role` is admin-only at field level, so without a hook the first
+      account takes the `editor` default and the deployment has no
+      administrator and no way to promote one.
 - [ ] An `editor` cannot delete a page or a media item — the delete control
       is absent, and the REST delete returns 403.
-- [ ] An `editor` cannot change its own `role`, including via a direct API
-      call.
+- [ ] An `editor` cannot change its own `role`. Payload **strips** a field
+      the user may not write rather than rejecting the request, so the PATCH
+      returns 200 — assert the stored role, not the status code.
 - [ ] An `admin` can do all of the above.
 - [ ] Role option labels are Vietnamese.
 
@@ -87,7 +107,8 @@ curl -s -o /dev/null -w 'editor escalate: %{http_code}\n' -b editor.cookie \
   -X PATCH -H 'content-type: application/json' -d '{"role":"admin"}' localhost:3000/api/users/<editor-id>
 ```
 
-Expect `403, 200, 403, 403`.
+Expect `403, 200, 403` for users-list, admin-list and media-delete. The
+escalation PATCH returns `200` with the role unchanged — see above.
 
 ## Notes
 
@@ -98,6 +119,10 @@ Expect `403, 200, 403, 403`.
   from the sidebar is not access control.
 
 ## Flags
+
+- **Resolved: `create` is granted on `Media` only.** The reasoning below
+  stands; `Pages` and `Services` keep `create: isAdmin` when they arrive in
+  T-06 and T-07.
 
 - **`create` for `editor` is unspecified, and it matters for `Media`
   only.** A Payload upload is a `create` on `Media`, so an editor with
