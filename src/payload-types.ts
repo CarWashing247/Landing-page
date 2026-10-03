@@ -185,6 +185,10 @@ export interface Media {
  */
 export interface User {
   id: number;
+  /**
+   * Quản trị viên: toàn quyền, kể cả xoá và quản lý người dùng. Biên tập viên: thêm và sửa nội dung, không xoá được.
+   */
+  role: 'admin' | 'editor';
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -347,6 +351,7 @@ export interface MediaSelect<T extends boolean = true> {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  role?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;

@@ -1,5 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
+import { anyone, isAdmin, isAdminOrEditor } from '../lib/access'
+
 /**
  * The image library.
  *
@@ -29,12 +31,16 @@ export const Media: CollectionConfig = {
   access: {
     // Images on a marketing site are public by definition: without this,
     // Payload's default denies anonymous reads and every <img> on the site
-    // 403s for visitors and crawlers. Verified: authenticated 200, anonymous
-    // 403 before this was added.
-    //
-    // Read only. The write rules (editor may create and update, only admin
-    // may delete) belong to T-03 and are deliberately not set here.
-    read: () => true,
+    // 403s for visitors and crawlers.
+    read: anyone,
+    // An upload *is* a create on this collection, so an editor without it
+    // could change a page's words but not its pictures. That is the one place
+    // `create` matters for the editor role (T-03).
+    create: isAdminOrEditor,
+    update: isAdminOrEditor,
+    // Deleting an image breaks every page already using it, and there is no
+    // undo. Editors replace images instead.
+    delete: isAdmin,
   },
   upload: {
     // Local-disk fallback only (MEDIA_LOCAL_DISK=true). Gitignored: uploads
