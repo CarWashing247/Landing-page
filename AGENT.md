@@ -64,6 +64,13 @@ npm run test:e2e              # playwright
 generated — never hand-edit it, and always commit it alongside the config
 change that produced it.
 
+The Postgres adapter runs with `push: false`, so `npm run dev` does **not**
+sync schema changes to the database. After a collection or global change, run
+`migrate:create` then `migrate`, or the new columns will not exist. This keeps
+development identical to deployed environments; with push enabled,
+`payload migrate` refuses to run without a data-loss prompt because it cannot
+tell what the push already applied.
+
 ---
 
 ## 4. Repository layout
@@ -220,6 +227,8 @@ style preferences.
 | `REVALIDATE_SECRET` | Shared secret for the revalidate webhook |
 | `PREVIEW_SECRET` | Shared secret for the draft preview route |
 | `R2_BUCKET` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` / `R2_ENDPOINT` | Media storage |
+| `R2_PUBLIC_URL` | Public base URL images are served from; also feeds `images.remotePatterns` |
+| `MEDIA_LOCAL_DISK` | Development only: store uploads on disk instead of R2 |
 | `E2E_ADMIN_EMAIL` / `E2E_ADMIN_PASSWORD` | Optional: a local admin account for the login specs in `e2e/` |
 
 Add any new variable to `.env.example` in the same commit.

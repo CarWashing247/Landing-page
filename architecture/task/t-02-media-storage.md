@@ -19,7 +19,15 @@ stopping a hundred unlabelled images from accumulating in the library.
 **In scope**
 
 - `@payloadcms/storage-s3` configured against R2 (`R2_ENDPOINT`,
-  `R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`).
+  `R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`), plus
+  `R2_PUBLIC_URL` — the S3 API endpoint is not the host browsers fetch from,
+  and `images.remotePatterns` needs that host.
+- `MEDIA_LOCAL_DISK=true` as an explicit development-only opt-out. A deployed
+  environment missing its R2 variables must fail at startup, not accept
+  uploads onto a filesystem that does not survive the next deployment.
+- `sharp` passed to `buildConfig`; without it no `imageSizes` are generated.
+- Public `read` access on `Media`. Payload's default denies anonymous reads,
+  which 403s every image for visitors and crawlers. Write rules stay in T-03.
 - `Media` collection: `alt` (**required**, Vietnamese label),
   `caption`, upload enabled.
 - Generated sizes: `thumbnail`, `card`, `hero`, `og` (1200×630).
@@ -64,8 +72,15 @@ Inherits AGENT.md section 8. In addition:
 - [ ] All four generated sizes resolve over public URLs (HTTP 200).
 - [ ] Saving an upload with an empty `alt` is rejected by the admin UI with
       a Vietnamese validation message.
-- [ ] `og` size is exactly 1200×630.
-- [ ] `.env.example` lists all four R2 variables.
+- [ ] `og` size is exactly 1200×630, **including when the source is smaller
+      than that**. Payload omits a size entirely rather than upscaling unless
+      `withoutEnlargement` is set, so a 900px upload otherwise yields no
+      social preview image and nothing in the admin UI says so.
+- [ ] No generated size is ever null, whatever the source dimensions.
+- [ ] `.env.example` lists all five R2 variables plus `MEDIA_LOCAL_DISK`.
+- [ ] `alt` is `NOT NULL` in the database, not merely required in the UI.
+- [ ] An anonymous request for every generated size returns 200 and an
+      `image/*` content type.
 
 ## Verification
 
