@@ -50,18 +50,3 @@ export const resolveR2Config = (): R2Config | null => {
 
   return null
 }
-
-/** The host `next/image` must be allowed to load optimised images from. */
-export const r2PublicHostname = (): string | null => {
-  const publicUrl = process.env.R2_PUBLIC_URL
-
-  if (!publicUrl) {
-    return null
-  }
-
-  try {
-    return new URL(publicUrl).hostname
-  } catch {
-    throw new Error(`R2_PUBLIC_URL is not a valid URL: ${publicUrl}`)
-  }
-}

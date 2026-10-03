@@ -1,4 +1,8 @@
-import { expect, test } from '@playwright/test'
+import { type APIRequestContext, expect, test } from '@playwright/test'
+
+import { FIXTURE_PNG } from './fixture-image'
+
+const baseURL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
 /**
  * Smoke test for the rewrite layer in next.config.mjs.
@@ -84,30 +88,66 @@ test.describe('authenticated admin', () => {
 })
 
 test.describe('media', () => {
-  test('uploaded images and all their sizes are publicly readable', async ({ request }) => {
-    const list = await request.get('/api/media?limit=1&depth=0')
-    expect(list.status()).toBe(200)
+  const email = process.env.E2E_ADMIN_EMAIL
+  const password = process.env.E2E_ADMIN_PASSWORD
 
-    const doc = (await list.json()).docs?.[0]
-    test.skip(!doc, 'no media uploaded in this environment')
+  test.skip(!email || !password, 'set E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD')
 
-    // Anonymous: a visitor or crawler, with no session.
-    const urls: string[] = [doc.url, ...Object.values(doc.sizes ?? {}).map((s) => (s as { url?: string }).url)]
-      .filter((url): url is string => Boolean(url))
+  /**
+   * Uploads its own fixture rather than reading whatever happens to be in the
+   * database. An earlier version skipped when the library was empty, which
+   * meant the public-read assertion below — the one guarding every image on
+   * the site against a 403 — silently never ran on a fresh environment.
+   *
+   * The fixture is 1400x900, so every size (og included) is a real downscale.
+   */
+  const upload = async (request: APIRequestContext) => {
+    const login = await request.post('/api/users/login', { data: { email, password } })
+    expect(login.status()).toBe(200)
 
-    expect(urls.length).toBeGreaterThan(1)
+    const response = await request.post('/api/media', {
+      multipart: {
+        file: { name: 'e2e-fixture.png', mimeType: 'image/png', buffer: FIXTURE_PNG },
+        _payload: JSON.stringify({ alt: 'Ảnh kiểm thử tự động' }),
+      },
+    })
 
-    for (const url of urls) {
-      const response = await request.get(url)
-      expect(response.status(), `${url} must be publicly readable`).toBe(200)
-      expect(response.headers()['content-type']).toContain('image/')
+    expect(response.status(), await response.text()).toBe(201)
+
+    return (await response.json()).doc
+  }
+
+  test('every size is generated and publicly readable', async ({ playwright, request }) => {
+    const doc = await upload(request)
+    const sizes: Record<string, { url?: string }> = doc.sizes ?? {}
+
+    // A null size is how Payload reports "source was smaller than the target".
+    // Every size sets withoutEnlargement, so none may be null.
+    for (const name of ['thumbnail', 'card', 'hero', 'og']) {
+      expect(sizes[name]?.url, `size "${name}" must be generated`).toBeTruthy()
+    }
+
+    const urls = [doc.url, ...Object.values(sizes).map((size) => size?.url)].filter(
+      (url): url is string => Boolean(url),
+    )
+    expect(urls.length).toBe(5)
+
+    // A separate context with no session: what a visitor or crawler sees.
+    const anonymous = await playwright.request.newContext({ baseURL })
+
+    try {
+      for (const url of urls) {
+        const response = await anonymous.get(url)
+        expect(response.status(), `${url} must be publicly readable`).toBe(200)
+        expect(response.headers()['content-type']).toContain('image/')
+      }
+    } finally {
+      await anonymous.dispose()
     }
   })
 
   test('the og size is exactly 1200x630', async ({ request }) => {
-    const list = await request.get('/api/media?limit=1&depth=0')
-    const doc = (await list.json()).docs?.[0]
-    test.skip(!doc, 'no media uploaded in this environment')
+    const doc = await upload(request)
 
     expect(doc.sizes?.og).toMatchObject({ width: 1200, height: 630 })
   })

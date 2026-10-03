@@ -72,7 +72,11 @@ Inherits AGENT.md section 8. In addition:
 - [ ] All four generated sizes resolve over public URLs (HTTP 200).
 - [ ] Saving an upload with an empty `alt` is rejected by the admin UI with
       a Vietnamese validation message.
-- [ ] `og` size is exactly 1200×630.
+- [ ] `og` size is exactly 1200×630, **including when the source is smaller
+      than that**. Payload omits a size entirely rather than upscaling unless
+      `withoutEnlargement` is set, so a 900px upload otherwise yields no
+      social preview image and nothing in the admin UI says so.
+- [ ] No generated size is ever null, whatever the source dimensions.
 - [ ] `.env.example` lists all five R2 variables plus `MEDIA_LOCAL_DISK`.
 - [ ] `alt` is `NOT NULL` in the database, not merely required in the UI.
 - [ ] An anonymous request for every generated size returns 200 and an

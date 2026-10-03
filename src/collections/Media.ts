@@ -22,6 +22,9 @@ export const Media: CollectionConfig = {
   admin: {
     useAsTitle: 'alt',
     defaultColumns: ['filename', 'alt', 'updatedAt'],
+    description:
+      'Tải ảnh rộng ít nhất 1200px. Ảnh nhỏ hơn vẫn dùng được, nhưng ảnh ' +
+      'chia sẻ lên Facebook/Zalo sẽ bị phóng to và hơi mờ.',
   },
   access: {
     // Images on a marketing site are public by definition: without this,
@@ -40,17 +43,32 @@ export const Media: CollectionConfig = {
     mimeTypes: ['image/*'],
     // Lets an editor choose what must stay in frame when a size crops.
     focalPoint: true,
+    //
+    // `withoutEnlargement` is set on every size on purpose. Left undefined,
+    // Payload returns *null* for any size larger than the source: a 600x400
+    // upload generated only `thumbnail`, and `card`, `hero` and `og` were all
+    // absent. A missing `og` means no Facebook/Zalo preview image at all, and
+    // nothing in the admin UI says so.
+    //
+    //   false -> always enlarge to the target size
+    //   true  -> fall back to the original image, never upscaled
+    //
+    // So every size is always populated, and downstream code (T-09 metadata,
+    // T-17 blocks) never has to handle a null size.
     imageSizes: [
       // Admin list thumbnails.
-      { name: 'thumbnail', width: 300, height: 300, fit: 'cover' },
+      { name: 'thumbnail', width: 300, height: 300, fit: 'cover', withoutEnlargement: true },
       // Cards and grids.
-      { name: 'card', width: 768, height: 512, fit: 'cover' },
+      { name: 'card', width: 768, height: 512, fit: 'cover', withoutEnlargement: true },
       // Above-the-fold hero. Width only: a fixed height would crop every
-      // hero to one aspect ratio regardless of the source image.
-      { name: 'hero', width: 1920, height: undefined },
+      // hero to one aspect ratio regardless of the source image. Not
+      // upscaled — a stretched 600px source makes a blurry hero.
+      { name: 'hero', width: 1920, withoutEnlargement: true },
       // Open Graph. Exactly 1200x630 and cropped, never letterboxed —
-      // Facebook and Zalo pad anything else with grey bars.
-      { name: 'og', width: 1200, height: 630, fit: 'cover' },
+      // Facebook and Zalo pad anything else with grey bars. This is the one
+      // size that *must* enlarge: the right dimensions matter more than
+      // sharpness, because a wrong-sized card is rejected outright.
+      { name: 'og', width: 1200, height: 630, fit: 'cover', withoutEnlargement: false },
     ],
   },
   fields: [
