@@ -1,0 +1,21 @@
+# dependencies
+node_modules/
+
+# next
+.next/
+out/
+next-env.d.ts
+
+# env — never commit secrets (AGENT.md section 6)
+.env
+.env.local
+.env*.local
+
+# build / test output
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+
+# os
+.DS_Store
