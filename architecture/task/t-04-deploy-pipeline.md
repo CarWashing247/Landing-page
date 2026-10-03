@@ -52,10 +52,16 @@ which is not a claim this project can act on.
 ## Files
 
 ```
-vercel.json                     # only if a setting cannot be set in the UI
+vercel.json                     # buildCommand: migrations before the build
+package.json                    # migrate:deploy script
+scripts/verify-deployment.sh    # checks a deployed environment
+docs/deployment.md              # the step-by-step procedure
 .env.example                    # confirm it matches what Vercel holds
-package.json                    # build command, if changed
 ```
+
+The build command is committed rather than set in the Vercel UI, so the
+deploy step is reviewable. It stays out of `build` itself so a local build
+still needs no database (T-01).
 
 ## Acceptance criteria
 
@@ -73,11 +79,17 @@ Inherits AGENT.md section 8. In addition:
 ## Verification
 
 ```bash
-curl -s -o /dev/null -w '%{http_code}\n' https://<deploy-url>/
-curl -s -o /dev/null -w '%{http_code}\n' https://<deploy-url>/admin
-# confirm the deploy's own site URL is what the app believes it is
-curl -s https://<deploy-url>/ | grep -o 'content="https://[^"]*"' | head
+./scripts/verify-deployment.sh https://<deploy-url>
 ```
+
+Checks both locales, the `lang` attributes, the 404, that no page is
+reachable at two URLs, that the admin responds, that anonymous API reads are
+refused, that GraphQL is off, and that images come from R2 rather than the
+deploy. Exits non-zero on any failure, so it can gate a pipeline. Checks for
+things a later task delivers (robots.txt) skip rather than fail.
+
+Follow [`docs/deployment.md`](../../docs/deployment.md) for the steps, and
+its section 8 for what the script cannot check and you must look at by hand.
 
 ## Notes
 
