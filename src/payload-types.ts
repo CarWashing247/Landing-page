@@ -118,6 +118,8 @@ export interface UserAuthOperations {
   };
 }
 /**
+ * Tải ảnh rộng ít nhất 1200px. Ảnh nhỏ hơn vẫn dùng được, nhưng ảnh chia sẻ lên Facebook/Zalo sẽ bị phóng to và hơi mờ.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
