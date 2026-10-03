@@ -26,6 +26,13 @@ section 8. The criteria in each file are *in addition* to it.
 Branch names are the file names without the `.md`:
 `t-09-build-metadata`. One task per branch and per PR.
 
+## Diagrams
+
+- [Architecture diagram](../architecture-diagram.md) — the runtime pieces,
+  the stores, and how a locale becomes a cached page.
+- [Flow diagram](../flow-diagram.md) — the read path, the write path, draft
+  preview, and where each one can fail.
+
 ## Index
 
 ### Phase 1 — Foundation
@@ -36,8 +43,11 @@ Branch names are the file names without the `.md`:
 | [T-02](t-02-media-storage.md) | Media storage and the Media collection | T-01 |
 | [T-03](t-03-users-roles-access.md) | Users, roles and access control | T-01 |
 | [T-04](t-04-deploy-pipeline.md) | Deploy pipeline | T-01 |
+| [T-04A](t-04a-localization-foundation.md) | Localization foundation | T-01 |
 
-> **Gate 1** — admin login works and the deploy is green.
+> **Gate 1** — admin login works, the deploy is green, and both locales
+> resolve. T-04A is the hard gate: it decides the schema, the cache key, the
+> routing and the metadata contract that all of Phase 2 reads.
 
 ### Phase 2 — Content and SEO
 
@@ -62,6 +72,7 @@ Branch names are the file names without the `.md`:
 | ID | Task | Depends on |
 | --- | --- | --- |
 | [T-15](t-15-design-foundation.md) | Design foundation | T-04 |
+| [T-15A](t-15a-message-catalog.md) | Interface message catalog | T-04A, T-15 |
 | [T-16](t-16-layout-shell.md) | Layout shell | T-05, T-15 |
 | [T-17](t-17-content-blocks.md) | Content blocks | T-06, T-15 |
 | [T-18](t-18-service-detail-template.md) | Service detail template | T-07, T-17 |
@@ -85,7 +96,7 @@ Branch names are the file names without the `.md`:
 ## Critical path
 
 ```
-T-01 → T-06 → T-08 → T-09 → T-10 → T-11 → T-14 → T-17 → T-20 → T-23
+T-01 → T-04A → T-06 → T-08 → T-09 → T-10 → T-11 → T-14 → T-17 → T-20 → T-23
 ```
 
 Everything else runs alongside it. Parallelises cleanly: T-02/T-03/T-04
@@ -93,10 +104,13 @@ after T-01; T-15 and T-16 as soon as T-05 lands; T-13 needs only T-10, so
 it runs while T-11 and T-12 are in flight; T-22 is independent of all UI
 work.
 
-**What must not be reordered: Phase 2 before Phase 3.** Building components
-first and adding `generateMetadata` afterwards means prising metadata out of
-finished components and treating JSON-LD as something pasted on at the end.
-That is the failure the ordering exists to prevent.
+**What must not be reordered:** T-04A before Phase 2, Phase 2 before
+Phase 3, and T-15A before T-16/T-17. All three are the same rule — put the
+contract in place before the code that depends on it. Retrofitting
+localization means a migration per localized field and re-cutting every
+cache tag; retrofitting metadata means prising it out of finished
+components; retrofitting the message catalog means hunting literals across
+components that already shipped.
 
 ## Tasks blocked on information we do not have
 
@@ -110,7 +124,9 @@ own, but collected here so they can be chased in one go:
 | T-05 | real address, phone, opening hours, price range, lat/lng |
 | T-07, T-23 | package names, prices, durations |
 | T-15 | brand palette |
+| T-04A | English wording for the admin labels |
+| T-15A | Vietnamese and English interface strings |
 | T-19 | where contact form submissions go; Maps API key if needed |
 | T-21 | GA4 measurement ID, Search Console access |
-| T-23 | all Vietnamese marketing copy |
+| T-23 | all marketing copy, in both locales — written, not translated |
 | T-24 | Vietnamese editor guide copy |
