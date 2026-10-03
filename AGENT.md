@@ -21,9 +21,16 @@ Two goals drive every decision in this repo:
 If a change you are about to make conflicts with either goal, stop and raise
 it instead of working around it.
 
-**Content language is Vietnamese.** Code, comments, commit messages,
-identifiers and documentation are English. Never machine-translate
-user-facing Vietnamese copy — leave a `TODO(copy)` marker instead.
+**The site ships in Vietnamese and English.** Vietnamese is the default
+locale and the primary market, served unprefixed (`/bang-gia`); English is
+served under `/en` (`/en/pricing`). Code, comments, commit messages,
+identifiers and documentation are English.
+
+**Never machine-translate user-facing copy, in either direction.** Leave a
+`TODO(copy): <gist>` marker and say so. An English page produced by running
+the Vietnamese through a translator reads as machine output to the exact
+audience it is meant to win. An untranslated locale stays `noindex` rather
+than shipping filler — see `Design.md` section 2.3.
 
 ---
 
@@ -32,6 +39,7 @@ user-facing Vietnamese copy — leave a `TODO(copy)` marker instead.
 | Layer | Choice |
 | --- | --- |
 | Framework | Next.js (App Router) |
+| Localization | Payload `localization` (`vi` default, `en`) + a typed message catalog |
 | CMS | Payload CMS, mounted inside the same Next.js app |
 | SEO fields | `@payloadcms/plugin-seo` |
 | Database | PostgreSQL via `@payloadcms/db-postgres` |
@@ -151,13 +159,18 @@ style preferences.
   Open Graph image URLs are relative and Facebook/Zalo silently fail to
   pull the image.
 - Exactly one `<h1>` per page.
-- `openGraph.locale` is `vi_VN`.
+- `openGraph.locale` matches the rendered locale: `vi_VN` or `en_US`.
+- Every content route emits `alternates.languages` for both locales plus
+  `x-default` pointing at Vietnamese. A page that exists in one locale and
+  not the other must not advertise a `hreflang` to a URL that 404s.
 
 ### 5.3 Caching and revalidation
 
-- Every Payload query that feeds a page passes `next: { tags: [...],
-  revalidate: 3600 }`. Tag strings come from `src/lib/cache-tags.ts` —
-  never inline a tag literal.
+- Every Payload query that feeds a page is cached under a tag and a
+  revalidate floor. Tag strings come from `src/lib/cache-tags.ts` — never
+  inline a tag literal.
+- **Page and service tags include the locale** (`page:<locale>:<slug>`).
+  Publishing an English edit must not purge the cached Vietnamese page.
 - The `revalidate: 3600` floor is a safety net for a failed webhook.
   Do not remove it.
 - `afterChange` hooks send both `doc.slug` and `previousDoc?.slug` so a
@@ -169,7 +182,9 @@ style preferences.
 
 - JSON-LD is built from the `BusinessInfo` global, never from hardcoded
   values. Name, address and phone must be byte-identical to what is in
-  Google Business Profile.
+  Google Business Profile, and are therefore **not** localized — a
+  translated street address is wrong in both languages.
+- Every emitted schema carries `inLanguage` for the rendered locale.
 - Home page emits `AutoWash`. Service pages add `Service` + `Offer`.
   Pages with an FAQ block add `FAQPage`.
 - After changing any JSON-LD shape, validate against Google's Rich Results
@@ -189,9 +204,16 @@ style preferences.
 
 ### 5.6 CMS authoring experience
 
-- Every field has a Vietnamese `label` and, where the purpose is not
-  obvious, a Vietnamese `admin.description`. The audience cannot read
-  `canonical` and infer what it does.
+- Every field has a `label` and, where the purpose is not obvious, an
+  `admin.description` — each a `{ vi, en }` pair, never a bare string. The
+  audience cannot read `canonical` and infer what it does.
+- A hook that refuses an operation resolves its message through `req.t`
+  against the registered translations, and throws
+  `APIError(message, 400, null, true)`. A bare `throw new Error` surfaces as
+  a 500 `"Something went wrong."` and the reason never reaches the editor.
+- Which fields are `localized` is a schema decision, not a preference:
+  Payload stores localized values separately, so changing it later is a
+  migration. `Design.md` section 2.1 is the list.
 - SEO fields live in their own tab, separate from the content tab.
 - Prefer a guardrail in the config over a line in a handover document:
   `required`, `maxLength`, `readOnly`, `admin.condition`, access control.
@@ -210,8 +232,11 @@ style preferences.
 - Server Components by default.
 - Tailwind utility classes only. No `@apply` beyond `globals.css`, no
   runtime CSS-in-JS.
-- Slugs are unaccented lowercase Vietnamese with hyphens: `bang-gia`,
-  `dich-vu/rua-xe-nhanh`.
+- Slugs are localized, unaccented, lowercase and hyphenated: `bang-gia` and
+  `pricing`, `dich-vu/rua-xe-nhanh` and `services/quick-wash`.
+- No user-facing string literal in a component. Interface text comes from
+  the message catalog; content comes from the CMS. A missing catalog key is
+  a type error, not a blank on the page.
 - Conventional commits: `feat:`, `fix:`, `chore:`, `docs:`.
 - Secrets come from environment variables. Never commit `.env`.
 
@@ -245,7 +270,9 @@ A task is complete when all of these hold:
       if the Payload config changed
 - [ ] A migration exists, if the schema changed
 - [ ] Page source (`view-source:`, not devtools) shows the expected
-      `<title>`, `<meta name="description">`, `og:*` tags and JSON-LD
+      `<title>`, `<meta name="description">`, `og:*` tags, `hreflang`
+      alternates and JSON-LD — checked in **both locales** for any route the
+      change touches
 - [ ] The new or changed page appears in `/sitemap.xml`, unless it is
       `noindex` or draft
 - [ ] No new `'use client'` above a leaf component
@@ -258,7 +285,11 @@ A task is complete when all of these hold:
 - Do not install a second CMS, headless UI kit or state manager.
 - Do not add a UI library that ships its own CSS reset.
 - Do not use `localStorage` or `sessionStorage` for anything that affects
-  rendered content.
+  rendered content — including the chosen locale. The locale is in the URL,
+  so a crawler and a visitor see the same page.
+- Do not add a client-side i18n runtime (`next-intl`, `react-i18next`, …).
+  Interface strings resolve on the server, because Zalo and Coc Coc do not
+  execute JavaScript.
 - Do not hardcode business details (address, phone, opening hours, prices)
   anywhere in components — they belong in `BusinessInfo` or `Services`.
 - Do not add a `keywords` meta tag. Search engines ignore it.
