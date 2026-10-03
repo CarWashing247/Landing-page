@@ -1,4 +1,12 @@
-import { type APIRequestContext, expect, test } from '@playwright/test'
+import {
+  type APIRequestContext,
+  type PlaywrightWorkerArgs,
+  expect,
+  test,
+} from '@playwright/test'
+
+/** The `playwright` fixture, used to build isolated request contexts. */
+type PlaywrightFixture = PlaywrightWorkerArgs['playwright']
 
 import { FIXTURE_PNG } from './fixture-image'
 
@@ -251,6 +259,95 @@ test.describe('roles and access control', () => {
       expect((await anonymous.get('/api/users')).status()).toBe(403)
     } finally {
       await anonymous.dispose()
+    }
+  })
+})
+
+test.describe('the last administrator cannot be removed', () => {
+  const adminEmail = process.env.E2E_ADMIN_EMAIL
+  const adminPassword = process.env.E2E_ADMIN_PASSWORD
+
+  test.skip(!adminEmail || !adminPassword, 'set E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD')
+
+  /**
+   * Losing the last admin bricks the deployment: `role` is admin-only at
+   * field level and Users is hidden from editors, so nobody can promote
+   * anyone and only SQL can undo it. Both routes to that state are blocked.
+   */
+  const asAdmin = async (playwright: PlaywrightFixture) => {
+    const context = await playwright.request.newContext({ baseURL })
+    const login = await context.post('/api/users/login', {
+      data: { email: adminEmail, password: adminPassword },
+    })
+    expect(login.status()).toBe(200)
+
+    return context
+  }
+
+  const soleAdminId = async (context: APIRequestContext) => {
+    const admins = (await (await context.get('/api/users?limit=100&depth=0')).json()).docs.filter(
+      (user: { role: string }) => user.role === 'admin',
+    )
+    expect(admins, 'this spec assumes exactly one admin').toHaveLength(1)
+
+    return admins[0].id as number
+  }
+
+  test('demoting the last admin is refused, with a reason', async ({ playwright }) => {
+    const admin = await asAdmin(playwright)
+
+    try {
+      const id = await soleAdminId(admin)
+      const response = await admin.patch(`/api/users/${id}`, { data: { role: 'editor' } })
+
+      // 400 and a readable message, not a 500 "Something went wrong."
+      expect(response.status()).toBe(400)
+      expect((await response.json()).errors[0].message).toContain('quản trị viên cuối cùng')
+
+      const after = await admin.get(`/api/users/${id}`)
+      expect((await after.json()).role).toBe('admin')
+    } finally {
+      await admin.dispose()
+    }
+  })
+
+  test('deleting the last admin is refused, with a reason', async ({ playwright }) => {
+    const admin = await asAdmin(playwright)
+
+    try {
+      const id = await soleAdminId(admin)
+      const response = await admin.delete(`/api/users/${id}`)
+
+      expect(response.status()).toBe(400)
+      expect((await response.json()).errors[0].message).toContain('quản trị viên cuối cùng')
+
+      expect((await admin.get(`/api/users/${id}`)).status()).toBe(200)
+    } finally {
+      await admin.dispose()
+    }
+  })
+
+  test('a second admin may be demoted and deleted', async ({ playwright }) => {
+    const admin = await asAdmin(playwright)
+
+    try {
+      const created = await admin.post('/api/users', {
+        data: {
+          email: `e2e-second-admin-${Date.now()}@autowash247.local`,
+          password: 'SecondAdmin123!',
+          role: 'admin',
+        },
+      })
+      expect(created.status()).toBe(201)
+
+      const { doc } = await created.json()
+      expect(doc.role).toBe('admin')
+
+      // Allowed now, because it is no longer the last one.
+      expect((await admin.patch(`/api/users/${doc.id}`, { data: { role: 'editor' } })).status()).toBe(200)
+      expect((await admin.delete(`/api/users/${doc.id}`)).status()).toBe(200)
+    } finally {
+      await admin.dispose()
     }
   })
 })

@@ -75,6 +75,15 @@ Inherits AGENT.md section 8. In addition:
       instead, which keeps other accounts invisible.
 - [ ] An `editor` fetching another user by id gets 404, and patching one
       gets 403.
+- [ ] The **last** administrator cannot be demoted or deleted. Both return
+      400 with a Vietnamese reason, not a 500. Without this guard the sole
+      admin could set its own role to `editor`, get a 200, and leave zero
+      admins — after which nobody can promote anyone, because `role` is
+      admin-only at field level and the collection is hidden from editors.
+      Only SQL recovers from that.
+- [ ] A hook that refuses an operation throws `APIError(msg, 400, null,
+      true)`, not a bare `Error`. A bare throw surfaces as a 500
+      "Something went wrong." and the reason never reaches the editor.
 - [ ] On an empty database the create-first-user flow produces an **admin**.
       `role` is admin-only at field level, so without a hook the first
       account takes the `editor` default and the deployment has no
