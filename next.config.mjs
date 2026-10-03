@@ -20,9 +20,22 @@ import { withPayload } from '@payloadcms/next/withPayload'
  * `/api`), so every URL Payload's client code builds is a public one and is
  * rewritten inbound. That is what keeps this layer invisible to Payload.
  */
+/**
+ * Derived here rather than imported from src/lib/r2.ts: this file is plain
+ * ESM and cannot import a TypeScript module. Kept to one expression so the
+ * duplication stays obvious.
+ */
+const r2Hostname = process.env.R2_PUBLIC_URL
+  ? new URL(process.env.R2_PUBLIC_URL).hostname
+  : null
+
 const nextConfig = {
   images: {
-    remotePatterns: [],
+    // next/image refuses to optimise a remote host that is not listed here.
+    // Empty on local disk, where uploads are served same-origin by Payload.
+    remotePatterns: r2Hostname
+      ? [{ protocol: 'https', hostname: r2Hostname, pathname: '/**' }]
+      : [],
   },
   experimental: {
     // There is no single root layout (landing-page and crm each own one), so

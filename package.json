@@ -19,11 +19,13 @@
     "@payloadcms/db-postgres": "3.90.2",
     "@payloadcms/next": "3.90.2",
     "@payloadcms/richtext-lexical": "3.90.2",
+    "@payloadcms/storage-s3": "^3.90.2",
     "graphql": "^16.8.1",
     "next": "16.3.8",
     "payload": "3.90.2",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.0",

@@ -82,3 +82,33 @@ test.describe('authenticated admin', () => {
     expect(await response.text()).toContain('Nothing found')
   })
 })
+
+test.describe('media', () => {
+  test('uploaded images and all their sizes are publicly readable', async ({ request }) => {
+    const list = await request.get('/api/media?limit=1&depth=0')
+    expect(list.status()).toBe(200)
+
+    const doc = (await list.json()).docs?.[0]
+    test.skip(!doc, 'no media uploaded in this environment')
+
+    // Anonymous: a visitor or crawler, with no session.
+    const urls: string[] = [doc.url, ...Object.values(doc.sizes ?? {}).map((s) => (s as { url?: string }).url)]
+      .filter((url): url is string => Boolean(url))
+
+    expect(urls.length).toBeGreaterThan(1)
+
+    for (const url of urls) {
+      const response = await request.get(url)
+      expect(response.status(), `${url} must be publicly readable`).toBe(200)
+      expect(response.headers()['content-type']).toContain('image/')
+    }
+  })
+
+  test('the og size is exactly 1200x630', async ({ request }) => {
+    const list = await request.get('/api/media?limit=1&depth=0')
+    const doc = (await list.json()).docs?.[0]
+    test.skip(!doc, 'no media uploaded in this environment')
+
+    expect(doc.sizes?.og).toMatchObject({ width: 1200, height: 630 })
+  })
+})
