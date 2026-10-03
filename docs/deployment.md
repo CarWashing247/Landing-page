@@ -70,7 +70,7 @@ Keep both connection strings. They become `DATABASE_URI` per environment.
 Verify a connection string before going further:
 
 ```bash
-node --input-type=module -e "
+DATABASE_URI='<paste the connection string>' node --input-type=module -e "
 import pg from 'pg'
 const c = new pg.Client({ connectionString: process.env.DATABASE_URI })
 await c.connect()
@@ -78,6 +78,9 @@ console.log('connected:', (await c.query('select version()')).rows[0].version.sp
 await c.end()
 "
 ```
+
+Run it once per database. `pg` comes with the Payload Postgres adapter, so
+`npm install` is the only prerequisite.
 
 Expect a `PostgreSQL <version>` line. If it hangs, the provider is probably
 waiting on an IP allow-list.
