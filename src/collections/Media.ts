@@ -18,15 +18,20 @@ import { anyone, isAdmin, isAdminOrEditor } from '../lib/access'
 export const Media: CollectionConfig = {
   slug: 'media',
   labels: {
-    singular: 'Hình ảnh',
-    plural: 'Hình ảnh',
+    singular: { en: 'Image', vi: 'Hình ảnh' },
+    plural: { en: 'Images', vi: 'Hình ảnh' },
   },
   admin: {
     useAsTitle: 'alt',
     defaultColumns: ['filename', 'alt', 'updatedAt'],
-    description:
-      'Tải ảnh rộng ít nhất 1200px. Ảnh nhỏ hơn vẫn dùng được, nhưng ảnh ' +
-      'chia sẻ lên Facebook/Zalo sẽ bị phóng to và hơi mờ.',
+    description: {
+      en:
+        'Upload images at least 1200px wide. Smaller ones still work, but the ' +
+        'Facebook/Zalo share image will be enlarged and slightly soft.',
+      vi:
+        'Tải ảnh rộng ít nhất 1200px. Ảnh nhỏ hơn vẫn dùng được, nhưng ảnh ' +
+        'chia sẻ lên Facebook/Zalo sẽ bị phóng to và hơi mờ.',
+    },
   },
   access: {
     // Images on a marketing site are public by definition: without this,
@@ -82,21 +87,36 @@ export const Media: CollectionConfig = {
       name: 'alt',
       type: 'text',
       required: true,
-      label: 'Mô tả ảnh (cho SEO và trình đọc màn hình)',
+      // Localized: alt text is read aloud and indexed, so an English page
+      // needs English alt text (Design.md section 2.1).
+      localized: true,
+      label: {
+        en: 'Image description (for SEO and screen readers)',
+        vi: 'Mô tả ảnh (cho SEO và trình đọc màn hình)',
+      },
       admin: {
-        description:
-          'Mô tả ngắn nội dung của ảnh. Trình đọc màn hình sẽ đọc câu này, ' +
-          'và Google dùng nó để hiểu ảnh. Ví dụ: "Xe sedan trắng đang được ' +
-          'rửa tự động tại AutoWash247". Bắt buộc phải có.',
+        description: {
+          en:
+            'Briefly describe what the image shows. Screen readers read this ' +
+            'aloud and Google uses it to understand the image. For example: ' +
+            '"A white sedan being washed automatically at AutoWash247". Required.',
+          vi:
+            'Mô tả ngắn nội dung của ảnh. Trình đọc màn hình sẽ đọc câu này, ' +
+            'và Google dùng nó để hiểu ảnh. Ví dụ: "Xe sedan trắng đang được ' +
+            'rửa tự động tại AutoWash247". Bắt buộc phải có.',
+        },
       },
     },
     {
       name: 'caption',
       type: 'text',
-      label: 'Chú thích (không bắt buộc)',
+      localized: true,
+      label: { en: 'Caption (optional)', vi: 'Chú thích (không bắt buộc)' },
       admin: {
-        description:
-          'Chú thích hiển thị bên dưới ảnh trên trang. Để trống nếu không cần.',
+        description: {
+          en: 'Caption shown beneath the image on the page. Leave blank if not needed.',
+          vi: 'Chú thích hiển thị bên dưới ảnh trên trang. Để trống nếu không cần.',
+        },
       },
     },
   ],

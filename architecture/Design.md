@@ -524,13 +524,18 @@ discovering them inside it.
 in that table, carrying the locale the same way `__p` already carries path
 depth. Every route added from here needs its rule in both locales.
 
-**Static generation is the open question.** `generateStaticParams()` cannot
-prerender per slug when the folder name is a literal word, and localization
-multiplies the route count by the number of locales. T-10's criterion — each
-CMS page listed as prerendered, not `ƒ` — is therefore at risk, and the
-answer is likely either to accept `ƒ` with the tag cache in front of it or
-to reintroduce a dynamic segment for content routes. **Decide this before
-T-09**, because both answers change how T-09 and T-10 are written.
+**Static rendering is settled: the locale is a build-time constant.**
+Resolving it per request — from a header or from `searchParams` — makes every
+page `ƒ`, which breaks AGENT.md 5.1. So each locale has its own plain-word
+folder whose layout carries its `lang` literally, and both are prerendered
+(`src/lib/locales.ts`, `FOLDER_FOR`). The cost is one thin folder per locale
+per route, re-exporting a shared implementation.
+
+**Slug-level static generation is still open.** `generateStaticParams()`
+cannot prerender per slug behind a literal folder name, so T-10's criterion —
+each CMS page listed as prerendered, not `ƒ` — remains at risk for content
+routes specifically. **Decide before T-09**: accept `ƒ` with the tag cache in
+front, or reintroduce a dynamic segment for content routes only.
 
 ---
 

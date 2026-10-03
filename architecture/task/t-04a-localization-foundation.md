@@ -134,6 +134,43 @@ curl -s -b admin.cookie -X PATCH -H 'content-type: application/json' \
 - Do not reach for `next-intl` or similar. The locale is in the URL and the
   strings resolve on the server (AGENT.md section 9).
 
+## Found while building
+
+**Static rendering forced a design decision.** Resolving the locale at
+request time — from a header set by a proxy, or from `searchParams` — makes
+every page render per request. Measured: the home page went from `○` to `ƒ`
+the moment the layout called `headers()`, which breaks AGENT.md 5.1. The
+answer is one thin plain-word folder per locale, so the locale is a
+**build-time constant**: `landing-page/` renders `LocaleLayout locale="vi"`,
+`landing-page-en/` renders `locale="en"`, and both are `○` again. This
+resolves the open question in `Design.md` section 5a.
+
+The cost is one folder per locale per route, re-exporting a shared
+implementation — 5 routes becomes 10 folders by T-23. Every route added from
+here needs its folder and its rewrite rule in both locales.
+
+**Payload resolves the API language to `en` regardless of configuration.**
+`getRequestLanguage` documents cookie → `Accept-Language` →
+`i18n.fallbackLanguage`, but a REST request reports `req.i18n.language ===
+'en'` with a `payload-lng=vi` cookie, with `Accept-Language: vi`, and with
+neither, even with `fallbackLanguage: 'vi'` and
+`supportedLanguages: { en, vi }` set. Measured by instrumenting
+`adminMessage`.
+
+Consequences, neither of them a correctness problem:
+- Collection labels still work — the panel renders the `en` half of each
+  `{ vi, en }` pair, which is the pair mechanism doing its job.
+- Hook messages reach the caller in English rather than Vietnamese. The
+  strings are no longer hardcoded, so this becomes right as soon as the
+  language resolves; nothing needs rewriting.
+- The e2e specs accept either translation rather than asserting a language
+  that cannot currently be selected.
+
+**Unresolved**, and worth a look before T-24 writes the handover: whether the
+admin UI in a real browser resolves Vietnamese (it sends `Accept-Language:
+vi-VN` and the panel sets its own cookie), or whether the panel is English
+for everyone. Only a browser can answer it.
+
 ## Flags
 
 - **English copy for the admin labels is new user-facing text.** The

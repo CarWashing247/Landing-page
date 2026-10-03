@@ -2,12 +2,9 @@ import type { ReactNode } from 'react'
 
 import { LocaleLayout } from '../../components/layout/LocaleLayout'
 
-/**
- * Vietnamese root layout. The locale is a literal, not a lookup — see
- * `src/lib/locales.ts` FOLDER_FOR for why.
- */
+/** English root layout. See `src/app/landing-page/layout.tsx`. */
 const Layout = ({ children }: { children: ReactNode }) => (
-  <LocaleLayout locale="vi">{children}</LocaleLayout>
+  <LocaleLayout locale="en">{children}</LocaleLayout>
 )
 
 export default Layout

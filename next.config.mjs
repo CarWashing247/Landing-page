@@ -54,6 +54,7 @@ const nextConfig = {
   async redirects() {
     return [
       { source: '/landing-page', destination: '/', permanent: true },
+      { source: '/landing-page-en', destination: '/en', permanent: true },
       { source: '/crm/admin/:path*', destination: '/admin', permanent: false },
       { source: '/crm/api/:path*', destination: '/api/:path*', permanent: false },
     ]
@@ -72,6 +73,19 @@ const nextConfig = {
         // `__p` cannot choose the admin view.
         { source: '/admin', destination: '/crm/admin/segements?__p=/' },
         { source: '/admin/:path*', destination: '/crm/admin/segements?__p=:path*' },
+        // Locales. English is prefixed; Vietnamese is the default and
+        // unprefixed (Design.md 1.1a). The prefix cannot be a plain folder
+        // either, so it rides this table like every other public path.
+        //
+        // `/en` needs its own rule for the same reason `/admin` did: folded
+        // into `/en/:path*`, the parameter is left unsubstituted for zero
+        // segments.
+        // Locales. Each locale has its own plain-word folder so the locale
+        // is a build-time constant and pages stay statically prerenderable
+        // (src/lib/locales.ts FOLDER_FOR). Resolving it at request time made
+        // every page `ƒ`, which breaks AGENT.md 5.1.
+        { source: '/en', destination: '/landing-page-en' },
+        { source: '/en/:path*', destination: '/landing-page-en/:path*' },
         { source: '/', destination: '/landing-page' },
       ],
     }

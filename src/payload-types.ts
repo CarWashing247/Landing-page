@@ -86,10 +86,10 @@ export interface Config {
   db: {
     defaultIDType: number;
   };
-  fallbackLocale: null;
+  fallbackLocale: ('false' | 'none' | 'null') | false | null | ('vi' | 'en') | ('vi' | 'en')[];
   globals: {};
   globalsSelect: {};
-  locale: null;
+  locale: 'vi' | 'en';
   widgets: {
     collections: CollectionsWidget;
   };
@@ -118,7 +118,7 @@ export interface UserAuthOperations {
   };
 }
 /**
- * Tải ảnh rộng ít nhất 1200px. Ảnh nhỏ hơn vẫn dùng được, nhưng ảnh chia sẻ lên Facebook/Zalo sẽ bị phóng to và hơi mờ.
+ * Upload images at least 1200px wide. Smaller ones still work, but the Facebook/Zalo share image will be enlarged and slightly soft.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
@@ -126,11 +126,11 @@ export interface UserAuthOperations {
 export interface Media {
   id: number;
   /**
-   * Mô tả ngắn nội dung của ảnh. Trình đọc màn hình sẽ đọc câu này, và Google dùng nó để hiểu ảnh. Ví dụ: "Xe sedan trắng đang được rửa tự động tại AutoWash247". Bắt buộc phải có.
+   * Briefly describe what the image shows. Screen readers read this aloud and Google uses it to understand the image. For example: "A white sedan being washed automatically at AutoWash247". Required.
    */
   alt: string;
   /**
-   * Chú thích hiển thị bên dưới ảnh trên trang. Để trống nếu không cần.
+   * Caption shown beneath the image on the page. Leave blank if not needed.
    */
   caption?: string | null;
   updatedAt: string;
@@ -186,7 +186,7 @@ export interface Media {
 export interface User {
   id: number;
   /**
-   * Quản trị viên: toàn quyền, kể cả xoá và quản lý người dùng. Biên tập viên: thêm và sửa nội dung, không xoá được.
+   * Administrator: full access, including deleting and managing users. Editor: add and edit content, cannot delete.
    */
   role: 'admin' | 'editor';
   updatedAt: string;
