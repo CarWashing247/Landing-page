@@ -42,9 +42,15 @@ number anywhere in the repo is a bug.
 | `ga4MeasurementId` | text | consumed in T-21 |
 | `socialLinks` | array | `platform` select + `url` |
 
-Every non-obvious field gets a Vietnamese `label` **and** a Vietnamese
-`admin.description`. The audience cannot read `priceRange` or `lat` and
-infer what they are for.
+Every field gets a `label`, and every non-obvious field an
+`admin.description`, **each a `{ vi, en }` pair** — never a bare string
+(AGENT.md 5.6). The audience cannot read `priceRange` or `lat` and infer
+what they are for.
+
+> This task was written before T-04A, which made every label and
+> `admin.description` in the config a `{ vi, en }` pair. AGENT.md 5.6 is the
+> contract; a Vietnamese-only string here would be the one field the admin's
+> English mode cannot render.
 
 **Out of scope**
 
@@ -79,8 +85,8 @@ Inherits AGENT.md section 8. In addition:
 
 - [ ] Both globals are editable in `/admin` and typed in
       `payload-types.ts` (`BusinessInfo`, `SiteSetting`).
-- [ ] Every field has a Vietnamese label; every non-obvious field has a
-      Vietnamese `admin.description`.
+- [ ] Every field has a `{ vi, en }` label; every non-obvious field has a
+      `{ vi, en }` `admin.description`. No bare strings (AGENT.md 5.6).
 - [ ] Opening hours cover all seven weekdays, and a day marked closed hides
       its time inputs.
 - [ ] `required` is set on the fields JSON-LD cannot omit: `legalName`,
@@ -101,6 +107,13 @@ grep -rn "0[0-9]\{8,10\}" src/components src/app || echo 'no hardcoded phone'
 - Name, address and phone must end up byte-identical to Google Business
   Profile (AGENT.md 5.4). This task creates the fields; T-23 fills them and
   T-24 provides the sync checklist.
+- **`openingHours` is exactly seven rows, fixed.** One per weekday,
+  pre-filled, neither addable nor removable, because a partial week reads to
+  Google as "closed on the missing days" rather than "unknown". The cost is
+  that a day with a midday break cannot be expressed — that needs two rows
+  for one weekday. Correct for a wash that opens continuously. If the
+  business does close for lunch, drop `maxRows` and T-14 must then emit one
+  `OpeningHoursSpecification` per row rather than per day.
 
 ## Flags
 
@@ -108,6 +121,6 @@ grep -rn "0[0-9]\{8,10\}" src/components src/app || echo 'no hardcoded phone'
   obvious placeholders (`TODO(data): street address`) and flag them. A
   plausible-looking Hanoi address entered now ends up in JSON-LD and in
   Google Business Profile.
-- Vietnamese field labels: write them; they are CMS chrome, not user-facing
+- Field labels in both languages: write them; they are CMS chrome, not user-facing
   marketing copy. If unsure of a term, use `TODO(copy)` with the English
   gist.
