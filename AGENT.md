@@ -129,6 +129,7 @@ src/
     payload.ts  cache-tags.ts
     secrets.ts              # loadSecrets() — the ONLY place a credential is read
     env.ts                  # requireEnv() — non-secret config only
+    log.ts                  # logger() — the ONLY place a log line is written
   payload.config.ts
   payload-types.ts          # GENERATED
 ```
@@ -256,6 +257,63 @@ style preferences.
   **Redeploy straight after rotating** or instances disagree about what a
   valid session is.
 
+### 5.8 Logging
+
+Every log line goes through `logger()` in `src/lib/log.ts` and has exactly
+this shape. `console.log` and bare `console.error` in application code are a
+bug, because they bypass the format, the level filter and the redaction.
+
+```
+[2026-10-04T12:45:13.482Z] [203.0.113.7] [INFO] [POST /api/revalidate] purged tag=page:vi:bang-gia
+[2026-10-04T12:45:13.901Z] [-]           [INFO] [vault:login] connected addr=https://…hashicorp.cloud:8200
+[2026-10-04T12:45:14.112Z] [-]           [ERROR] [vault:login] refused status=403 hint=namespace
+```
+
+| Field | Rule |
+| --- | --- |
+| timestamp | ISO 8601, UTC, milliseconds. Never local time — the deploy, the database and Vault are in three different zones |
+| source IP | First hop of `x-forwarded-for`. **`-` when there is no request**: module init, `next build`, `payload migrate`, a cron |
+| level | `DEBUG`, `INFO` or `ERROR`, upper case |
+| action | `METHOD /path` for anything serving a request, `module:operation` otherwise (`vault:login`, `r2:upload`) |
+| content | One short clause, then `key=value` pairs. Values are scalars, never an object or a request body |
+
+**Where it is mandatory.** Not everywhere — a rule that says "every
+function" produces noise that buries the one line that mattered:
+
+- Every route handler, at entry and at outcome.
+- Every Payload hook that changes data or authenticates.
+- **Every reach outside this process, on success as well as failure** — the
+  Vault round trip, and the resolved target of anything that stores data
+  (database host, media backend). A dependency that only logs when it breaks
+  cannot tell you whether it ever worked.
+  Log what this code can actually observe: `loadSecrets()` performs the Vault
+  request itself and logs it, whereas Postgres is connected by Payload's
+  adapter, so what is observable here is the configuration it was handed, not
+  a socket.
+- Every rejected request: a 401, a 403, a refused login.
+
+Everywhere else `log.debug()` is optional and silent unless
+`LOG_LEVEL=debug`. Pure functions — `FOLDER_FOR()`, `buildMetadata()`,
+`pageTag()` — log nothing at all.
+
+`resolveR2Config()` is the exception that proves the boundary rule rather
+than the purity one: it opens no connection, but it decides whether uploads
+go to R2 or to a filesystem that does not survive a deployment, and that
+decision silently taken is the failure T-04B exists to prevent. It logs the
+decision, once.
+
+**Never from a page or a layout.** Reading the source IP needs `headers()`,
+and that makes the route `ƒ`, which breaks 5.1. Logging lives in route
+handlers, hooks and library code, never in a rendered component.
+
+**Never log a credential, a session token, a password or a full request
+body**, and that includes inside an `Error` passed to `log.error()`. Section
+5.7 is the rule; this is where it is most easily broken, because the
+convenient thing to log is the object that holds the secret. A source IP is
+personal data under Decree 13/2023 — it earns its place in the line because
+it is what makes an abusive caller identifiable, but it is a reason not to
+log more than the format calls for.
+
 ---
 
 ## 6. Conventions
@@ -295,6 +353,7 @@ belongs in Vault, not here.
 | `NEXT_PUBLIC_SITE_URL` | `metadataBase`, canonical URLs, sitemap. `NEXT_PUBLIC_*` is inlined at build time, so Vault cannot supply it |
 | `R2_PUBLIC_URL` | Public base URL images are served from; feeds `images.remotePatterns` in `next.config.mjs` at build time. A CDN hostname, not a credential |
 | `MEDIA_LOCAL_DISK` | Development only: store uploads on disk instead of R2 |
+| `LOG_LEVEL` | `debug`, `info` or `error`. Optional; defaults to `info`. `debug` is for a local machine, not a deployed environment |
 | `VAULT_ADDR` | Vault cluster URL |
 | `VAULT_NAMESPACE` | `admin` on HCP Vault. Omitting it 403s every read, with a message that does not mention namespaces |
 | `VAULT_SECRET_PATH` | KV v2 path for this environment, e.g. `kv/autowash247/production` |
@@ -359,6 +418,9 @@ A task is complete when all of these hold:
       the loader's validation — and **not** to `.env.example`
 - [ ] No secret appears in a log line, an error message or the client
       bundle
+- [ ] Every route handler, hook and external connection the change touches
+      logs through `logger()` in the section 5.8 format — connections on
+      success as well as failure
 
 ---
 

@@ -34,6 +34,9 @@ crawl exclusion, and a **tested** backup.
 - Vault audit device enabled, so a read of a credential leaves a record.
   Being able to answer "who read this, and when" is the reason the
   credentials moved out of the hosting dashboard at all.
+  This is Vault's record of who read a credential, which is a different
+  question from what the app did with it — that is T-04C's application log.
+  Neither substitutes for the other.
 - **A restore actually performed once**, into a scratch database, and the
   result verified.
 

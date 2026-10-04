@@ -14,6 +14,8 @@
  * a crash names the problem on the first line of the log.
  */
 
+import { logger } from './log'
+
 /**
  * Keys held in Vault. Named identically to the environment variables they
  * replaced, so `grep` still finds every consumer.
@@ -148,6 +150,13 @@ const vaultFetch = async (
  * there is no lease to watch and no expiry to get wrong.
  */
 const login = async (addr: string): Promise<string> => {
+  const log = logger('vault:login')
+
+  // Logged before the attempt as well as after it, because a hang is the one
+  // failure the outcome line cannot report: the 10s timeout is indistinguishable
+  // from a cold start that never got going unless something recorded the try.
+  log.debug('authenticating', { addr })
+
   const body = await vaultFetch(`${addr}/v1/auth/approle/login`, {
     method: 'POST',
     body: JSON.stringify({
@@ -161,6 +170,13 @@ const login = async (addr: string): Promise<string> => {
   if (!token) {
     throw new Error('Vault AppRole login returned no client token.')
   }
+
+  // The success line is the point of this task. This runs once per process, at
+  // init, and it is the only evidence the Vault round trip ever worked — without
+  // it a cold start that authenticated looks exactly like one that did not, and
+  // T-04B's rule that a rotated value lands on the next start is unobservable.
+  // Neither the role id, the secret id nor the token appears here.
+  log.info('connected', { addr })
 
   return token
 }
@@ -187,6 +203,7 @@ const kvDataPath = (secretPath: string): string => {
 }
 
 const read = async (): Promise<Secrets> => {
+  const log = logger('vault:read')
   const addr = vaultEnv('VAULT_ADDR').replace(/\/$/, '')
   const path = kvDataPath(vaultEnv('VAULT_SECRET_PATH'))
 
@@ -228,12 +245,17 @@ const read = async (): Promise<Secrets> => {
     // Not fatal — Vault is shared and may hold keys for a later task. Worth
     // saying, because a typo in a key name is otherwise invisible: the write
     // succeeds and the read silently ignores it.
-    console.warn(
-      `Vault path ${path} holds keys this app does not read: ` +
-        `${unknown.join(', ')}. Check for a typo, or add them to ` +
-        `SECRET_KEYS in src/lib/secrets.ts.`,
-    )
+    //
+    // This is the one warn-shaped line in the repo and it is INFO, because the
+    // logger carries three levels. Design.md 5a records what that costs: in a
+    // stream filtered to errors, a mistyped key name is invisible again. Key
+    // NAMES are safe to log; their values are what must never appear.
+    log.info('unread keys at path', { path, keys: unknown.join(',') })
   }
+
+  // Count, never names-with-values: enough to confirm the path held what this
+  // process needed, with nothing a reader of the log could use.
+  log.info('loaded', { path, keys: Object.keys(secrets).length })
 
   return Object.freeze(secrets) as Secrets
 }
@@ -252,6 +274,20 @@ export const loadSecrets = (): Promise<Secrets> => {
       // being handed the same failure forever. Relevant in `next dev`,
       // where the module survives a restart of the thing that was broken.
       cached = undefined
+
+      // The throw alone is not enough. It surfaces as a stack trace, which is
+      // unfiltered by LOG_LEVEL, unsearchable alongside the other lines, and
+      // in a build it scrolls past above whatever the deploy prints next. One
+      // ERROR line in the format is what makes `grep ' [ERROR] '` find it.
+      //
+      // The message is safe: section 5.7 keeps values out of it by
+      // construction, and the role id and secret id are never in it.
+      // The reason goes in the content field, not a `key=value`: it is prose,
+      // often a sentence or three, and a field value has its spaces collapsed.
+      logger('vault:load').error(
+        error instanceof Error ? error.message : 'failed for an unknown reason',
+      )
+
       throw error
     })
   }

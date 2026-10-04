@@ -140,6 +140,66 @@ the credentials.
 
 See section 4, T-04B.
 
+### 1.5 Logging
+
+One logger, `logger()` in `src/lib/log.ts`, and one line format:
+
+```
+[timestamp] [source IP] [LEVEL] [action / method] [content]
+```
+
+```
+[2026-10-04T12:45:13.482Z] [203.0.113.7] [INFO]  [POST /api/revalidate] purged tag=page:vi:bang-gia
+[2026-10-04T12:45:13.901Z] [-]           [INFO]  [vault:login] connected addr=https://…hashicorp.cloud:8200
+[2026-10-04T12:45:14.112Z] [-]           [ERROR] [vault:login] refused status=403 hint=namespace
+[2026-10-04T12:45:15.220Z] [198.51.100.4] [ERROR] [POST /api/revalidate] rejected reason=bad-signature
+```
+
+**Why a format and not just `console.log`.** This deploy has no log
+aggregator and will not get one. The only tool is reading Vercel's log
+stream, and the question asked of it is almost always *"what happened to
+this request, and did the thing it depended on answer?"* Four fixed leading
+fields make that `grep`-able without one. Free-form `console.log` is not,
+and it is the reason a production incident becomes an afternoon.
+
+**The levels are three**, as requested: `DEBUG`, `INFO`, `ERROR`, filtered by
+`LOG_LEVEL` (default `info`). The cost of leaving out `WARN` is stated in
+section 5a — it is a real loss and this is where to look when it bites.
+
+**Connections log on success, not only on failure.** The Vault round trip is
+the case that forces this: it happens once at process init, and
+`[vault:login] connected` is the only evidence it ever worked. Without it, a
+cold start that silently reuses nothing looks exactly like a cold start that
+authenticated — and T-04B's rotation rule, where a value reaches a warm
+instance only on its next start, is unobservable. The same holds for Postgres
+and R2.
+
+**Two structural limits, both forced by decisions already made:**
+
+- **No source IP outside a request.** `loadSecrets()` runs at module init,
+  during `next build`, `payload migrate` and every cold start. There is no
+  request and no IP, so the field is `-`. The same is true of any pure
+  function. An IP in *every* line is not achievable.
+- **No logging from a page or a layout.** The IP comes from `headers()`,
+  which makes the route `ƒ` and breaks the static-rendering rule in
+  section 1.1 that the whole SEO design rests on. Logging therefore lives in
+  route handlers, Payload hooks and library code. This is the sharpest edge
+  of the design: the obvious place to add a log line is the one place it
+  must never go.
+
+**Redaction is part of the contract, not a convention.** T-04B guarantees
+that no secret reaches a log line, and a logger taking free-form content is
+the easiest way to undo that — the convenient thing to log is the object
+holding the credential. So values are scalars, request bodies are never
+logged, and `log.error()` takes a message plus named fields rather than a
+bare caught object.
+
+A source IP is personal data under Decree 13/2023. It is in the format
+because an abusive caller has to be identifiable, which is also the reason
+not to log more than these five fields.
+
+See section 4, T-04C.
+
 ---
 
 ## 2. Data model
@@ -337,10 +397,26 @@ seed script and `npm run dev`, with no hand-edited secrets; `.env.example`
 holds no key that Vault owns; no secret reaches a log line or the client
 bundle.
 
+**T-04C · Structured logging**
+`logger()` in `src/lib/log.ts` as the single way anything in this repo writes
+a log line, in the section 1.5 format, with `DEBUG`/`INFO`/`ERROR` filtered
+by `LOG_LEVEL`. Mandatory in route handlers, in Payload hooks that change
+data or authenticate, and on every external connection — Vault, Postgres and
+R2 — on success as well as failure. Optional `debug` elsewhere; nothing in a
+page or a layout, because reading the source IP would make it `ƒ`.
+Depends on: T-01, and T-04B for the Vault connection that is its first
+consumer.
+Done when: `grep -rn 'console\.' src/` finds nothing outside `src/lib/log.ts`
+and its tests; a cold start logs `[vault:login] connected` and a wrong
+`VAULT_SECRET_ID` logs an `ERROR` naming neither the role id nor the secret
+id; a request to a route handler logs its source IP, and a build logs `-` in
+that field; `LOG_LEVEL=info` silences every `debug` line; every public page
+is still `○` in the build output.
+
 > **Gate 1 — Admin login works, the deploy is green, both locales resolve,
-> and no credential sits in an environment variable except the Vault
-> bootstrap.**
-> Do not start Phase 2 until T-01 to T-04B are merged.
+> no credential sits in an environment variable except the Vault bootstrap,
+> and every connection and route says so in the log.**
+> Do not start Phase 2 until T-01 to T-04C are merged.
 >
 > **T-04A is the hard gate.** Localization decides the database schema, the
 > cache key, the routing and the metadata contract. Every task in Phase 2
@@ -570,6 +646,10 @@ Everything else can run alongside it. Work that parallelises cleanly:
 - T-02, T-03 and T-04 after T-01, by different agents.
 - T-04B after T-02 and T-04. It touches no schema and no routing, so it
   runs alongside T-04A.
+- T-04C after T-04B, and it must land before Phase 2 opens. It touches no
+  schema and no routing either, but every route handler and hook written
+  after it is expected to log — so doing it later means revisiting T-11,
+  T-12 and T-13 to add the lines they should have had.
 - T-15 can start as soon as T-04 lands; it touches no content.
 - T-15A needs only T-04A and T-15, so it can run alongside Phase 2.
 - T-16 can start as soon as T-05 and T-15A land — it does not wait for
@@ -625,6 +705,16 @@ and Payload's own CLI, which does `config = await config.default`. Wrapping
 the config in an `async` function needs no top-level `await` and asks nothing
 new of any loader. Verified against all four commands plus a running server;
 no prefetch-into-`process.env` fallback was needed.
+
+**Three log levels, and the missing one is `WARN`.** The logger carries
+`DEBUG`, `INFO` and `ERROR` because that is what was asked for. The gap is
+real: the natural use for `WARN` is the recoverable-but-wrong case, and this
+repo already has one — `secrets.ts` warns when a Vault path holds a key the
+app does not read, which catches a typo that would otherwise be invisible
+because the write succeeds and the read ignores it. That line becomes `INFO`,
+where it is quieter than it deserves. If a second such case appears, add
+`WARN` rather than promoting both to `ERROR` and training everyone to skim
+errors.
 
 **Slug-level static generation is still open.** `generateStaticParams()`
 cannot prerender per slug behind a literal folder name, so T-10's criterion —

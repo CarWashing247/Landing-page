@@ -45,11 +45,13 @@ Branch names are the file names without the `.md`:
 | [T-04](t-04-deploy-pipeline.md) | Deploy pipeline | T-01 |
 | [T-04A](t-04a-localization-foundation.md) | Localization foundation | T-01 |
 | [T-04B](t-04b-vault-secrets.md) | Secret loading from Vault | T-02, T-04 |
+| [T-04C](t-04c-structured-logging.md) | Structured logging | T-01, T-04B |
 
 > **Gate 1** — admin login works, the deploy is green, both locales resolve,
-> and no credential sits in an environment variable except the Vault
-> bootstrap. T-04A is the hard gate: it decides the schema, the cache key,
-> the routing and the metadata contract that all of Phase 2 reads.
+> no credential sits in an environment variable except the Vault bootstrap,
+> and every connection and route says so in the log. T-04A is the hard gate:
+> it decides the schema, the cache key, the routing and the metadata contract
+> that all of Phase 2 reads.
 
 ### Phase 2 — Content and SEO
 
