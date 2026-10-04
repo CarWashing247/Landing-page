@@ -202,7 +202,8 @@ re-reading the policy:
 
 ```bash
 # log in with the preview role, then:
-curl -H "x-vault-token: $TOKEN" "$VAULT_ADDR/v1/kv/data/autowash247/production"
+curl -H "x-vault-token: $TOKEN" -H "x-vault-namespace: admin" \
+  "$VAULT_ADDR/v1/kv/data/autowash247/production"
 # expect 403
 ```
 
@@ -214,13 +215,16 @@ redeploying appears to change nothing, which is how a 15-minute wait turns
 into an hour of looking at the wrong thing. Check and clear it:
 
 ```bash
-curl -H "x-vault-token: $ROOT_TOKEN" "$VAULT_ADDR/v1/sys/locked-users"
+curl -H "x-vault-token: $ROOT_TOKEN" -H "x-vault-namespace: admin" \
+  "$VAULT_ADDR/v1/sys/locked-users"
 # the alias_identifier it lists is the role_id, not the role name
-curl -X POST -H "x-vault-token: $ROOT_TOKEN" \
+curl -X POST -H "x-vault-token: $ROOT_TOKEN" -H "x-vault-namespace: admin" \
   "$VAULT_ADDR/v1/sys/locked-users/<mount_accessor>/unlock/<role_id>"
 ```
 
 The mount accessor comes from `GET /v1/sys/auth` under `approle/`.
+
+Every `curl` in this section carries `-H "x-vault-namespace: admin"` because HCP requires it and 403s without it — drop the header when you are talking to the self-hosted Vault in `docker-compose.yml`, which has no namespaces.
 
 ### 5.3 What lives where
 

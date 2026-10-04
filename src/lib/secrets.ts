@@ -48,6 +48,26 @@ export type Secrets = Readonly<
   { PAYLOAD_SECRET: string } & Partial<Record<Exclude<SecretKey, 'PAYLOAD_SECRET'>, string>>
 >
 
+/**
+ * A Vault failure, and whether trying again could possibly help.
+ *
+ * `permanent` means the credential or the policy is wrong: nothing changes
+ * until someone edits configuration and restarts, so a retry is not merely
+ * useless, it is harmful. Five failed AppRole logins lock the `role_id` for 15
+ * minutes, after which Vault refuses the *correct* `secret_id` identically —
+ * so a process that retries on every request turns a one-line fix into a
+ * 15-minute outage that outlasts the fix.
+ */
+class VaultError extends Error {
+  readonly permanent: boolean
+
+  constructor(message: string, permanent: boolean, options?: { cause?: unknown }) {
+    super(message, options)
+    this.name = 'VaultError'
+    this.permanent = permanent
+  }
+}
+
 /** Vault can be slow to answer under load; a build should fail, not hang. */
 const REQUEST_TIMEOUT_MS = 10_000
 
@@ -90,9 +110,13 @@ const vaultFetch = async (
   } catch (cause) {
     // A DNS failure, a refused connection or the timeout above. The cause
     // carries no credential, so it is safe to attach.
-    throw new Error(
+    // Transient by nature: a refused connection, a DNS failure or the timeout
+    // above. None of them counts against Vault's login-failure lockout, and
+    // the next attempt may well succeed.
+    throw new VaultError(
       `Could not reach Vault at ${process.env.VAULT_ADDR}. Locally, that ` +
         `usually means \`docker compose up -d\` has not been run.`,
+      false,
       { cause },
     )
   }
@@ -114,14 +138,28 @@ const vaultFetch = async (
     // whoever is debugging at the wrong thing.
     const hints: string[] = []
 
-    if (response.status === 403 && !namespace) {
+    const isLogin = pathname.endsWith('/auth/approle/login')
+
+    // On a read, the overwhelmingly likely cause is the policy: this AppRole is
+    // scoped to one path and was pointed at another. Observed misleading a real
+    // debugging session — a self-hosted Vault 403'd a read for exactly this
+    // reason while the only hint on offer talked about HCP namespaces.
+    if (response.status === 403 && !isLogin) {
       hints.push(
-        `VAULT_NAMESPACE is unset — HCP Vault requires "admin" and 403s ` +
-          `every request without it, without mentioning namespaces.`,
+        `The AppRole's policy grants read on one path only — check ` +
+          `VAULT_SECRET_PATH against the policy before anything else.`,
       )
     }
 
-    if (response.status === 403 && pathname.endsWith('/auth/approle/login')) {
+    if (response.status === 403 && !namespace) {
+      hints.push(
+        `If this is HCP Vault, VAULT_NAMESPACE must be "admin"; unset, it ` +
+          `403s every request without mentioning namespaces. Self-hosted ` +
+          `Vault does not use namespaces, so this is not the cause there.`,
+      )
+    }
+
+    if (response.status === 403 && isLogin) {
       // Found the hard way: five failed logins locks the role_id, and the
       // lockout then refuses the *correct* secret_id with this same message.
       // Fixing the credential and redeploying looks like it changed nothing.
@@ -132,10 +170,15 @@ const vaultFetch = async (
       )
     }
 
-    throw new Error(
+    // A 4xx is a verdict on the credential or the policy and will be identical
+    // next time; a 5xx or a 429 is Vault having a bad moment.
+    const permanent = response.status >= 400 && response.status < 500 && response.status !== 429
+
+    throw new VaultError(
       `Vault returned ${response.status} for ${pathname}` +
         (detail ? `: ${detail}` : '') +
         (hints.length > 0 ? `. ${hints.join(' ')}` : ''),
+      permanent,
     )
   }
 
@@ -270,10 +313,25 @@ let cached: Promise<Secrets> | undefined
 export const loadSecrets = (): Promise<Secrets> => {
   if (!cached) {
     cached = read().catch((error: unknown) => {
-      // Drop the rejected promise so a later caller retries rather than
-      // being handed the same failure forever. Relevant in `next dev`,
-      // where the module survives a restart of the thing that was broken.
-      cached = undefined
+      /**
+       * Whether a later caller retries depends on what went wrong.
+       *
+       * Transient (Vault unreachable, 5xx, 429): drop the rejected promise so
+       * the next caller tries again. This is what makes `next dev` usable —
+       * the module outlives a restart of the thing that was broken.
+       *
+       * Permanent (a 4xx: wrong secret_id, policy denies the path): keep the
+       * rejection and hand it to every later caller untried. Retrying cannot
+       * succeed, and it actively harms: five failed logins lock the `role_id`
+       * for 15 minutes, after which Vault refuses the *correct* secret_id in
+       * exactly the same way. Without this, one wrong variable plus any traffic
+       * turns a redeploy-to-fix into a lockout that outlives the fix. The cost
+       * is that correcting a credential needs a restart, which a deploy does
+       * anyway, and which is cheaper than the outage it replaces.
+       */
+      if (!(error instanceof VaultError) || !error.permanent) {
+        cached = undefined
+      }
 
       // The throw alone is not enough. It surfaces as a stack trace, which is
       // unfiltered by LOG_LEVEL, unsearchable alongside the other lines, and
