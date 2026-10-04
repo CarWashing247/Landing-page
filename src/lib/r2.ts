@@ -71,6 +71,30 @@ export const resolveR2Config = (secrets: Secrets): R2Config | null => {
     )
   }
 
+  /**
+   * "Development only" was a comment, not a rule, and a comment does not stop
+   * `MEDIA_LOCAL_DISK=true` being pasted into a hosting dashboard alongside the
+   * rest of `.env.example`. The result is silent: the storage plugin never
+   * loads, uploads land on the deploy's filesystem, and they disappear on the
+   * next deployment with nothing in the admin UI saying so.
+   *
+   * `VERCEL_ENV` is the signal, not `NODE_ENV`. `next build` sets
+   * `NODE_ENV=production` on a developer's machine too, so gating on it would
+   * refuse every local production build — the one this repo's verification
+   * steps actually run.
+   */
+  const deployedEnv = process.env.VERCEL_ENV
+
+  if (deployedEnv) {
+    throw new Error(
+      `MEDIA_LOCAL_DISK is set in a deployed environment (VERCEL_ENV=` +
+        `${deployedEnv}). Uploads would be written to the deploy's filesystem, ` +
+        `which does not survive the next deployment, and they would be lost ` +
+        `without any error. Unset it and give this environment the four R2 ` +
+        `credentials in Vault (AGENT.md section 7.2).`,
+    )
+  }
+
   log.info('storing on local disk', { reason: 'MEDIA_LOCAL_DISK', missing: missing.length })
 
   return null

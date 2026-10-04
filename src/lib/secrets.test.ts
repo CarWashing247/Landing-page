@@ -138,6 +138,48 @@ describe('loadSecrets', () => {
     await expect(loadSecrets()).rejects.toThrow(/PAYLOAD_SECRET/)
   })
 
+  /**
+   * The lockout this prevents: five failed AppRole logins lock the role_id for
+   * 15 minutes, after which Vault refuses the CORRECT secret_id identically.
+   * A process that retried a wrong credential on every request would turn one
+   * bad variable into an outage that outlives fixing it.
+   */
+  it('does not retry a 4xx — the credential cannot fix itself', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(fail(403, ['permission denied']))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(loadSecrets()).rejects.toThrow(/403/)
+    await expect(loadSecrets()).rejects.toThrow(/403/)
+    await expect(loadSecrets()).rejects.toThrow(/403/)
+
+    // One attempt in total, not three.
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('does retry when Vault was unreachable', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockRejectedValueOnce(new Error('ECONNREFUSED'))
+      .mockResolvedValueOnce(ok({ auth: { client_token: 'token' } }))
+      .mockResolvedValueOnce(ok({ data: { data: VALID } }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(loadSecrets()).rejects.toThrow(/Could not reach Vault/)
+    await expect(loadSecrets()).resolves.toMatchObject(VALID)
+  })
+
+  it('does retry a 503 — Vault having a bad moment is not a verdict', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(fail(503, ['service unavailable']))
+      .mockResolvedValueOnce(ok({ auth: { client_token: 'token' } }))
+      .mockResolvedValueOnce(ok({ data: { data: VALID } }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(loadSecrets()).rejects.toThrow(/503/)
+    await expect(loadSecrets()).resolves.toMatchObject(VALID)
+  })
+
   it('retries on the next call rather than caching a failure', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()
@@ -198,6 +240,24 @@ describe('loadSecrets failure messages', () => {
     )
 
     await expect(loadSecrets()).rejects.toThrow(/sys\/locked-users/)
+  })
+
+  it('blames the policy first on a 403 from the read, not the namespace', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn<typeof fetch>()
+        .mockResolvedValueOnce(ok({ auth: { client_token: 'token' } }))
+        .mockResolvedValueOnce(fail(403, ['permission denied'])),
+    )
+
+    const error = await rejection(loadSecrets())
+
+    // The likely cause leads; the HCP caveat follows and says when it applies.
+    expect(error.message).toMatch(/policy grants read on one path only/)
+    expect(error.message.indexOf('policy grants read')).toBeLessThan(
+      error.message.indexOf('HCP Vault'),
+    )
   })
 
   it('does not mention the lockout for a 403 on the read', async () => {

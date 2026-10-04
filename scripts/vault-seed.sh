@@ -23,12 +23,26 @@
 set -euo pipefail
 
 ADDR="${VAULT_ADDR:-http://127.0.0.1:8200}"
-TOKEN="${VAULT_DEV_ROOT_TOKEN:-dev-root-token}"
+# Named to match docker-compose.yml, which sets VAULT_DEV_ROOT_TOKEN_ID — that
+# is the variable Vault's dev mode itself reads. The old spelling here
+# (VAULT_DEV_ROOT_TOKEN) matched nothing, so changing the token in compose left
+# this script still sending the default and failing as "could not enable KV v2".
+TOKEN="${VAULT_DEV_ROOT_TOKEN_ID:-${VAULT_DEV_ROOT_TOKEN:-dev-root-token}}"
 MOUNT="${VAULT_MOUNT:-kv}"
 SECRET_PATH="${VAULT_SECRET_PATH:-$MOUNT/autowash247/development}"
 ROLE='autowash247-development'
 
 # The path within the mount: kv/autowash247/development -> autowash247/development
+#
+# Checked rather than assumed. `${VAR#prefix}` is a no-op when the prefix does
+# not match, so a VAULT_SECRET_PATH on a different mount used to sail through
+# and seed `kv/data/secret/autowash247/...` — one level below where the loader
+# reads, with no error anywhere.
+if [ "${SECRET_PATH%%/*}" != "$MOUNT" ]; then
+  echo "VAULT_SECRET_PATH ($SECRET_PATH) is not on VAULT_MOUNT ($MOUNT)." >&2
+  echo "Set VAULT_MOUNT to its first segment, or correct the path." >&2
+  exit 2
+fi
 REL_PATH="${SECRET_PATH#"$MOUNT"/}"
 
 # `node` rather than `jq`, which is not installed everywhere; this is a Node
@@ -60,6 +74,32 @@ api() {
     curl -sS -X "$method" -H "x-vault-token: $TOKEN" "$ADDR/v1/$path"
   fi
 }
+
+# A write whose result is discarded is a write that can fail silently, and this
+# script ends by printing a bootstrap pair that then does not work. Vault
+# answers a successful write with either an empty body or one with no "errors"
+# key, so anything containing "errors" is a failure worth stopping for.
+write() {
+  local what="$1" method="$2" path="$3" body="$4"
+  local out
+  out="$(api "$method" "$path" "$body")" || {
+    echo "    could not $what: curl failed talking to $ADDR" >&2
+    exit 1
+  }
+
+  if printf '%s' "$out" | grep -q '"errors":\[.'; then
+    echo "    could not $what: $out" >&2
+    exit 1
+  fi
+}
+
+# Checked up front: `openssl rand` inside a command substitution does not stop
+# the script when it is missing, and an absent openssl would seed
+# PAYLOAD_SECRET="" — which Payload accepts shapewise and signs sessions with.
+if ! command -v openssl >/dev/null 2>&1; then
+  echo "openssl is required to generate the secrets this script writes." >&2
+  exit 2
+fi
 
 if ! curl -sS --max-time 5 "$ADDR/v1/sys/health" >/dev/null 2>&1; then
   echo "No Vault at $ADDR. Start it with:" >&2
@@ -100,7 +140,7 @@ if [ "${1:-}" != '--force' ] &&
   api GET "$MOUNT/data/$REL_PATH" | json_field 'data.data.PAYLOAD_SECRET' >/dev/null; then
   echo "    already seeded, leaving it alone (--force to regenerate)"
 else
-  api POST "$MOUNT/data/$REL_PATH" "$(
+  write "write the secret" POST "$MOUNT/data/$REL_PATH" "$(
     cat <<JSON
 {"data":{
   "PAYLOAD_SECRET":"$(openssl rand -hex 32)",
@@ -108,7 +148,7 @@ else
   "PREVIEW_SECRET":"$(openssl rand -hex 16)"
 }}
 JSON
-  )" >/dev/null
+  )"
   echo "    PAYLOAD_SECRET, REVALIDATE_SECRET, PREVIEW_SECRET generated"
 fi
 echo "    R2 credentials NOT seeded — local dev uses MEDIA_LOCAL_DISK=true."
@@ -124,20 +164,29 @@ enable 'AppRole auth' 'sys/auth/approle' '{"type":"approle"}'
 # Read on this path and nothing else. The deployed policies are the same
 # shape, which is what keeps a leaked preview role out of production.
 echo "==> Writing policy and role $ROLE"
-api PUT "sys/policies/acl/$ROLE" "$(
+write "write the policy" PUT "sys/policies/acl/$ROLE" "$(
   node -e 'process.stdout.write(JSON.stringify({
     policy: `path "${process.argv[1]}/data/${process.argv[2]}" {\n  capabilities = ["read"]\n}\n`,
   }))' "$MOUNT" "$REL_PATH"
-)" >/dev/null
+)"
 
-api POST "auth/approle/role/$ROLE" "$(
+write "write the role" POST "auth/approle/role/$ROLE" "$(
   cat <<JSON
 {"token_policies":"$ROLE","token_ttl":"20m","token_max_ttl":"1h"}
 JSON
-)" >/dev/null
+)"
 
-ROLE_ID="$(api GET "auth/approle/role/$ROLE/role-id" | json_field 'data.role_id')"
-SECRET_ID="$(api POST "auth/approle/role/$ROLE/secret-id" '{}' | json_field 'data.secret_id')"
+# `json_field` exits non-zero when the field is absent, which is the only way
+# to tell a real id from an error body. Printing an empty VAULT_ROLE_ID as
+# though it were the bootstrap is the failure mode being closed here.
+ROLE_ID="$(api GET "auth/approle/role/$ROLE/role-id" | json_field 'data.role_id')" || {
+  echo "could not read the role id back — the role was not created" >&2
+  exit 1
+}
+SECRET_ID="$(api POST "auth/approle/role/$ROLE/secret-id" '{}' | json_field 'data.secret_id')" || {
+  echo "could not issue a secret id for $ROLE" >&2
+  exit 1
+}
 
 cat <<EOF
 

@@ -142,9 +142,18 @@ else
         -H "x-vault-token: $tok" \
         ${VAULT_NAMESPACE:+-H "x-vault-namespace: $VAULT_NAMESPACE"} \
         "${VAULT_ADDR%/}/v1/$cross")"
-      if [[ "$cross_status" == "403" || "$cross_status" == "404" ]]; then
+      # 403 only. A denied read of a path that does not exist still answers
+      # 403 — Vault refuses before it looks — so 404 does not mean "nothing
+      # there to read". It means the policy ALLOWED the read and the path
+      # happened to be empty, which is the failure this check exists to catch.
+      if [[ "$cross_status" == "403" ]]; then
         printf '  \033[32mok\033[0m    %-52s %s on %s\n' "cannot read another environment's secrets" "$cross_status" "$other"
         pass=$((pass + 1))
+      elif [[ "$cross_status" == "404" ]]; then
+        printf '  \033[31mFAIL\033[0m  %-52s 404 on %s\n' "cannot read another environment's secrets" "$other"
+        printf '        404 means the read was PERMITTED and the path is merely empty.\n'
+        printf '        A correctly scoped AppRole gets 403 whether or not it exists.\n'
+        fail=$((fail + 1))
       else
         printf '  \033[31mFAIL\033[0m  %-52s got %s on %s\n' "cannot read another environment's secrets" "$cross_status" "$other"
         printf '        one AppRole per environment, read on its own path only\n'
@@ -158,11 +167,21 @@ fi
 
 echo
 echo "Media"
+media_status="$(status "$BASE/api/media?limit=1&depth=0")"
 media="$(body "$BASE/api/media?limit=1&depth=0")"
-if [[ "$media" == *'"docs":[]'* || "$media" != *'"docs"'* ]]; then
+if [[ "$media_status" != "200" ]]; then
+  # Previously any response without "docs" was reported as "nothing uploaded
+  # yet" and skipped, so a 403, a 500 or a timeout passed the gate silently.
+  printf '  \033[31mFAIL\033[0m  %-52s got %s\n' "media API responds" "$media_status"
+  printf '        a non-200 here is a broken media API, not an empty library\n'
+  fail=$((fail + 1))
+elif [[ "$media" == *'"docs":[]'* ]]; then
   printf '  \033[33mskip\033[0m  %s\n' "no media uploaded yet — upload one and re-run"
 else
-  url="$(printf '%s' "$media" | sed -n 's/.*"url":"\([^"]*\)".*/\1/p' | head -1)"
+  # grep -o takes the FIRST "url" in the document. The previous sed was greedy
+  # (`.*"url":"`), so it captured the LAST one — a generated size variant
+  # rather than the document's own URL, and then checked the wrong object.
+  url="$(printf '%s' "$media" | grep -o '"url":"[^"]*"' | head -1 | sed 's/^"url":"//; s/"$//')"
   printf '  info  first media URL: %s\n' "$url"
   if [[ "$url" == http* && "$url" != "$BASE"* ]]; then
     printf '  \033[32mok\033[0m    %-52s served off-origin\n' "images come from R2, not the deploy"
