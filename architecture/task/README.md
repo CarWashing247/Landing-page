@@ -44,10 +44,12 @@ Branch names are the file names without the `.md`:
 | [T-03](t-03-users-roles-access.md) | Users, roles and access control | T-01 |
 | [T-04](t-04-deploy-pipeline.md) | Deploy pipeline | T-01 |
 | [T-04A](t-04a-localization-foundation.md) | Localization foundation | T-01 |
+| [T-04B](t-04b-vault-secrets.md) | Secret loading from Vault | T-02, T-04 |
 
-> **Gate 1** — admin login works, the deploy is green, and both locales
-> resolve. T-04A is the hard gate: it decides the schema, the cache key, the
-> routing and the metadata contract that all of Phase 2 reads.
+> **Gate 1** — admin login works, the deploy is green, both locales resolve,
+> and no credential sits in an environment variable except the Vault
+> bootstrap. T-04A is the hard gate: it decides the schema, the cache key,
+> the routing and the metadata contract that all of Phase 2 reads.
 
 ### Phase 2 — Content and SEO
 
@@ -100,7 +102,7 @@ T-01 → T-04A → T-06 → T-08 → T-09 → T-10 → T-11 → T-14 → T-17 �
 ```
 
 Everything else runs alongside it. Parallelises cleanly: T-02/T-03/T-04
-after T-01; T-15 and T-16 as soon as T-05 lands; T-13 needs only T-10, so
+after T-01; T-04B after T-02 and T-04, alongside T-04A; T-15 and T-16 as soon as T-05 lands; T-13 needs only T-10, so
 it runs while T-11 and T-12 are in flight; T-22 is independent of all UI
 work.
 
@@ -121,6 +123,7 @@ own, but collected here so they can be chased in one go:
 | --- | --- |
 | T-02 | R2 bucket name and public hostname |
 | T-04 | production domain |
+| T-04B | HCP Vault cluster (paid) — cluster URL, namespace, and one AppRole per environment |
 | T-05 | real address, phone, opening hours, price range, lat/lng |
 | T-07, T-23 | package names, prices, durations |
 | T-15 | brand palette |

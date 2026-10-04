@@ -40,6 +40,7 @@ graph TB
 
     pg[("PostgreSQL<br/><i>all content, per locale</i>")]
     r2[("Cloudflare R2<br/><i>media + generated sizes</i>")]
+    vault[("HashiCorp Vault<br/><i>HCP · KV v2 per environment</i>")]
 
     visitor --> edge
     crawler --> edge
@@ -54,6 +55,11 @@ graph TB
     restapi --> payload
     draft --> landing
     payload --> pg
+    secrets["loadSecrets()<br/><i>once per process, at init</i>"]
+    secrets -->|"AppRole · one KV read"| vault
+    payload -.->|"PAYLOAD_SECRET · R2 creds"| secrets
+    revalidate -.->|"REVALIDATE_SECRET"| secrets
+    draft -.->|"PREVIEW_SECRET"| secrets
     payload -->|"afterChange"| revalidate
     revalidate -->|"revalidateTag"| edge
     crawler -. "img src" .-> r2
@@ -62,9 +68,18 @@ graph TB
 
     classDef store fill:#1f3a5f,stroke:#5b9bd5,color:#fff
     classDef infra fill:#2d2d3a,stroke:#8a8aa3,color:#fff
-    class pg,r2 store
-    class edge,rewrites infra
+    class pg,r2,vault store
+    class edge,rewrites,secrets infra
 ```
+
+**Why the credential path is dotted.** Nothing fetches a secret per
+request. `loadSecrets()` runs once when the process initialises, caches the
+values at module scope and discards the Vault token, so a warm instance pays
+one round trip for its whole life. Public pages are statically generated and
+edge-cached, so they never reach a lambda at all — the cost lands on
+`/admin`, `/api/**` and the two secret-guarded routes. The flip side is that
+**Vault is a build-time dependency**: `next build` and `payload migrate`
+both load the Payload config. See `Design.md` section 1.4.
 
 **Why images bypass the deploy.** `disablePayloadAccessControl` makes
 `next/image` and crawlers fetch straight from R2's public host. Proxying the
@@ -157,9 +172,13 @@ graph TB
         p4["GET /api/media"]
     end
 
-    subgraph secret["Shared secret"]
+    subgraph secret["Shared secret — value from Vault at init"]
         s1["/api/revalidate<br/><i>REVALIDATE_SECRET · 401 otherwise</i>"]
         s2["/api/draft<br/><i>PREVIEW_SECRET</i>"]
+    end
+
+    subgraph boot["Bootstrap — environment variables"]
+        b1["VAULT_ROLE_ID + VAULT_SECRET_ID<br/><i>the one secret Vault cannot hold</i>"]
     end
 
     subgraph staff["Signed in"]
@@ -176,8 +195,17 @@ graph TB
     class p1,p2,p3,p4 pub
     class s1,s2 sec
     class e1,a1 stf
-    class blocked no
+    class blocked,b1 no
 ```
+
+**Where the trust chain ends.** Both shared secrets are read from Vault, so
+rotating one is a Vault write plus a redeploy, not a dashboard edit. But the
+AppRole pair that unlocks Vault lives in the hosting environment's
+variables, so **access to the Vercel project is access to that
+environment's secrets**. One AppRole per environment keeps a leaked preview
+role out of production. Say this plainly in the handover — Vault makes reads
+auditable and rotation possible; it does not make the hosting dashboard
+untrusted.
 
 Two of these are load-bearing and were found by testing, not by reading:
 

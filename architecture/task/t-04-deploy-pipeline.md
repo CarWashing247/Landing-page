@@ -5,7 +5,7 @@
 | Phase | 1 — Foundation |
 | Branch | `t-04-deploy-pipeline` |
 | Depends on | T-01 |
-| Blocks | T-15, and Gate 1 |
+| Blocks | T-04B, T-15, and Gate 1 |
 | Critical path | no — parallel with T-02, T-03 |
 
 ## Goal
@@ -20,7 +20,9 @@ which is not a claim this project can act on.
 
 - Vercel project linked to the repo, Node and build command set.
 - Postgres instance per environment (production, preview).
-- Every variable from AGENT.md section 7 set in Vercel, per environment.
+- Every variable from AGENT.md section 7.1 set in Vercel, per environment.
+  Credentials are **not** among them: T-04B moves them to Vault, and this
+  task only has to set the Vault bootstrap alongside the rest.
 - Migrations applied as part of the deploy (`payload migrate && next build`
   or equivalent in the build command).
 - Preview deployments on pull requests.
@@ -42,8 +44,13 @@ which is not a claim this project can act on.
 2. Provision Postgres for production and for preview. Preview must not
    point at the production database — an editor's draft in preview must not
    be able to overwrite live content.
-3. Set environment variables per environment, including distinct
-   `PAYLOAD_SECRET`, `REVALIDATE_SECRET` and `PREVIEW_SECRET` values.
+3. Set environment variables per environment (AGENT.md section 7.1).
+   `PAYLOAD_SECRET`, `REVALIDATE_SECRET`, `PREVIEW_SECRET` and the four R2
+   credentials come from Vault instead — set them there, distinct per
+   environment, and set only `VAULT_ADDR`, `VAULT_NAMESPACE`,
+   `VAULT_SECRET_PATH`, `VAULT_ROLE_ID` and `VAULT_SECRET_ID` in Vercel.
+   If T-04B is not merged yet, set them in Vercel for now and say so in the
+   PR, so the cleanup is not forgotten.
 4. Push to `main`, confirm green, open `/admin` on the deployed URL.
 5. Open a throwaway PR and confirm the preview deployment builds and serves.
 6. Document the variable list and which environment each value belongs to
@@ -72,7 +79,8 @@ Inherits AGENT.md section 8. In addition:
 - [ ] A PR produces a working preview deployment that serves the frontend.
 - [ ] Migrations are applied by the deploy, verified by checking a fresh
       database comes up with the expected tables.
-- [ ] Preview and production use different databases and different secrets.
+- [ ] Preview and production use different databases, different secrets and
+      different Vault paths and AppRoles.
 - [ ] `NEXT_PUBLIC_SITE_URL` on each environment matches that environment's
       own URL.
 
@@ -101,8 +109,12 @@ its section 8 for what the script cannot check and you must look at by hand.
 
 - Production domain: if not yet registered, flag it and note that
   `NEXT_PUBLIC_SITE_URL` must be revisited before T-21 submits a sitemap.
+- If the Vault cluster does not exist yet, the credentials sit in Vercel
+  until T-04B. Say so explicitly in the PR — this is the state the project
+  is leaving, so an unflagged "temporary" here becomes permanent.
 
 ---
 
-> **Gate 1 — admin login works and the deploy is green.**
-> T-01 to T-04 must be merged before any Phase 2 task starts.
+> **Gate 1 — admin login works, the deploy is green, and no credential sits
+> in an environment variable except the Vault bootstrap.**
+> T-01 to T-04B must be merged before any Phase 2 task starts.

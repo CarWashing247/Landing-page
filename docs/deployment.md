@@ -17,8 +17,8 @@ order: each step assumes the one before it.
 
 ## 0. What you are deploying
 
-One Next.js deploy containing both the public site and the CMS, plus two
-external stores:
+One Next.js deploy containing both the public site and the CMS, plus three
+external dependencies:
 
 | Piece | Where it ends up |
 | --- | --- |
@@ -28,6 +28,7 @@ external stores:
 | Payload REST API | `/api/**` |
 | Content | PostgreSQL (external) |
 | Images | Cloudflare R2 (external, public host) |
+| Credentials | HashiCorp Vault (external, read at process init) |
 
 See [`architecture/architecture-diagram.md`](../architecture/architecture-diagram.md).
 
@@ -43,6 +44,9 @@ You need:
       anything that gives a connection string does.
 - [ ] A Cloudflare account with R2 enabled. **R2 requires a payment method
       even on the free tier.**
+- [ ] An HCP Vault account with permission to create a cluster. **HCP Vault
+      Dedicated is a paid, recurring cost** — confirm it before you start,
+      because the app does not boot without a reachable Vault.
 - [ ] `node --version` ≥ 20, and the repo installing cleanly with
       `npm install`.
 
@@ -100,14 +104,18 @@ waiting on an IP allow-list.
 
 Both are needed, and confusing them is the most common mistake here:
 
-| Variable | Example | Used by |
-| --- | --- | --- |
-| `R2_ENDPOINT` | `https://abc123.r2.cloudflarestorage.com` | the server, to upload |
-| `R2_PUBLIC_URL` | `https://media.autowash247.vn` | the browser, to display |
+| Variable | Example | Used by | Lives in |
+| --- | --- | --- | --- |
+| `R2_ENDPOINT` | `https://abc123.r2.cloudflarestorage.com` | the server, to upload | Vault |
+| `R2_PUBLIC_URL` | `https://media.autowash247.vn` | the browser, to display | environment |
 
 `R2_PUBLIC_URL` is also added to `images.remotePatterns` in
 `next.config.mjs`. Without it `next/image` refuses to optimise the image and
-the page renders nothing.
+the page renders nothing. That build-time read is why it is the one R2
+variable that stays an environment variable rather than moving into Vault.
+
+Keep the access key id and secret to hand — they go into Vault in section 5,
+not into Vercel.
 
 ---
 
@@ -118,33 +126,52 @@ the page renders nothing.
 3. Leave the build command alone — [`vercel.json`](../vercel.json) sets it to
    `npm run migrate:deploy && npm run build`, so migrations run before the
    build and a schema mismatch fails the deploy instead of reaching users.
-4. Do **not** deploy yet. Set the environment variables first; without them
-   the build fails by design (see step 5).
+4. Do **not** deploy yet. Set up Vault and the environment variables first;
+   without them the build fails by design (see section 5). The build loads
+   the Payload config, which reads `PAYLOAD_SECRET` from Vault, so Vault has
+   to be reachable from Vercel's build container — not only at runtime.
+
+**`migrate:deploy` is what makes an unreachable Vault fail the deploy, and
+it has to stay first.** Measured, not assumed: `next build` on its own
+*prints* the Vault error and still exits 0, because the pages that need
+secrets are the dynamic ones (`ƒ`) and Next.js defers their failure to
+request time. The deploy would be green and `/admin` would 500. `payload
+migrate` loads the same config and exits 1, so the `&&` is load-bearing:
+anything that reorders those two commands, or drops the migration step,
+silently takes the fail-closed guarantee with it.
 
 ---
 
-## 5. Environment variables
+## 5. Vault, environment variables and secrets
 
-Set these in Vercel under Settings → Environment Variables. Everything in
-[`.env.example`](../.env.example) is required except where noted.
+Two sources, and which one a value comes from depends on **when it is
+needed**, not on how sensitive it is. AGENT.md section 7 is the contract;
+this section is how to set it up.
 
-| Variable | Production | Preview | Notes |
-| --- | --- | --- | --- |
-| `DATABASE_URI` | production DB | **preview DB** | never the same value |
-| `PAYLOAD_SECRET` | unique | unique | **different per environment** |
-| `NEXT_PUBLIC_SITE_URL` | `https://<your-domain>` | the preview URL | no trailing slash |
-| `REVALIDATE_SECRET` | unique | unique | T-11 webhook |
-| `PREVIEW_SECRET` | unique | unique | T-12 draft preview |
-| `R2_BUCKET` | same | same | |
-| `R2_ACCESS_KEY_ID` | same | same | |
-| `R2_SECRET_ACCESS_KEY` | same | same | |
-| `R2_ENDPOINT` | same | same | S3 endpoint |
-| `R2_PUBLIC_URL` | same | same | public host |
-| `MEDIA_LOCAL_DISK` | **do not set** | **do not set** | development only |
-| `E2E_ADMIN_EMAIL` / `E2E_ADMIN_PASSWORD` | — | — | local testing only |
-| `E2E_EDITOR_EMAIL` / `E2E_EDITOR_PASSWORD` | — | — | local testing only |
+### 5.1 Create the Vault cluster
 
-Generate each secret separately:
+**HCP Vault Dedicated**, because Vercel's build containers and lambdas run
+on Vercel's network: Vault has to be reachable over the public internet with
+TLS. Self-hosting makes unsealing, certificate renewal and backups your
+problem, and an unseal nobody notices means the site can neither build nor
+cold-start.
+
+1. Create the cluster. Note its URL — that is `VAULT_ADDR`.
+2. `VAULT_NAMESPACE` is `admin` on HCP. **Set it.** Omitted, every read
+   returns 403 with a message that never mentions namespaces, which is an
+   hour of debugging the wrong thing.
+3. Enable a KV **v2** mount at `kv/`. Version 1 silently lacks the
+   `kv/data/...` path the loader reads.
+4. Create three secrets:
+
+```
+kv/autowash247/production
+kv/autowash247/preview
+kv/autowash247/development     # each developer seeds their own locally
+```
+
+Each holds the keys in section 5.3. Generate the three signing secrets
+per path, never shared:
 
 ```bash
 openssl rand -hex 32    # PAYLOAD_SECRET
@@ -155,11 +182,121 @@ openssl rand -hex 16    # REVALIDATE_SECRET, PREVIEW_SECRET
 session tokens, so a shared value means a session minted in preview is
 accepted in production.
 
+### 5.2 Create one AppRole per environment
+
+One role per path, each with read on its own path and nothing else, so a
+leaked preview role cannot read production. Policy shape:
+
+```hcl
+path "kv/data/autowash247/production" {
+  capabilities = ["read"]
+}
+```
+
+Record each `role_id` and issue a `secret_id`. Those two are
+`VAULT_ROLE_ID` and `VAULT_SECRET_ID`, and they are **the one credential
+that cannot live in Vault** — a secret store cannot hold the key to itself.
+
+Verify the scoping by attempting the thing it forbids, rather than by
+re-reading the policy:
+
+```bash
+# log in with the preview role, then:
+curl -H "x-vault-token: $TOKEN" "$VAULT_ADDR/v1/kv/data/autowash247/production"
+# expect 403
+```
+
+**Before you test a wrong `secret_id` on purpose, know that Vault locks the
+role.** Five failed logins against a `role_id` within 15 minutes lock that
+`role_id` for 15 minutes, and the lockout then refuses the *correct*
+`secret_id` with the same `permission denied`. Fixing the variable and
+redeploying appears to change nothing, which is how a 15-minute wait turns
+into an hour of looking at the wrong thing. Check and clear it:
+
+```bash
+curl -H "x-vault-token: $ROOT_TOKEN" "$VAULT_ADDR/v1/sys/locked-users"
+# the alias_identifier it lists is the role_id, not the role name
+curl -X POST -H "x-vault-token: $ROOT_TOKEN" \
+  "$VAULT_ADDR/v1/sys/locked-users/<mount_accessor>/unlock/<role_id>"
+```
+
+The mount accessor comes from `GET /v1/sys/auth` under `approle/`.
+
+### 5.3 What lives where
+
+In Vault, read once at process init by `loadSecrets()`:
+
+| Key | Production | Preview | Notes |
+| --- | --- | --- | --- |
+| `PAYLOAD_SECRET` | unique | unique | **must differ per environment** |
+| `REVALIDATE_SECRET` | unique | unique | T-11 webhook |
+| `PREVIEW_SECRET` | unique | unique | T-12 draft preview |
+| `R2_BUCKET` | same | same | |
+| `R2_ACCESS_KEY_ID` | same | same | |
+| `R2_SECRET_ACCESS_KEY` | same | same | |
+| `R2_ENDPOINT` | same | same | S3 endpoint |
+
+In Vercel under Settings → Environment Variables. Everything in
+[`.env.example`](../.env.example), and nothing else:
+
+| Variable | Production | Preview | Notes |
+| --- | --- | --- | --- |
+| `DATABASE_URI` | production DB | **preview DB** | never the same value |
+| `NEXT_PUBLIC_SITE_URL` | `https://<your-domain>` | the preview URL | no trailing slash; inlined at build time, so Vault cannot supply it |
+| `R2_PUBLIC_URL` | same | same | public host. Read by `next.config.mjs` at build time for `images.remotePatterns`; a CDN hostname, not a credential |
+| `VAULT_ADDR` | same | same | cluster URL |
+| `VAULT_NAMESPACE` | `admin` | `admin` | HCP requirement |
+| `VAULT_SECRET_PATH` | `kv/autowash247/production` | `kv/autowash247/preview` | **different per environment** |
+| `VAULT_ROLE_ID` | production role | preview role | **different per environment** |
+| `VAULT_SECRET_ID` | production role | preview role | **different per environment** |
+| `MEDIA_LOCAL_DISK` | **do not set** | **do not set** | development only |
+| `E2E_*` | — | — | local testing only |
+
+Access to the Vercel project is therefore access to that environment's
+secrets, because it holds the bootstrap. Vault makes reads auditable,
+rotation possible, and keeps preview out of production; it does not make the
+Vercel dashboard untrusted. Say that plainly in the handover.
+
 **Never set `MEDIA_LOCAL_DISK` in a deployed environment.** It makes uploads
 go to the deploy's filesystem, which does not survive the next deployment —
-the images silently disappear. Leaving the R2 variables unset without it
-makes the app refuse to start, naming what is missing. That refusal is the
-feature.
+the images silently disappear. Leaving the R2 credentials out of Vault
+without it makes the app refuse to start, naming what is missing. That
+refusal is the feature.
+
+### 5.4 Rotating a secret
+
+```bash
+# 1. write the new value to the Vault path for that environment
+# 2. REDEPLOY IMMEDIATELY
+```
+
+Secrets are read at process init and cached for the life of the process, so
+a rotated value reaches a warm instance only on its next cold start. Between
+the write and the redeploy, instances disagree: a `PAYLOAD_SECRET` rotation
+leaves some sessions validating and some not, and a `REVALIDATE_SECRET`
+rotation makes the webhook 401 intermittently. The redeploy is not
+housekeeping — it is the second half of the rotation.
+
+### 5.5 Local development
+
+Same code path, same auth method, against the Vault in
+`docker-compose.yml`:
+
+```bash
+docker compose up -d        # Postgres + Vault (dev mode)
+./scripts/vault-seed.sh     # enables KV v2 + AppRole, seeds, prints the bootstrap
+# paste the four VAULT_* lines it prints into .env
+npm run dev
+```
+
+Vault dev mode is in-memory and keeps nothing, so re-run the seed script
+after every `docker compose up`. It leaves existing values alone; pass
+`--force` to regenerate them, which invalidates any admin session signed
+with the old `PAYLOAD_SECRET`.
+
+Local dev sets `MEDIA_LOCAL_DISK=true`, which makes the four R2 credentials
+optional — the seed script does not write them. Add them to the dev path
+only if you need to exercise the real R2 upload path.
 
 ---
 
@@ -240,6 +377,11 @@ What it cannot check, and you should look at by hand:
       on your own domain. If it is on your domain, the storage plugin is not
       active and uploads are going to a filesystem that will lose them.
 - [ ] `NEXT_PUBLIC_SITE_URL` matches the environment you are looking at.
+- [ ] No secret appears in the build log. The loader never logs a value,
+      but a `console.log` added during debugging would.
+- [ ] This environment's AppRole **cannot** read another environment's
+      path. Attempt it and expect a 403 (section 5.2); reading the policy
+      is not the same as testing it.
 
 ---
 
@@ -255,6 +397,10 @@ Confirm on the preview URL:
       canonical tags on a preview point at production.
 - [ ] The database is the preview one. Editing content here must not change
       production.
+- [ ] `VAULT_SECRET_PATH` is the preview path and the AppRole is the preview
+      role. A preview deploy reading production secrets would mint sessions
+      valid in production, which is the failure the per-environment
+      `PAYLOAD_SECRET` exists to prevent.
 
 A preview database starts empty, so it needs its own first administrator.
 
@@ -288,7 +434,15 @@ read the new schema, and *after* if the new schema is a superset.
 | Symptom | Cause to check first |
 | --- | --- |
 | Build fails: "Media storage is not configured" | An R2 variable is missing. This is deliberate — see step 5 |
-| Build fails: "Missing required environment variable" | `DATABASE_URI` or `PAYLOAD_SECRET` not set for that environment |
+| Build fails: "Missing required environment variable" | `DATABASE_URI` not set for that environment |
+| Build fails: "Could not reach Vault" | `VAULT_ADDR` wrong, or the cluster is unreachable from Vercel's network. The build loads the Payload config, so it needs secrets too |
+| Every Vault read returns 403 | `VAULT_NAMESPACE` unset — HCP requires `admin` and its error does not say so |
+| Build fails: "invalid role or secret ID" | `VAULT_ROLE_ID`/`VAULT_SECRET_ID` mismatched, or a `secret_id` that has expired or exhausted its uses |
+| A 403 on login that survives fixing `VAULT_SECRET_ID` | Vault locked the `role_id` after 5 failed logins and refuses the correct one identically for 15 minutes. `GET /v1/sys/locked-users`, then unlock — section 5.2 |
+| Deploy is green but `/admin` 500s with a Vault error | The build command no longer runs `npm run migrate:deploy` first. `next build` alone exits 0 on a Vault failure — section 4 |
+| Vault returns 404 for the secret path | KV v1 mount instead of v2, or `VAULT_SECRET_PATH` missing its mount prefix (`kv/autowash247/production`, not `autowash247/production`) |
+| All admin sessions suddenly invalid | `PAYLOAD_SECRET` rotated. Expected — redeploy to finish the rotation |
+| Sessions valid on some requests and not others | A rotation without a redeploy; warm instances still hold the old value |
 | Site builds but every page is 404 | A rewrite rule is missing from `next.config.mjs` — folder names do not create URLs here |
 | `/` works, `/en` is 404 | The `/en` rewrites are missing or out of order |
 | Pages show `ƒ` instead of `○` | Something reads `headers()` or `searchParams` at the top of a route |
@@ -308,7 +462,13 @@ Honest list of what remains manual after this document:
 
 - Creating the Vercel project, the databases and the R2 bucket.
 - Setting environment variables. There is no committed source for them, by
-  design — they are secrets.
+  design. The credentials are in Vault, which gives them an auditable home;
+  the AppRole bootstrap pair stays manual, because a secret store cannot
+  hold the key to itself.
+- Creating the HCP Vault cluster, its KV v2 mount and one AppRole per
+  environment. Section 5.
+- Rotating secrets, and the redeploy that has to follow each rotation
+  (section 5.4). T-22 owns writing the schedule down.
 - The custom domain and DNS.
 - Postgres backups and a tested restore (**T-22**).
 - Search Console verification and sitemap submission (**T-21**).
