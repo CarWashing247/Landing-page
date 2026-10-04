@@ -5,7 +5,59 @@ write path are independent, and that independence is the whole point of the
 architecture: it is why a non-developer can change a meta description and
 see it live in seconds, with no build.
 
+There is a third flow now, and it runs before either of them: the process
+has to get its credentials before it can serve or write anything.
+
 If this file and `Design.md` disagree, `Design.md` wins.
+
+---
+
+## 0. Boot path — the process gets its credentials
+
+Once per process, not once per request. Everything below this section
+assumes it has already succeeded.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Proc as Process start<br/><i>build · dev · cold start</i>
+    participant S as loadSecrets()
+    participant V as Vault (HCP)
+    participant P as Payload config
+
+    Proc->>S: first import
+    S->>S: read VAULT_ADDR · NAMESPACE · PATH · ROLE_ID · SECRET_ID<br/><i>from env — the bootstrap</i>
+    S->>V: POST auth/approle/login
+    alt role or secret_id wrong
+        V-->>S: 400 / 403
+        S-->>Proc: throw, naming Vault<br/><b>the process does not start</b>
+    else ok
+        V-->>S: client token (short TTL)
+        S->>V: GET kv/autowash247/ · this environment
+        V-->>S: PAYLOAD_SECRET · REVALIDATE_SECRET · PREVIEW_SECRET · R2 creds
+        S->>S: validate every key present<br/>freeze · cache at module scope<br/><b>discard the token</b>
+        S-->>P: values
+        P->>P: buildConfig()
+    end
+    Note over S,V: No renewal logic: the values are cached,<br/>the session is not. One round trip per process.
+```
+
+**Why it throws instead of falling back.** An app that boots with a
+guessable `PAYLOAD_SECRET` issues sessions that look valid and says nothing.
+A crash names the problem on the first line of the log. There is
+deliberately no `.env` fallback and no default — see `Design.md` 1.4.
+
+**What can go wrong here**
+
+| Symptom | First thing to check |
+| --- | --- |
+| Every Vault read 403s, message says nothing about why | `VAULT_NAMESPACE` unset — HCP requires `admin` |
+| Build fails but the app ran yesterday | Vault unreachable or sealed; `next build` loads the Payload config, so it needs secrets too |
+| Admin sessions all invalid after a rotation | `PAYLOAD_SECRET` rotated without a redeploy — warm instances still hold the old value |
+| `/api/revalidate` 401s every webhook | `REVALIDATE_SECRET` differs between the Payload hook's instance and the route's, i.e. a partial rotation |
+| Preview deploy can read production secrets | one AppRole reused across environments instead of one per path |
+| Secret visible in the browser | something was given a `NEXT_PUBLIC_` name; those are inlined into the client bundle |
+| Local `npm run dev` throws at Vault | `docker compose up -d` not run, or the dev path not seeded |
 
 ---
 
@@ -165,8 +217,9 @@ graph LR
     subgraph p1["Phase 1"]
         t1["T-01 bootstrap"] --> t4["T-04 deploy"]
         t1 --> t4a["<b>T-04A localization</b>"]
+        t4 --> t4b["T-04B Vault secrets"]
     end
-    g1{{"Gate 1<br/>login · green deploy ·<br/>both locales"}}
+    g1{{"Gate 1<br/>login · green deploy ·<br/>both locales ·<br/>no secret in env"}}
     subgraph p2["Phase 2 — content and SEO"]
         t6["T-06/07 collections"] --> t8["T-08 SEO group"] --> t9["T-09 buildMetadata"] --> t10["T-10 cache tags"] --> t14["T-14 JSON-LD"]
     end
@@ -180,7 +233,7 @@ graph LR
     end
     g4{{"Gate 4<br/>indexed · editor publishes unaided"}}
 
-    t4 --> g1
+    t4b --> g1
     t4a --> g1
     g1 --> t6
     t14 --> g2
@@ -193,8 +246,11 @@ graph LR
     class g1,g2,g3,g4 gate
 ```
 
-Each arrow into a gate is a thing that cannot be retrofitted cheaply:
-**T-04A** fixes the schema, the cache key and the routing; **Phase 2** makes
+**T-04B is the exception on this diagram**: it is a retrofit by definition,
+and a cheap one, because the credentials it moves are read in two files.
+That is why it sits after T-04 rather than blocking it. Everything else
+feeding a gate here cannot be retrofitted cheaply: **T-04A** fixes the
+schema, the cache key and the routing; **Phase 2** makes
 SEO a property of the data layer; **T-15A** gives interface strings a home
 before the components exist. Reordering any of them turns the next phase
 into extraction work.

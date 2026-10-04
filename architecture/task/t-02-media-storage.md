@@ -52,6 +52,11 @@ stopping a hundred unlabelled images from accumulating in the library.
 4. Add the R2 host to `next.config` `images.remotePatterns`.
 5. `npx payload generate:types`, `npx payload migrate:create`, apply.
 6. Add the four R2 variables to `.env.example`.
+   **Superseded by T-04B:** `R2_BUCKET`, `R2_ACCESS_KEY_ID`,
+   `R2_SECRET_ACCESS_KEY` and `R2_ENDPOINT` move into Vault and leave
+   `.env.example`. `R2_PUBLIC_URL` stays in the environment — it is read by
+   `next.config.mjs` at build time and is a public hostname, not a
+   credential. See AGENT.md sections 7.1 and 7.2.
 
 ## Files
 
@@ -78,6 +83,8 @@ Inherits AGENT.md section 8. In addition:
       social preview image and nothing in the admin UI says so.
 - [ ] No generated size is ever null, whatever the source dimensions.
 - [ ] `.env.example` lists all five R2 variables plus `MEDIA_LOCAL_DISK`.
+      **After T-04B**, only `R2_PUBLIC_URL` and `MEDIA_LOCAL_DISK`; the four
+      credentials live in Vault.
 - [ ] `alt` is `NOT NULL` in the database, not merely required in the UI.
 - [ ] An anonymous request for every generated size returns 200 and an
       `image/*` content type.
