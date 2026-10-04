@@ -9,6 +9,8 @@ import sharp from 'sharp'
 
 import { Media } from './collections/Media'
 import { Users } from './collections/Users'
+import { BusinessInfo } from './globals/BusinessInfo'
+import { SiteSettings } from './globals/SiteSettings'
 import { adminTranslations } from './i18n/admin-translations'
 import { requireEnv } from './lib/env'
 import { logger } from './lib/log'
@@ -71,6 +73,11 @@ const buildConfigFromVault = async () => {
       },
     },
     collections: [Media, Users],
+    /**
+     * Single source for every business detail and site-wide default (T-05).
+     * A phone number or a title suffix written into a component is a bug.
+     */
+    globals: [BusinessInfo, SiteSettings],
     /**
      * Content localization. Which fields are localized is a schema decision —
      * Payload stores localized values in separate tables — so this must be in

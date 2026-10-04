@@ -87,8 +87,14 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('vi' | 'en') | ('vi' | 'en')[];
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    'business-info': BusinessInfo;
+    'site-settings': SiteSetting;
+  };
+  globalsSelect: {
+    'business-info': BusinessInfoSelect<false> | BusinessInfoSelect<true>;
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+  };
   locale: 'vi' | 'en';
   widgets: {
     collections: CollectionsWidget;
@@ -409,6 +415,153 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * Name, address, phone and opening hours. These appear in the footer, on the contact page, and in the structured data Google reads. They must match your Google Business Profile exactly, character for character.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "business-info".
+ */
+export interface BusinessInfo {
+  id: number;
+  /**
+   * Exactly as registered and as it appears on Google Business Profile.
+   */
+  legalName: string;
+  /**
+   * House number and street only. The district goes in the next field.
+   */
+  streetAddress: string;
+  locality: string;
+  postalCode?: string | null;
+  /**
+   * From Google Maps: right-click your location on the map and click the coordinates to copy them. Latitude is the first number.
+   */
+  lat?: number | null;
+  /**
+   * The second of the two numbers copied from Google Maps.
+   */
+  lng?: number | null;
+  /**
+   * Write it the way a customer would dial it. Keep it identical to Google Business Profile, spacing included.
+   */
+  phone: string;
+  /**
+   * Optional. A phone number, or a zalo.me link.
+   */
+  zalo?: string | null;
+  /**
+   * One row per weekday, already in order. Tick "Closed" for a day you do not open; its times then disappear. Use 24-hour times.
+   */
+  openingHours?:
+    | {
+        day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+        closed?: boolean | null;
+        opens?: string | null;
+        closes?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * A rough range, shown in search results. Not a price list — the services carry their own prices.
+   */
+  priceRange?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Brand, default SEO values and social links used across the whole site.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  /**
+   * The trading name, as customers know it. Used in page titles. This is the short name — the registered legal name lives in Business information.
+   */
+  brandName: string;
+  /**
+   * The small icon shown in the browser tab. A square image works best.
+   */
+  favicon?: (number | null) | Media;
+  /**
+   * Shown in the footer. Leave empty for any platform you do not use.
+   */
+  socialLinks?:
+    | {
+        platform: 'facebook' | 'zalo' | 'youtube' | 'tiktok' | 'instagram';
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Appended to every page title, including the separator. Google truncates titles near 60 characters, so keep it short.
+   */
+  titleSuffix?: string | null;
+  /**
+   * One or two sentences describing the business, used when a page has no description of its own. Around 150 characters reads best in search results; 180 is the maximum.
+   */
+  defaultDescription?: string | null;
+  /**
+   * Shown when a page has no share image of its own. Facebook and Zalo crop to 1200x630, which the upload generates for you.
+   */
+  ogFallback?: (number | null) | Media;
+  /**
+   * From Google Analytics: Admin → Data streams → your stream. Starts with "G-". Leave blank to load no analytics at all.
+   */
+  ga4MeasurementId?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "business-info_select".
+ */
+export interface BusinessInfoSelect<T extends boolean = true> {
+  legalName?: T;
+  streetAddress?: T;
+  locality?: T;
+  postalCode?: T;
+  lat?: T;
+  lng?: T;
+  phone?: T;
+  zalo?: T;
+  openingHours?:
+    | T
+    | {
+        day?: T;
+        closed?: T;
+        opens?: T;
+        closes?: T;
+        id?: T;
+      };
+  priceRange?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  brandName?: T;
+  favicon?: T;
+  socialLinks?:
+    | T
+    | {
+        platform?: T;
+        url?: T;
+        id?: T;
+      };
+  titleSuffix?: T;
+  defaultDescription?: T;
+  ogFallback?: T;
+  ga4MeasurementId?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
