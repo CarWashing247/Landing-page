@@ -1,3 +1,4 @@
+import { logger } from './log'
 import type { Secrets } from './secrets'
 
 /**
@@ -39,7 +40,15 @@ export const resolveR2Config = (secrets: Secrets): R2Config | null => {
     missing.push('R2_PUBLIC_URL (environment, not Vault)')
   }
 
+  const log = logger('media:config')
+
   if (missing.length === 0) {
+    // Logged because the alternative — uploads quietly going to a filesystem
+    // that does not survive a deployment — is the exact failure this function
+    // exists to prevent, and it is silent. One line per process says which
+    // backend won. The host, never the credentials.
+    log.info('storing in R2', { bucket: secrets.R2_BUCKET, endpoint: secrets.R2_ENDPOINT })
+
     return {
       accessKeyId: secrets.R2_ACCESS_KEY_ID!,
       bucket: secrets.R2_BUCKET!,
@@ -61,6 +70,8 @@ export const resolveR2Config = (secrets: Secrets): R2Config | null => {
         `a deployment.`,
     )
   }
+
+  log.info('storing on local disk', { reason: 'MEDIA_LOCAL_DISK', missing: missing.length })
 
   return null
 }

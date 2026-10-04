@@ -250,6 +250,7 @@ In Vercel under Settings → Environment Variables. Everything in
 | `VAULT_ROLE_ID` | production role | preview role | **different per environment** |
 | `VAULT_SECRET_ID` | production role | preview role | **different per environment** |
 | `MEDIA_LOCAL_DISK` | **do not set** | **do not set** | development only |
+| `LOG_LEVEL` | leave unset (`info`) | leave unset (`info`) | `debug` logs a line per internal step and Vercel bills log retention. T-04C |
 | `E2E_*` | — | — | local testing only |
 
 Access to the Vercel project is therefore access to that environment's

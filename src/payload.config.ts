@@ -11,6 +11,7 @@ import { Media } from './collections/Media'
 import { Users } from './collections/Users'
 import { adminTranslations } from './i18n/admin-translations'
 import { requireEnv } from './lib/env'
+import { logger } from './lib/log'
 import { DEFAULT_LOCALE, LOCALES } from './lib/locales'
 import { resolveR2Config } from './lib/r2'
 import { loadSecrets } from './lib/secrets'
@@ -27,11 +28,35 @@ const dirname = path.dirname(fileURLToPath(import.meta.url))
  * the `@payloadcms/next` route handlers, and Payload's own CLI, which does
  * `config = await config.default`. The export's shape is unchanged.
  */
+/**
+ * Which database this process will talk to, without its credentials.
+ *
+ * Payload's adapter owns the socket, so a connection success is not observable
+ * from here — what is, is the target it was handed, and "pointing at the wrong
+ * (empty) database" is a documented failure in the runbook that this makes
+ * visible at boot instead of at the first 500.
+ */
+const databaseTarget = (uri: string): string => {
+  try {
+    const { hostname, port, pathname } = new URL(uri)
+
+    return `${hostname}${port ? `:${port}` : ''}${pathname}`
+  } catch {
+    // A malformed URI must not take the boot down here — the adapter will fail
+    // with a better message than this function could.
+    return 'unparseable'
+  }
+}
+
 const buildConfigFromVault = async () => {
   const secrets = await loadSecrets()
 
   // null means local disk, which resolveR2Config only permits in development.
   const r2 = resolveR2Config(secrets)
+
+  const databaseUri = requireEnv('DATABASE_URI')
+
+  logger('db:config').info('target resolved', { at: databaseTarget(databaseUri) })
 
   return buildConfig({
     admin: {
@@ -75,7 +100,7 @@ const buildConfigFromVault = async () => {
     },
     db: postgresAdapter({
       pool: {
-        connectionString: requireEnv('DATABASE_URI'),
+        connectionString: databaseUri,
       },
       migrationDir: path.resolve(dirname, 'migrations'),
       // Without this the adapter pushes schema changes straight to the database
