@@ -48,8 +48,14 @@ non-developer can change a meta description without a developer.
 4. In the hook, collect `pageTag(doc.slug)`, `pageTag(previousDoc.slug)`
    when the slug changed, and `SITEMAP_TAG`.
 5. Wrap the POST in try/catch; log on failure, never throw into the save.
-6. Add `REVALIDATE_SECRET` to `.env.example` and to every Vercel
-   environment.
+   Log through `logger()` (T-04C, AGENT.md section 5.8) — and log the
+   successful purge too, with the tag, because a webhook that only speaks
+   up when it breaks cannot be shown to have ever worked. Log the rejection
+   reason and the caller's IP on a 401, never the secret it got wrong.
+6. Put `REVALIDATE_SECRET` in Vault, at all three paths, with a distinct
+   value each, and read it through `loadSecrets()` rather than
+   `process.env` (AGENT.md section 7.2). It does **not** go in
+   `.env.example` or Vercel.
 
 ## Files
 
@@ -60,7 +66,7 @@ src/collections/Pages.ts
 src/collections/Services.ts
 src/globals/BusinessInfo.ts
 src/globals/SiteSettings.ts
-.env.example
+src/lib/secrets.ts              # add the key to the contract (T-04B)
 ```
 
 ## Acceptance criteria

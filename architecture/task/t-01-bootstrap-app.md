@@ -36,7 +36,9 @@ task has a place to put its code and a working `/admin` to click in.
 - `Users` collection in its minimal form (email + password) so admin login
   works — roles come in T-03.
 - `src/lib/payload.ts` exposing a single `getPayload()` helper.
-- `.env.example` with every variable from AGENT.md section 7.
+- `.env.example` with every variable from AGENT.md section 7.1.
+  **After T-04B**, credentials live in Vault (section 7.2) and must not
+  appear in `.env.example` at all.
 - Scripts: `dev`, `build`, `lint`, `typecheck`, `test`, `test:e2e`.
 
 **Out of scope**
@@ -99,8 +101,8 @@ Inherits AGENT.md section 8. In addition:
       login screen.
 - [ ] First admin user can be created through `/admin` and can log back in.
 - [ ] `npm run build` passes.
-- [ ] `.env.example` lists every variable in AGENT.md section 7, with a
-      comment per variable.
+- [ ] `.env.example` lists every variable in AGENT.md section 7.1, with a
+      comment per variable, and no key that section 7.2 assigns to Vault.
 - [ ] `src/payload-types.ts` is committed and not hand-edited.
 - [ ] `landing-page` and `crm` do not appear in any URL.
 

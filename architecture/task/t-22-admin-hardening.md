@@ -26,6 +26,17 @@ crawl exclusion, and a **tested** backup.
 - Confirm `/admin` and `/api` are disallowed in `robots.txt` (delivered in
   T-13 — verify, do not re-implement).
 - Daily automated Postgres backups, with retention stated.
+- A written rotation procedure for each key in Vault (AGENT.md section 7.2),
+  covering the AppRole `secret_id` as well. It must say **redeploy
+  immediately after rotating** — values are cached per process, so a rotated
+  `PAYLOAD_SECRET` otherwise leaves warm instances disagreeing about which
+  sessions are valid.
+- Vault audit device enabled, so a read of a credential leaves a record.
+  Being able to answer "who read this, and when" is the reason the
+  credentials moved out of the hosting dashboard at all.
+  This is Vault's record of who read a credential, which is a different
+  question from what the app did with it — that is T-04C's application log.
+  Neither substitutes for the other.
 - **A restore actually performed once**, into a scratch database, and the
   result verified.
 
@@ -34,8 +45,8 @@ crawl exclusion, and a **tested** backup.
 - Moving `/admin` to a separate domain or behind a VPN. One repo, one
   deploy, one domain is fixed in AGENT.md section 2.
 - A WAF or bot-management product.
-- Secret rotation policy — note it as a recommendation if you think it is
-  needed.
+- Automatic rotation of the AppRole `secret_id`. T-04B documents it as a
+  manual procedure; automating it is a later concern.
 
 ## Steps
 

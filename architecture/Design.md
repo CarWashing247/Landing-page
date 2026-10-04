@@ -22,8 +22,9 @@ One Next.js deploy contains four runtime pieces:
 | Revalidate webhook | `api/revalidate` | Purges edge cache tags on publish |
 | Preview route | `api/draft` | Enables `draftMode()` for unpublished content |
 
-Two data stores sit behind it: **PostgreSQL** (all content) and
-**Cloudflare R2** (media). Both are external to the deploy.
+Three external dependencies sit behind it: **PostgreSQL** (all content),
+**Cloudflare R2** (media) and **HashiCorp Vault** (every credential the
+other two need). All three are external to the deploy.
 
 ### 1.1a Locales
 
@@ -81,6 +82,123 @@ slug **of that locale only**.
 
 A `globals` purge is site-wide and therefore expensive. It is correct and
 rare — opening hours do not change weekly.
+
+### 1.4 Where credentials come from
+
+Every credential is read from Vault once, when the process initialises, by
+`loadSecrets()` in `src/lib/secrets.ts`. Nothing else reads a credential.
+
+The reason is not that environment variables leak. It is that they are
+**unauditable and unrotatable**: a value pasted into a hosting dashboard has
+no record of who set it, no record of who read it, and no way to rotate it
+except by hand in every environment at once. Vault answers each of those,
+and gives one place to look when a key is suspected of leaking.
+
+The boundary between the two sources is **when the value is needed**, not how
+sensitive it is:
+
+| Source | Holds | Because |
+| --- | --- | --- |
+| Vault | `PAYLOAD_SECRET`, `REVALIDATE_SECRET`, `PREVIEW_SECRET`, the four R2 credentials | Needed only at runtime, and rotating them must not mean editing a dashboard |
+| Environment | `DATABASE_URI`, `NEXT_PUBLIC_SITE_URL`, `R2_PUBLIC_URL`, `MEDIA_LOCAL_DISK`, the Vault bootstrap | Either not a credential, or needed before Vault can be reached |
+
+Three of those exceptions are structural, not convenience:
+
+- `NEXT_PUBLIC_SITE_URL` is inlined into the client bundle at build time. A
+  runtime fetch cannot produce it, which is also why nothing secret may ever
+  be given a `NEXT_PUBLIC_` name.
+- `R2_PUBLIC_URL` is read by `next.config.mjs` to build
+  `images.remotePatterns`, baked into the build output. It is a public CDN
+  hostname. Move it to Vault and `next/image` refuses every image on the
+  site.
+- `VAULT_ROLE_ID` / `VAULT_SECRET_ID` are the bootstrap credential. A secret
+  store cannot hold the key to itself, so this is where the trust chain
+  terminates — and it means hosting-dashboard access is equivalent to read
+  access on that environment's secrets. Vault narrows the blast radius and
+  makes reads auditable; it does not remove that.
+
+**Vault is HCP Dedicated with AppRole auth.** Vercel's build containers and
+lambdas run on Vercel's network, so Vault must be reachable over the public
+internet with TLS. Self-hosting would make unsealing, certificate renewal
+and backups this project's problem, and an unseal nobody notices means the
+site can neither build nor cold-start.
+
+**The cost, stated plainly.** Vault is now a build-time dependency:
+`npm run build`, `payload migrate` and `payload generate:types` all load the
+Payload config, which needs `PAYLOAD_SECRET`. Vault down means no deploy —
+the same blast radius Postgres already has, with a second cause. And
+rotation is not instant: values are cached per process, so a rotated secret
+reaches a warm instance only on its next cold start. Rotating
+`PAYLOAD_SECRET` without redeploying leaves instances disagreeing about
+which sessions are valid.
+
+Local development uses the same single code path, against the Vault service
+in `docker-compose.yml`. There is deliberately **no `.env` fallback**, for
+the same reason the Postgres adapter runs with `push: false`: a second code
+path for development is a path nobody tests, and it would be the one holding
+the credentials.
+
+See section 4, T-04B.
+
+### 1.5 Logging
+
+One logger, `logger()` in `src/lib/log.ts`, and one line format:
+
+```
+[timestamp] [source IP] [LEVEL] [action / method] [content]
+```
+
+```
+[2026-10-04T12:45:13.482Z] [203.0.113.7] [INFO]  [POST /api/revalidate] purged tag=page:vi:bang-gia
+[2026-10-04T12:45:13.901Z] [-]           [INFO]  [vault:login] connected addr=https://…hashicorp.cloud:8200
+[2026-10-04T12:45:14.112Z] [-]           [ERROR] [vault:login] refused status=403 hint=namespace
+[2026-10-04T12:45:15.220Z] [198.51.100.4] [ERROR] [POST /api/revalidate] rejected reason=bad-signature
+```
+
+**Why a format and not just `console.log`.** This deploy has no log
+aggregator and will not get one. The only tool is reading Vercel's log
+stream, and the question asked of it is almost always *"what happened to
+this request, and did the thing it depended on answer?"* Four fixed leading
+fields make that `grep`-able without one. Free-form `console.log` is not,
+and it is the reason a production incident becomes an afternoon.
+
+**The levels are three**, as requested: `DEBUG`, `INFO`, `ERROR`, filtered by
+`LOG_LEVEL` (default `info`). The cost of leaving out `WARN` is stated in
+section 5a — it is a real loss and this is where to look when it bites.
+
+**Connections log on success, not only on failure.** The Vault round trip is
+the case that forces this: it happens once at process init, and
+`[vault:login] connected` is the only evidence it ever worked. Without it, a
+cold start that silently reuses nothing looks exactly like a cold start that
+authenticated — and T-04B's rotation rule, where a value reaches a warm
+instance only on its next start, is unobservable. The same holds for Postgres
+and R2.
+
+**Two structural limits, both forced by decisions already made:**
+
+- **No source IP outside a request.** `loadSecrets()` runs at module init,
+  during `next build`, `payload migrate` and every cold start. There is no
+  request and no IP, so the field is `-`. The same is true of any pure
+  function. An IP in *every* line is not achievable.
+- **No logging from a page or a layout.** The IP comes from `headers()`,
+  which makes the route `ƒ` and breaks the static-rendering rule in
+  section 1.1 that the whole SEO design rests on. Logging therefore lives in
+  route handlers, Payload hooks and library code. This is the sharpest edge
+  of the design: the obvious place to add a log line is the one place it
+  must never go.
+
+**Redaction is part of the contract, not a convention.** T-04B guarantees
+that no secret reaches a log line, and a logger taking free-form content is
+the easiest way to undo that — the convenient thing to log is the object
+holding the credential. So values are scalars, request bodies are never
+logged, and `log.error()` takes a message plus named fields rather than a
+bare caught object.
+
+A source IP is personal data under Decree 13/2023. It is in the format
+because an abusive caller has to be identifiable, which is also the reason
+not to log more than these five fields.
+
+See section 4, T-04C.
 
 ---
 
@@ -243,7 +361,9 @@ Vercel project, Postgres instance, environment variables per environment,
 preview deploys on PRs, migrations applied on deploy.
 Depends on: T-01.
 Done when: a push to `main` deploys green; `/admin` is reachable on the
-deployed URL; a PR produces a working preview deployment.
+deployed URL; a PR produces a working preview deployment. Environment
+variables are set per the split in section 1.4 — the deploy holds no
+credential except the Vault bootstrap.
 
 **T-04A · Localization foundation**
 Payload `localization` with `vi` (default) and `en`, the `/en` URL prefix,
@@ -258,9 +378,45 @@ working locale switcher and its own language setting; every label and
 message resolves through `req.t`; `payload-types.ts` shows localized fields;
 a migration exists.
 
-> **Gate 1 — Admin login works, the deploy is green, and both locales
-> resolve.**
-> Do not start Phase 2 until T-01 to T-04A are merged.
+**T-04B · Secret loading from Vault**
+`loadSecrets()` in `src/lib/secrets.ts` — AppRole login, one KV v2 read per
+process, validated and cached — as the single source for every credential,
+per section 1.4. `payload.config.ts` and `resolveR2Config()` read through
+it; `requireEnv()` is narrowed to non-secret config. Local Vault in
+`docker-compose.yml` with a seed script, so development and deployed
+environments share one code path.
+Depends on: T-02 (owns the R2 credentials it moves), T-04 (owns the deployed
+environments).
+Done when: no credential is read from `process.env` anywhere in `src/`; a
+wrong or unreachable Vault fails the boot with a message naming Vault rather
+than 500-ing on first request; a path missing a key names that key; the
+production and preview AppRoles cannot read each other's path, verified by
+attempting it; `PAYLOAD_SECRET`, `REVALIDATE_SECRET` and `PREVIEW_SECRET`
+differ per environment; a fresh clone runs with `docker compose up -d`, the
+seed script and `npm run dev`, with no hand-edited secrets; `.env.example`
+holds no key that Vault owns; no secret reaches a log line or the client
+bundle.
+
+**T-04C · Structured logging**
+`logger()` in `src/lib/log.ts` as the single way anything in this repo writes
+a log line, in the section 1.5 format, with `DEBUG`/`INFO`/`ERROR` filtered
+by `LOG_LEVEL`. Mandatory in route handlers, in Payload hooks that change
+data or authenticate, and on every external connection — Vault, Postgres and
+R2 — on success as well as failure. Optional `debug` elsewhere; nothing in a
+page or a layout, because reading the source IP would make it `ƒ`.
+Depends on: T-01, and T-04B for the Vault connection that is its first
+consumer.
+Done when: `grep -rn 'console\.' src/` finds nothing outside `src/lib/log.ts`
+and its tests; a cold start logs `[vault:login] connected` and a wrong
+`VAULT_SECRET_ID` logs an `ERROR` naming neither the role id nor the secret
+id; a request to a route handler logs its source IP, and a build logs `-` in
+that field; `LOG_LEVEL=info` silences every `debug` line; every public page
+is still `○` in the build output.
+
+> **Gate 1 — Admin login works, the deploy is green, both locales resolve,
+> no credential sits in an environment variable except the Vault bootstrap,
+> and every connection and route says so in the log.**
+> Do not start Phase 2 until T-01 to T-04C are merged.
 >
 > **T-04A is the hard gate.** Localization decides the database schema, the
 > cache key, the routing and the metadata contract. Every task in Phase 2
@@ -488,6 +644,12 @@ the tag), the routing (`/en` prefix) and the metadata contract (`hreflang`).
 Everything else can run alongside it. Work that parallelises cleanly:
 
 - T-02, T-03 and T-04 after T-01, by different agents.
+- T-04B after T-02 and T-04. It touches no schema and no routing, so it
+  runs alongside T-04A.
+- T-04C after T-04B, and it must land before Phase 2 opens. It touches no
+  schema and no routing either, but every route handler and hook written
+  after it is expected to log — so doing it later means revisiting T-11,
+  T-12 and T-13 to add the lines they should have had.
 - T-15 can start as soon as T-04 lands; it touches no content.
 - T-15A needs only T-04A and T-15, so it can run alongside Phase 2.
 - T-16 can start as soon as T-05 and T-15A land — it does not wait for
@@ -531,6 +693,29 @@ folder whose layout carries its `lang` literally, and both are prerendered
 (`src/lib/locales.ts`, `FOLDER_FOR`). The cost is one thin folder per locale
 per route, re-exporting a shared implementation.
 
+**An async Payload config costs nothing — settled in T-04B.** The concern
+was that `payload.config.ts` reads `PAYLOAD_SECRET` at module load while
+Vault is asynchronous, and that the module is loaded by `next dev`,
+`next build`, `payload migrate`, `payload generate:types` and every lambda
+cold start, each through a different loader. It turned out there was nothing
+to retrofit: **`buildConfig` already returns `Promise<SanitizedConfig>`**, so
+the default export has always been a promise, and every consumer already
+awaits it — `getPayload({ config })`, the `@payloadcms/next` route handlers,
+and Payload's own CLI, which does `config = await config.default`. Wrapping
+the config in an `async` function needs no top-level `await` and asks nothing
+new of any loader. Verified against all four commands plus a running server;
+no prefetch-into-`process.env` fallback was needed.
+
+**Three log levels, and the missing one is `WARN`.** The logger carries
+`DEBUG`, `INFO` and `ERROR` because that is what was asked for. The gap is
+real: the natural use for `WARN` is the recoverable-but-wrong case, and this
+repo already has one — `secrets.ts` warns when a Vault path holds a key the
+app does not read, which catches a typo that would otherwise be invisible
+because the write succeeds and the read ignores it. That line becomes `INFO`,
+where it is quieter than it deserves. If a second such case appears, add
+`WARN` rather than promoting both to `ERROR` and training everyone to skim
+errors.
+
 **Slug-level static generation is still open.** `generateStaticParams()`
 cannot prerender per slug behind a literal folder name, so T-10's criterion —
 each CMS page listed as prerendered, not `ƒ` — remains at risk for content
@@ -554,4 +739,5 @@ Hooks already in place for later, requiring no architectural change:
 | Blog or articles | A `Posts` collection reusing the same SEO group and `buildMetadata()` |
 | Multiple locations | `BusinessInfo` becomes a `Locations` collection; add `/chi-nhanh/<slug>`, one `LocalBusiness` each |
 | Mobile app deep links | `AppLinks` and universal links in metadata; CTA target from `SiteSettings` |
+| Dynamic Postgres credentials | Vault's database secrets engine replaces the static `DATABASE_URI`; the loader already exists, only the lease renewal is new |
 | A third locale | `localization.locales` plus one more entry in the message catalog and the `/xx` rewrite; the schema already supports it |

@@ -44,7 +44,9 @@ check a draft is to publish it.
 4. Add an exit-preview route that disables draft mode and redirects.
 5. Render a small fixed banner when draft mode is on. Keep it a Server
    Component — it needs no interactivity beyond a link.
-6. Add `PREVIEW_SECRET` to `.env.example` and Vercel.
+6. Put `PREVIEW_SECRET` in Vault, at all three paths, with a distinct
+   value each, and read it through `loadSecrets()` (AGENT.md section 7.2).
+   It does **not** go in `.env.example` or Vercel.
 
 ## Files
 
@@ -56,7 +58,7 @@ src/collections/Pages.ts
 src/collections/Services.ts
 src/app/landing-page/[slug]/page.tsx
 src/app/landing-page/dich-vu/[slug]/page.tsx
-.env.example
+src/lib/secrets.ts              # add the key to the contract (T-04B)
 ```
 
 ## Acceptance criteria

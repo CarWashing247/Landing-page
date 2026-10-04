@@ -1,0 +1,63 @@
+# Local development dependencies only. Not used by any deployed environment.
+#
+#   docker compose up -d
+#   docker compose down        # keeps data
+#   docker compose down -v     # wipes the Postgres volume
+#
+# Postgres matches the DATABASE_URI example in .env.example:
+#   DATABASE_URI=postgres://postgres:postgres@localhost:5432/autowash247
+#
+# Vault runs in dev mode: in-memory, auto-unsealed, root token below. Every
+# secret is lost on restart, and it must never be run this way anywhere but a
+# developer's machine. Deployed environments use HCP Vault with AppRole auth.
+#
+# This is where local credentials live — the app reads them at init and there
+# is no .env fallback (AGENT.md section 5.7). Seed the dev path after the
+# first start, and again after every restart, because dev mode keeps nothing:
+#
+#   ./scripts/vault-seed.sh      # populates kv/autowash247/development
+#
+# The seed script is delivered by T-04B
+# (architecture/task/t-04b-vault-secrets.md).
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: autowash247-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: autowash247
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d autowash247']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  vault:
+    image: hashicorp/vault:1.18
+    container_name: autowash247-vault
+    restart: unless-stopped
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: dev-root-token
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+      # For `vault` CLI calls made inside the container.
+      VAULT_ADDR: http://127.0.0.1:8200
+    ports:
+      - '8200:8200'
+    cap_add:
+      # Lets Vault lock its memory so secrets are not swapped to disk.
+      - IPC_LOCK
+    healthcheck:
+      test: ['CMD', 'vault', 'status']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres-data:

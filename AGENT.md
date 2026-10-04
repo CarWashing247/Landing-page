@@ -44,6 +44,7 @@ than shipping filler — see `Design.md` section 2.3.
 | SEO fields | `@payloadcms/plugin-seo` |
 | Database | PostgreSQL via `@payloadcms/db-postgres` |
 | Media | Cloudflare R2 (S3-compatible) via `@payloadcms/storage-s3` |
+| Secrets | HashiCorp Vault (HCP Dedicated), AppRole auth, read at init |
 | Styling | Tailwind CSS |
 | Forms | React Hook Form + Zod |
 | Hosting | Vercel |
@@ -66,6 +67,9 @@ npx payload migrate:create    # REQUIRED after any schema change
 npx payload migrate           # apply migrations locally
 npm test                      # vitest
 npm run test:e2e              # playwright
+
+docker compose up -d          # local Postgres + Vault
+./scripts/vault-seed.sh       # populate the local Vault dev path (T-04B)
 ```
 
 `npx payload generate:types` writes `src/payload-types.ts`. That file is
@@ -78,6 +82,11 @@ sync schema changes to the database. After a collection or global change, run
 development identical to deployed environments; with push enabled,
 `payload migrate` refuses to run without a data-loss prompt because it cannot
 tell what the push already applied.
+
+**Vault must be reachable for anything that loads the Payload config** —
+`dev`, `build`, `migrate` and `generate:types` all do, because the config
+reads `PAYLOAD_SECRET`. Locally that means `docker compose up -d` and a
+seeded dev path before the first build; see section 7.
 
 ---
 
@@ -118,6 +127,9 @@ src/
     ui/
   lib/
     payload.ts  cache-tags.ts
+    secrets.ts              # loadSecrets() — the ONLY place a credential is read
+    env.ts                  # requireEnv() — non-secret config only
+    log.ts                  # logger() — the ONLY place a log line is written
   payload.config.ts
   payload-types.ts          # GENERATED
 ```
@@ -225,6 +237,83 @@ style preferences.
 - `slug` becomes `readOnly` once `_status` is `published`. Changing a
   published slug breaks indexed URLs.
 
+### 5.7 Secrets
+
+- **Every credential is read from Vault, once, at process init** — through
+  `loadSecrets()` in `src/lib/secrets.ts` and nowhere else. A credential
+  read with `process.env` is a bug even when it works.
+- The env side holds only what Vault cannot: `DATABASE_URI`,
+  `NEXT_PUBLIC_SITE_URL`, `R2_PUBLIC_URL`, `MEDIA_LOCAL_DISK` and the Vault
+  bootstrap itself. Section 7 is the list, and it is exhaustive.
+- A `NEXT_PUBLIC_*` variable can **never** come from Vault. It is inlined
+  into the client bundle at build time, which also means nothing secret may
+  ever be given a `NEXT_PUBLIC_` name.
+- Missing or unreachable Vault **fails the boot**. Never fall back to a
+  default, a placeholder or `process.env` — an app that boots with a
+  guessable `PAYLOAD_SECRET` issues valid-looking sessions and says nothing.
+- Never log a secret, and never put one in an error message or a thrown
+  error's context. Report the *key name* that is missing, never its value.
+- Rotation takes effect on the next cold start, not immediately.
+  **Redeploy straight after rotating** or instances disagree about what a
+  valid session is.
+
+### 5.8 Logging
+
+Every log line goes through `logger()` in `src/lib/log.ts` and has exactly
+this shape. `console.log` and bare `console.error` in application code are a
+bug, because they bypass the format, the level filter and the redaction.
+
+```
+[2026-10-04T12:45:13.482Z] [203.0.113.7] [INFO] [POST /api/revalidate] purged tag=page:vi:bang-gia
+[2026-10-04T12:45:13.901Z] [-]           [INFO] [vault:login] connected addr=https://…hashicorp.cloud:8200
+[2026-10-04T12:45:14.112Z] [-]           [ERROR] [vault:login] refused status=403 hint=namespace
+```
+
+| Field | Rule |
+| --- | --- |
+| timestamp | ISO 8601, UTC, milliseconds. Never local time — the deploy, the database and Vault are in three different zones |
+| source IP | First hop of `x-forwarded-for`. **`-` when there is no request**: module init, `next build`, `payload migrate`, a cron |
+| level | `DEBUG`, `INFO` or `ERROR`, upper case |
+| action | `METHOD /path` for anything serving a request, `module:operation` otherwise (`vault:login`, `r2:upload`) |
+| content | One short clause, then `key=value` pairs. Values are scalars, never an object or a request body |
+
+**Where it is mandatory.** Not everywhere — a rule that says "every
+function" produces noise that buries the one line that mattered:
+
+- Every route handler, at entry and at outcome.
+- Every Payload hook that changes data or authenticates.
+- **Every reach outside this process, on success as well as failure** — the
+  Vault round trip, and the resolved target of anything that stores data
+  (database host, media backend). A dependency that only logs when it breaks
+  cannot tell you whether it ever worked.
+  Log what this code can actually observe: `loadSecrets()` performs the Vault
+  request itself and logs it, whereas Postgres is connected by Payload's
+  adapter, so what is observable here is the configuration it was handed, not
+  a socket.
+- Every rejected request: a 401, a 403, a refused login.
+
+Everywhere else `log.debug()` is optional and silent unless
+`LOG_LEVEL=debug`. Pure functions — `FOLDER_FOR()`, `buildMetadata()`,
+`pageTag()` — log nothing at all.
+
+`resolveR2Config()` is the exception that proves the boundary rule rather
+than the purity one: it opens no connection, but it decides whether uploads
+go to R2 or to a filesystem that does not survive a deployment, and that
+decision silently taken is the failure T-04B exists to prevent. It logs the
+decision, once.
+
+**Never from a page or a layout.** Reading the source IP needs `headers()`,
+and that makes the route `ƒ`, which breaks 5.1. Logging lives in route
+handlers, hooks and library code, never in a rendered component.
+
+**Never log a credential, a session token, a password or a full request
+body**, and that includes inside an `Error` passed to `log.error()`. Section
+5.7 is the rule; this is where it is most easily broken, because the
+convenient thing to log is the object that holds the secret. A source IP is
+personal data under Decree 13/2023 — it earns its place in the line because
+it is what makes an abusive caller identifiable, but it is a reason not to
+log more than the format calls for.
+
 ---
 
 ## 6. Conventions
@@ -241,28 +330,73 @@ style preferences.
   the message catalog; content comes from the CMS. A missing catalog key is
   a type error, not a blank on the page.
 - Conventional commits: `feat:`, `fix:`, `chore:`, `docs:`.
-- Secrets come from environment variables. Never commit `.env`.
+- Secrets come from Vault, via `loadSecrets()` — never `process.env`, and
+  never committed. Non-secret config comes from the environment via
+  `requireEnv()`. Section 5.7 and section 7 are the contract.
 
 ---
 
-## 7. Environment variables
+## 7. Configuration and secrets
+
+Two sources, and which one a value comes from depends on **when it is
+needed**, not on how sensitive it is.
+
+### 7.1 Environment variables
+
+Everything here is either not a credential, or is required before Vault can
+be reached. This list is exhaustive: a new variable that is a credential
+belongs in Vault, not here.
 
 | Variable | Purpose |
 | --- | --- |
-| `DATABASE_URI` | Postgres connection string |
-| `PAYLOAD_SECRET` | Signs admin session JWTs |
-| `NEXT_PUBLIC_SITE_URL` | `metadataBase`, canonical URLs, sitemap |
-| `REVALIDATE_SECRET` | Shared secret for the revalidate webhook |
-| `PREVIEW_SECRET` | Shared secret for the draft preview route |
-| `R2_BUCKET` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` / `R2_ENDPOINT` | Media storage |
-| `R2_PUBLIC_URL` | Public base URL images are served from; also feeds `images.remotePatterns` |
+| `DATABASE_URI` | Postgres connection string. Per-environment infrastructure config; also needed by `payload migrate` in the deploy's build step |
+| `NEXT_PUBLIC_SITE_URL` | `metadataBase`, canonical URLs, sitemap. `NEXT_PUBLIC_*` is inlined at build time, so Vault cannot supply it |
+| `R2_PUBLIC_URL` | Public base URL images are served from; feeds `images.remotePatterns` in `next.config.mjs` at build time. A CDN hostname, not a credential |
 | `MEDIA_LOCAL_DISK` | Development only: store uploads on disk instead of R2 |
+| `LOG_LEVEL` | `debug`, `info` or `error`. Optional; defaults to `info`. `debug` is for a local machine, not a deployed environment |
+| `VAULT_ADDR` | Vault cluster URL |
+| `VAULT_NAMESPACE` | `admin` on HCP Vault. Omitting it 403s every read, with a message that does not mention namespaces |
+| `VAULT_SECRET_PATH` | KV v2 path for this environment, e.g. `kv/autowash247/production` |
+| `VAULT_ROLE_ID` / `VAULT_SECRET_ID` | AppRole bootstrap credential. **The one secret that cannot live in Vault** — a secret store cannot hold the key to itself |
 | `E2E_ADMIN_EMAIL` / `E2E_ADMIN_PASSWORD` | Optional: a local admin account for the login specs in `e2e/` |
 | `E2E_EDITOR_EMAIL` / `E2E_EDITOR_PASSWORD` | Optional: a local editor account for the access-control specs |
 
 Add any new variable to `.env.example` in the same commit.
 
----
+### 7.2 Vault
+
+One KV v2 secret per environment, read once at process init by
+`loadSecrets()` in `src/lib/secrets.ts`. Keys are named identically to the
+variables they replaced, so `grep` still finds every consumer.
+
+| Key | Used by |
+| --- | --- |
+| `PAYLOAD_SECRET` | `payload.config.ts` — signs admin session JWTs |
+| `REVALIDATE_SECRET` | `/api/revalidate` (T-11) |
+| `PREVIEW_SECRET` | `/api/draft` (T-12) |
+| `R2_BUCKET` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` / `R2_ENDPOINT` | Media storage, via `resolveR2Config()` |
+
+```
+kv/autowash247/production     kv/autowash247/preview     kv/autowash247/development
+```
+
+One AppRole per path, each with read on its own path and nothing else — a
+leaked preview role must not read production. `PAYLOAD_SECRET`,
+`REVALIDATE_SECRET` and `PREVIEW_SECRET` differ per environment: a shared
+`PAYLOAD_SECRET` means a session minted in preview is valid in production.
+
+Adding a credential means adding it to the table above, to the loader's
+validation, and to all three Vault paths — **not** to `.env.example`.
+
+Local development uses the same code path, against the Vault in
+`docker-compose.yml`:
+
+```bash
+docker compose up -d && ./scripts/vault-seed.sh
+```
+
+See [`architecture/task/t-04b-vault-secrets.md`](./architecture/task/t-04b-vault-secrets.md)
+for the layout, the rotation procedure and the consequences.
 
 ## 8. Definition of done
 
@@ -279,7 +413,14 @@ A task is complete when all of these hold:
 - [ ] The new or changed page appears in `/sitemap.xml`, unless it is
       `noindex` or draft
 - [ ] No new `'use client'` above a leaf component
-- [ ] `.env.example` updated, if a variable was added
+- [ ] `.env.example` updated, if a non-secret variable was added
+- [ ] A new credential was added to Vault in all three environments and to
+      the loader's validation — and **not** to `.env.example`
+- [ ] No secret appears in a log line, an error message or the client
+      bundle
+- [ ] Every route handler, hook and external connection the change touches
+      logs through `logger()` in the section 5.8 format — connections on
+      success as well as failure
 
 ---
 
@@ -300,3 +441,7 @@ A task is complete when all of these hold:
   this repo. That is a separate backend; this site links out to it.
 - Do not add tracking scripts beyond GA4 without raising it first — each
   one costs LCP.
+- Do not read a credential from `process.env`, add one to `.env.example`,
+  or give one a `NEXT_PUBLIC_` name. Section 5.7.
+- Do not add a fallback for an unreachable Vault. Failing to boot is the
+  correct behaviour.

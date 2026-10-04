@@ -82,6 +82,81 @@ else
 fi
 
 echo
+echo "Secrets"
+# The deploy holding a credential in an environment variable is the thing
+# T-04B removed; this cannot be checked over HTTP, so it is checked where it
+# can be — against the Vault bootstrap this environment was given.
+if [[ -z "${VAULT_ADDR:-}" ]]; then
+  printf '  \033[33mskip\033[0m  %s\n' "VAULT_ADDR not set in this shell — run with the environment's bootstrap to check Vault"
+else
+  vault_health="$(status "${VAULT_ADDR%/}/v1/sys/health")"
+  if [[ "$vault_health" == "200" || "$vault_health" == "429" ]]; then
+    printf '  \033[32mok\033[0m    %-52s %s\n' "Vault is reachable and unsealed" "$vault_health"
+    pass=$((pass + 1))
+  else
+    printf '  \033[31mFAIL\033[0m  %-52s got %s\n' "Vault is reachable and unsealed" "$vault_health"
+    printf '        503 means sealed; the app cannot boot or build until it is unsealed\n'
+    fail=$((fail + 1))
+  fi
+
+  # A credential in the environment is what this task exists to prevent, so
+  # finding one is a failure even though the app would still work.
+  leaked=()
+  for key in PAYLOAD_SECRET REVALIDATE_SECRET PREVIEW_SECRET \
+    R2_BUCKET R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY R2_ENDPOINT; do
+    [[ -n "${!key:-}" ]] && leaked+=("$key")
+  done
+  if [[ ${#leaked[@]} -eq 0 ]]; then
+    printf '  \033[32mok\033[0m    %-52s none set\n' "no credential in the environment"
+    pass=$((pass + 1))
+  else
+    printf '  \033[31mFAIL\033[0m  %-52s %s\n' "no credential in the environment" "${leaked[*]}"
+    printf '        these belong in Vault (AGENT.md 7.2), not in the environment\n'
+    fail=$((fail + 1))
+  fi
+
+  if [[ -n "${VAULT_SECRET_PATH:-}" && -n "${VAULT_ROLE_ID:-}" && -n "${VAULT_SECRET_ID:-}" ]]; then
+    tok="$(curl -s --max-time 30 -X POST \
+      -H 'content-type: application/json' \
+      ${VAULT_NAMESPACE:+-H "x-vault-namespace: $VAULT_NAMESPACE"} \
+      -d "{\"role_id\":\"$VAULT_ROLE_ID\",\"secret_id\":\"$VAULT_SECRET_ID\"}" \
+      "${VAULT_ADDR%/}/v1/auth/approle/login" |
+      sed -n 's/.*"client_token":"\([^"]*\)".*/\1/p')"
+    if [[ -n "$tok" ]]; then
+      printf '  \033[32mok\033[0m    %-52s AppRole login\n' "the bootstrap credential works"
+      pass=$((pass + 1))
+    else
+      printf '  \033[31mFAIL\033[0m  %-52s login refused\n' "the bootstrap credential works"
+      printf '        a 403 here with no detail usually means VAULT_NAMESPACE is unset\n'
+      fail=$((fail + 1))
+    fi
+
+    # Cross-environment read, attempted rather than inferred from the policy.
+    other='production'
+    [[ "$VAULT_SECRET_PATH" == *production* ]] && other='preview'
+    mount="${VAULT_SECRET_PATH%%/*}"
+    rest="${VAULT_SECRET_PATH#*/}"
+    cross="$mount/data/${rest%/*}/$other"
+    if [[ -n "$tok" ]]; then
+      cross_status="$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 \
+        -H "x-vault-token: $tok" \
+        ${VAULT_NAMESPACE:+-H "x-vault-namespace: $VAULT_NAMESPACE"} \
+        "${VAULT_ADDR%/}/v1/$cross")"
+      if [[ "$cross_status" == "403" || "$cross_status" == "404" ]]; then
+        printf '  \033[32mok\033[0m    %-52s %s on %s\n' "cannot read another environment's secrets" "$cross_status" "$other"
+        pass=$((pass + 1))
+      else
+        printf '  \033[31mFAIL\033[0m  %-52s got %s on %s\n' "cannot read another environment's secrets" "$cross_status" "$other"
+        printf '        one AppRole per environment, read on its own path only\n'
+        fail=$((fail + 1))
+      fi
+    fi
+  else
+    printf '  \033[33mskip\033[0m  %s\n' "no AppRole in this shell — cannot test the login or cross-environment reads"
+  fi
+fi
+
+echo
 echo "Media"
 media="$(body "$BASE/api/media?limit=1&depth=0")"
 if [[ "$media" == *'"docs":[]'* || "$media" != *'"docs"'* ]]; then
