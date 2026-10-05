@@ -108,9 +108,24 @@ Expect `401, 400, 200`, and the new description without a deploy.
 
 ## Notes
 
-- If an edit does not appear live, the usual cause is a query missing its
-  `next.tags` — `revalidateTag` then has nothing to purge. Check the query,
-  not the webhook.
+- If an edit does not appear live, the usual cause is a query that carries no
+  tag — `revalidateTag` then has nothing to purge, and reports nothing either.
+  Check the query, not the webhook. T-10 put every content read behind a tag in
+  `src/lib/content.ts`; confirm the tag you are purging is the one the read
+  attached, by name from `src/lib/cache-tags.ts`.
+- **Purge both locales of the document, not only the one that changed.** The
+  page tag is locale-scoped so an English edit does not throw away the
+  Vietnamese page — but a *slug rename* is different: the Vietnamese page's
+  cached render contains the English `hreflang` URL, so renaming the English
+  slug leaves the Vietnamese page advertising a URL that now 404s. The hook
+  knows the document id and can read every locale's slug, so purge
+  `pageTag(locale, slug)` for each locale, plus `previousDoc`'s slug in the
+  locale that changed. Left to the revalidate floor this self-corrects in an
+  hour; left unhandled it is the one case where locale-scoped tags under-purge.
+- **A miss is cached under the same tag as a hit** (T-10). Publishing a draft
+  therefore takes effect through the normal purge: the negative entry for
+  `page:<locale>:<slug>` is what `revalidateTag` throws away. No special case
+  is needed for "the page did not exist before".
 - Compare the secret with a constant-time comparison. A timing-safe check
   costs one import.
 
