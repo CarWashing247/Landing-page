@@ -23,9 +23,14 @@ recoverable.
   `layout` (blocks field), `_status` via `versions: { drafts: true }`.
 - Slug auto-generated from `title` on create, with an unaccented
   lowercase-hyphen transform (`Bảng giá` → `bang-gia`).
-- `slug` becomes `readOnly` once `_status` is `published`
-  (`admin.readOnly` by condition **and** a `beforeValidate` guard, since an
-  admin-only `readOnly` is bypassable via the API).
+- `slug` becomes read-only once `_status` is `published`, in two places,
+  because neither alone is enough: field-level `access.update` for the admin
+  UI and the write, **and** a `beforeValidate` guard for the error message.
+  (`admin.readOnly` is typed `boolean`, not a condition function — verified in
+  `node_modules/payload/dist/fields/config/types.d.ts`. Field-level
+  `access.update` is the mechanism that makes the admin render a field
+  read-only *and* rejects the write; a denied field is silently dropped, so
+  the hook is what turns that into a 4xx an editor can read.)
 - Version history with rollback enabled.
 - `layout` registered with an empty-for-now block list, or placeholder
   blocks — real blocks are T-17.
@@ -43,9 +48,26 @@ recoverable.
 2. Add a `slugify` helper in `src/lib/` that strips Vietnamese diacritics.
    Check `src/lib/` first — do not add a second one.
 3. Enable `versions: { drafts: true }` and confirm the Versions tab appears.
-4. Implement the published-slug lock in two places: `admin.readOnly` for
-   the UI and a `beforeValidate` field hook that rejects a change when the
-   existing document is published.
+4. Implement the published-slug lock in two places: field-level
+   `access.update` for the UI and the write, and a `beforeValidate` field hook
+   that rejects a change when the existing document is published. Three traps,
+   all found by testing rather than reading:
+   - **Compare against the slug stored for *this locale*, with the fallback
+     off.** `localization.fallback` is on, so reading a page in English
+     returns the Vietnamese slug where English has none; comparing against
+     that makes a first English slug look like an edit, and a page published
+     in Vietnamese can then never be given its English URL at all.
+   - **Allow the first value in a locale.** Same cause, stated as a rule: a
+     locale with no slug yet is a translation being written, not a URL being
+     changed.
+   - **Exempt version restore** (`req.context.isRestoringVersion`). A denied
+     field is *stripped*, so refusing the slug during a restore leaves it
+     empty and `required` fails the whole operation — rolling back a published
+     page answers 400 naming a field the editor never touched. Log the
+     resulting slugs from a collection `afterChange` instead: during a restore
+     Payload runs field hooks for the **default locale only**, so a field hook
+     cannot see a second locale's slug being cleared, and the read needs
+     `locale: 'all'`.
 5. Use `admin.useAsTitle: 'title'` and a `defaultColumns` list that is
    useful to an editor (`title`, `slug`, `_status`, `updatedAt`).
 6. `npx payload generate:types`, migration, apply.
@@ -70,7 +92,14 @@ Inherits AGENT.md section 8. In addition:
 - [ ] Slug generated from a Vietnamese title is unaccented lowercase with
       hyphens.
 - [ ] `slug` is unique — a second page with the same slug is rejected.
-- [ ] Drafts are not returned by a `draft: false` query.
+- [ ] Drafts are not returned to an anonymous caller — by any query, including
+      `draft=true` and an explicit `where[_status][equals]=draft`, and a draft
+      fetched by id is a 404. (Payload's `draft` flag chooses which *version* to
+      return; it does not filter by status, so the guarantee comes from the read
+      access filter, not from the flag.)
+- [ ] A published page can still be given its first slug in the other locale,
+      and rolled back from the Versions tab.
+- [ ] The same slug may exist once per locale, not twice within one.
 
 ## Verification
 
@@ -88,9 +117,34 @@ Expect the PATCH to fail (4xx), and only published slugs in the query.
 
 - Version history is what makes the slug lock acceptable to an editor: they
   can undo a content mistake, so they do not need to undo a URL mistake.
-- Do not add `localization` here. Vietnamese/English is listed as a future
-  extension in Design.md section 6 and changes every query shape.
+- **`title`, `slug` and `layout` are localized.** This Note previously said
+  the opposite — that Vietnamese/English was a future extension — and it was
+  written before T-04A landed. Design.md 2.1 marks all three `L` and says
+  plainly that localization is why T-04A precedes this task; 1.1a adds that
+  slugs in particular are localized, because `bang-gia` and `pricing` are
+  separate documents' worth of keyword value rather than translations of each
+  other. Localized storage is a schema decision, so getting this wrong here is
+  a migration later, not an edit.
 
 ## Flags
 
-- None expected.
+- **`layout` ships with a single `content` rich-text block.** T-17 owns the
+  real set. An empty `blocks: []` type-checks and then hands an editor a
+  content field with nothing to put in it, so neither the layout nor T-23's
+  seed data could be exercised before T-17 lands. Rich text survives whatever
+  T-17 decides, so it is not throwaway.
+- **A version restore can retire a live URL, and that is left possible on
+  purpose.** Restoring a version from before a locale was translated clears
+  that locale's slug, because the version holds no value for it — so rolling
+  back a Vietnamese typo can remove an indexed `/en/pricing`. Refusing the
+  restore is the wrong trade: version history is what makes the slug lock
+  acceptable at all (AGENT.md 5.6), and removing rollback to protect a URL
+  takes away the safety net that justified the lock. It is logged per locale
+  instead (`pages:restore`), because a URL that quietly stops resolving is
+  otherwise found weeks later in Search Console.
+  **T-11 and T-13 must treat a slug that disappeared as a URL that changed.**
+  Applies to T-07 identically.
+- An earlier draft of this file claimed restoring a pre-translation version
+  *fails validation* on `required`. It does not — that failure was the field
+  access stripping the slug, which the restore exemption fixed. Retested after
+  the fix: restores of pre-translation versions succeed.

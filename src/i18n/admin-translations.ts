@@ -25,6 +25,8 @@ export const adminTranslations = {
         'The last administrator cannot be deleted. Create another administrator first.',
       lastAdminCannotChangeRole:
         'The last administrator’s role cannot be changed. Create another administrator first.',
+      publishedSlugCannotChange:
+        'The address of a published page cannot be changed — the old URL is already indexed by Google and links to it would break. Unpublish it first, or create a new page.',
     },
   },
   vi: {
@@ -33,6 +35,8 @@ export const adminTranslations = {
         'Không thể xoá quản trị viên cuối cùng. Hãy tạo một quản trị viên khác trước.',
       lastAdminCannotChangeRole:
         'Không thể đổi vai trò của quản trị viên cuối cùng. Hãy tạo một quản trị viên khác trước.',
+      publishedSlugCannotChange:
+        'Không thể đổi đường dẫn của trang đã xuất bản — Google đã lập chỉ mục đường dẫn cũ và các liên kết tới trang sẽ bị lỗi. Hãy huỷ xuất bản trước, hoặc tạo một trang mới.',
     },
   },
 } as const

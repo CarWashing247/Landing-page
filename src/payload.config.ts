@@ -8,6 +8,7 @@ import { buildConfig } from 'payload'
 import sharp from 'sharp'
 
 import { Media } from './collections/Media'
+import { Pages } from './collections/Pages'
 import { Users } from './collections/Users'
 import { BusinessInfo } from './globals/BusinessInfo'
 import { SiteSettings } from './globals/SiteSettings'
@@ -72,7 +73,7 @@ const buildConfigFromVault = async () => {
         importMapFile: path.resolve(dirname, 'app/crm/admin/importMap.js'),
       },
     },
-    collections: [Media, Users],
+    collections: [Pages, Media, Users],
     /**
      * Single source for every business detail and site-wide default (T-05).
      * A phone number or a title suffix written into a component is a bug.
