@@ -99,13 +99,18 @@ src/
     landing-page-en/        # locale en — one thin folder per locale so the
                             # locale is a build-time constant and pages stay
                             # statically prerendered
-      layout.tsx            # renders LocaleLayout; metadataBase lands in T-09
+      layout.tsx            # renders LocaleLayout; declares metadataBase
       page.tsx              # home
       [slug]/page.tsx       # CMS pages
-      dich-vu/[slug]/page.tsx
+      dich-vu/[slug]/page.tsx   # services; the segment is LOCALIZED, so the
+                                # English folder is services/[slug] instead
+                                # (Design.md 1.1a). SERVICE_SEGMENT in
+                                # src/lib/locales.ts is the one place it is named
       sitemap.ts
       robots.ts
-      opengraph-image.tsx
+      opengraph-image.tsx   # last-resort share image. Named explicitly by
+                            # buildMetadata(), because the file convention does
+                            # NOT cascade to nested route segments
     crm/
       layout.tsx            # Payload admin shell; does NOT import globals.css
       admin/segements/page.tsx
@@ -130,6 +135,8 @@ src/
     ui/
   lib/
     payload.ts  cache-tags.ts
+    content.ts              # the one query layer the public pages read through;
+                            # where T-10 attaches cache tags
     secrets.ts              # loadSecrets() — the ONLY place a credential is read
     env.ts                  # requireEnv() — non-secret config only
     log.ts                  # logger() — the ONLY place a log line is written

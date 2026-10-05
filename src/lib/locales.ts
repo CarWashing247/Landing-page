@@ -97,3 +97,42 @@ export const FOLDER_FOR: Record<Locale, string> = {
   vi: 'landing-page',
   en: 'landing-page-en',
 }
+
+/**
+ * The path segment that carries a service page, per locale.
+ *
+ * Localized for the same reason the slug is: `/dich-vu/...` and
+ * `/en/services/...` are what each audience searches for, and Design.md 1.1a
+ * and section 3 both spell the two shapes out. A single segment shared by both
+ * locales would put a Vietnamese word in the middle of an English URL.
+ *
+ * Note that AGENT.md section 4's layout sketch shows `dich-vu/[slug]` under
+ * both locale folders. Design.md is explicit twice that English is
+ * `/en/services/<slug>`, so the sketch is the loose one; it has been corrected
+ * rather than followed.
+ */
+export const SERVICE_SEGMENT: Record<Locale, string> = {
+  vi: 'dich-vu',
+  en: 'services',
+}
+
+/** The public path of a CMS page in a locale. `('bang-gia', 'vi')` -> `/bang-gia`. */
+export const pathForPage = (slug: string, locale: Locale): string => urlFor(`/${slug}`, locale)
+
+/** The public path of a service in a locale. `('quick-wash', 'en')` -> `/en/services/quick-wash`. */
+export const pathForService = (slug: string, locale: Locale): string =>
+  urlFor(`/${SERVICE_SEGMENT[locale]}/${slug}`, locale)
+
+/** The public path of the home page in a locale. `'en'` -> `/en`. */
+export const pathForHome = (locale: Locale): string => urlFor('/', locale)
+
+/**
+ * The public URL of the generated last-resort share image for a locale.
+ *
+ * `/opengraph-image` and `/en/opengraph-image`, which the rewrites map onto
+ * each locale folder's `opengraph-image.tsx`. The public spelling is used
+ * rather than the internal one Next would generate, so the tag does not name a
+ * folder that is an implementation detail.
+ */
+export const pathForOpenGraphImage = (locale: Locale): string =>
+  urlFor('/opengraph-image', locale)

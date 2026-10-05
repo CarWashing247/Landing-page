@@ -1,0 +1,52 @@
+import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
+
+import { loadService, loadSiteSettings } from '../lib/content'
+import type { Locale } from '../lib/locales'
+import { buildMetadata } from './seo/metadata'
+
+/**
+ * A service page, shared by both locale folders. See `ContentPage.tsx` — the
+ * only differences are the collection and that a service's heading field is
+ * `name` rather than `title`.
+ *
+ * The full template — price, duration, what the package includes — is T-18, and
+ * the `Service` + `Offer` JSON-LD is T-14.
+ */
+
+export const servicePageMetadata = async (slug: string, locale: Locale): Promise<Metadata> => {
+  const found = await loadService(slug, locale)
+
+  if (!found) {
+    return {}
+  }
+
+  return buildMetadata({
+    // `name` is what an editor fills in; `buildMetadata` asks for `title`
+    // because that is what it becomes. Mapping it here keeps the builder from
+    // needing to know one collection from another.
+    doc: { meta: found.doc.meta, title: found.doc.name },
+    locale,
+    paths: found.paths,
+    settings: await loadSiteSettings(locale),
+  })
+}
+
+export const ServicePage = async ({ locale, slug }: { locale: Locale; slug: string }) => {
+  const found = await loadService(slug, locale)
+
+  if (!found) {
+    notFound()
+  }
+
+  return (
+    <main>
+      <h1>{found.doc.name}</h1>
+      <p>
+        {locale === 'vi'
+          ? 'TODO(copy): nội dung trang dịch vụ — bố cục đầy đủ là T-18.'
+          : 'TODO(copy): service page body — the full template is T-18.'}
+      </p>
+    </main>
+  )
+}

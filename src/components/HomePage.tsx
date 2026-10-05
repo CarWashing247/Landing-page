@@ -1,4 +1,9 @@
+import type { Metadata } from 'next'
+
+import { loadSiteSettings } from '../lib/content'
 import type { Locale } from '../lib/locales'
+import { LOCALES, pathForHome } from '../lib/locales'
+import { buildMetadata } from './seo/metadata'
 
 /**
  * Placeholder home page, shared by both locales.
@@ -20,3 +25,29 @@ export const HomePage = ({ locale }: { locale: Locale }) => (
     </p>
   </main>
 )
+
+/**
+ * Home-page metadata — fallbacks only, deliberately.
+ *
+ * **`/` is not CMS-backed yet, and T-09 does not decide that it should be.**
+ * T-23 step 1 lists `/` among the documents to create, but nothing in Design.md
+ * says which slug the home document carries, and inventing one here would
+ * commit two later tasks to it: the `[slug]` route would have to refuse that
+ * slug so `/` and `/trang-chu` are not the same page at two URLs, and the
+ * sitemap would have to special-case it. So the home route reads
+ * `SiteSettings` alone, which is exactly the "blank SEO tab still ships
+ * complete tags" path, and T-17 — which builds the home body — wires a document
+ * in if that is what it wants.
+ *
+ * The consequence to know: the home `<title>` is the brand name, with no
+ * suffix appended, because appending `| AutoWash247` to `AutoWash247` reads
+ * like a bug. Its description is `SiteSettings.defaultDescription`.
+ */
+export const homeMetadata = async (locale: Locale): Promise<Metadata> =>
+  buildMetadata({
+    locale,
+    // Both locales always serve a home page, so both `hreflang` links are
+    // always honest here — unlike a document, which may exist in only one.
+    paths: Object.fromEntries(LOCALES.map((candidate) => [candidate, pathForHome(candidate)])),
+    settings: await loadSiteSettings(locale),
+  })
