@@ -55,6 +55,88 @@ fix is the placeholder, and arguably the `admin.description` beside it.
 
 One line, in a file T-09 and T-10 had no other reason to touch.
 
+### A3 · `safeLocalPath` passes `/\host`, so the exit route is an open redirect
+
+**Owner: `src/lib/preview.ts` (T-12's file)** (recorded in
+`task/t-12-draft-preview.md`)
+
+`safeLocalPath` rejects an absolute URL and the protocol-relative `//host`, and
+its comment names those as the two shapes that matter. There is a third. A
+backslash: `/\evil.example` starts with one slash and not two, so the guard
+passes it, and the URL parser every browser uses reads that backslash as the
+second slash of an authority.
+
+Measured against the built server, with no secret and no draft cookie — the exit
+route requires neither:
+
+```
+POST /api/draft/exit?to=%2F%5Cevil.example
+  → 303 See Other
+    location: /\evil.example
+new URL('/\evil.example', 'https://site/')  → https://evil.example/
+```
+
+`to=%2F%5C%2Fevil.example%2Fphish` behaves the same way. Because Next answers a
+form-encoded `POST` with a 303, the browser follows it as a `GET`, which is the
+clean version of the hop the comment in `safeLocalPath` set out to prevent.
+
+One line closes it: disqualify a `to` whose second character is `/` **or** `\`
+(and a `\` anywhere else, which no local path here needs). `preview.test.ts`
+already has the `//` rows to copy.
+
+### A4 · `/api/draft` answers a missing `PREVIEW_SECRET` with a bare 500
+
+**Owner: `src/app/api/draft/route.ts` (T-12's file)** (recorded in
+`task/t-12-draft-preview.md`)
+
+`secretMatches()` throws when the key is absent from Vault, deliberately: a
+failure to *read* the expected secret is an outage, not a refusal. `/api/draft`
+does not catch it. `/api/revalidate`, which has exactly the same dependency,
+returns 503 and writes `log.error('cannot verify', …)` for the same case.
+
+Measured with `PREVIEW_SECRET` removed from the Vault path and nothing else
+changed: HTTP 500, empty body, and the only record is an unhandled stack trace
+in the server output. `grep ' [ERROR] '` finds nothing, which is the silence
+AGENT.md 5.8 exists to prevent.
+
+### A5 · The draft banner renders on two templates, not on the site
+
+**Owner: T-12's components; T-16 for where it belongs** (recorded in
+`task/t-12-draft-preview.md` and `task/t-16-layout-shell.md`)
+
+`<DraftBanner>` is rendered inside `ContentPage` and `ServicePage`. The draft
+cookie is site-wide and lasts until someone exits, so an editor who previews a
+draft and then goes to `/` is still in draft mode — with nothing saying so and no
+way out. Next's own draft-mode guide says to render the indicator from the root
+layout for this reason.
+
+Measured with a draft cookie: `/` and an unknown slug (the 404) contain no
+`role="status"` at all.
+
+Moving it into `LocaleLayout` was tried, and the build output is unchanged —
+every content route still `●`, both home pages still `○` — so T-10's static
+generation is not what stands in the way. It needs the per-page `<DraftBanner>`
+removed in the same change, or two banners render; the exit link then returns to
+the locale home instead of the previewed path, which also stops an editor
+exiting a never-published draft onto the empty 404 of A1.
+
+### A6 · Two smaller rule slips in T-12's files
+
+**Owner: T-12's files** (recorded in `task/t-12-draft-preview.md`)
+
+Neither is user-visible today; both are the kind of thing that is cheapest to
+fix before another file copies it.
+
+- **`DraftBanner.tsx` styles itself with inline `style={{…}}` objects.** AGENT.md
+  section 6 is "Tailwind utility classes only". The repo's only other `style`
+  prop is in `OpenGraphImage.tsx`, where `next/og` leaves no choice. The banner
+  has that choice, and as written T-15 cannot theme it.
+- **The exit side of the preview contract hardcodes its parameter names.**
+  `preview.ts` declares `PARAM` as the one place those names live, "shared by the
+  builder and the parser", precisely so a rename cannot half-land — and then
+  `to` and `locale` are spelled as literals in `api/draft/exit/route.ts` and
+  `DraftBanner.tsx`.
+
 ---
 
 ## B. Documentation inconsistencies
@@ -79,6 +161,28 @@ which the closed PR #15 already made once.
 **Left as a note rather than an edit** because changing a task's stated
 dependencies is a planning decision, not a typo fix. Both files should be
 corrected before Phase 3 opens.
+
+### B2 · T-12 describes a refactor of `/api/revalidate` that never landed
+
+**Owner: `src/app/api/revalidate/route.ts` and `src/lib/secrets.ts`** (recorded in
+`task/t-12-draft-preview.md`)
+
+T-12's commit message says the timing-safe comparison "moved into secrets.ts as
+`secretMatches` … `/api/revalidate` now uses it too rather than keeping a second
+hand-rolled copy", and `secrets.ts` repeats it in prose: "Two endpoints need it —
+`/api/revalidate` and `/api/draft`".
+
+Neither is true. `/api/revalidate` still has its own `matches()` and its own
+`createHash`/`timingSafeEqual` import, and `git log -- src/app/api/revalidate/route.ts`
+stops at T-11. The file was simply not in the commit.
+
+So the second hand-rolled comparison the refactor existed to remove is still
+there, in the one area — credential handling — where AGENT.md 5.7 asks for a
+single place. The fix is three lines and the behaviour is identical; what makes
+it worth doing is that a reader who trusts either comment will not go looking.
+
+The same T-12 commit also says `draftMode()` is read "in the page component and
+in the banner" for the home pages. It is not read there at all — see A5.
 
 ---
 
@@ -170,6 +274,27 @@ Neither path is in `.gitignore`, so both are one `git add -A` away from being
 committed by accident. Either ignore `.claude/settings.local.json` and commit a
 deliberate shared `settings.json`, or ignore the directory.
 
+### E3 · `npm ci` fails on the committed lockfile
+
+**Owner: whoever next touches dependencies — found in the T-12 review**
+
+A clean checkout cannot install:
+
+```
+npm error `npm ci` can only install packages when your package.json and
+npm error package-lock.json … are in sync.
+npm error Missing: yaml@2.9.1 from lock file
+```
+
+`npm install` resolves it and rewrites 174 lines of the lockfile, so the lock is
+simply behind — it was last committed in T-08, and `cosmiconfig` now wants a
+`yaml` the tree does not carry.
+
+This is not local-only inconvenience: `npm ci` is what a CI job and Vercel's
+default install step run, and both fail the same way. The fix is one `npm install`
+and committing the lockfile it produces, on its own, so the diff is reviewable as
+a dependency change rather than riding a feature branch.
+
 ---
 
 ## F. Watch list
@@ -182,6 +307,15 @@ surrounding assumption changed.
   until someone writes the English one. That is Payload's documented fallback
   working as designed, and T-23 writes both. It becomes a defect only if T-23
   ships with one locale filled in.
+- **`PREVIEW_SECRET` reaches every editor's browser.** `admin.preview` builds the
+  URL with the secret in the query string, which is Next's documented CMS-preview
+  contract and the reason `/api/draft` can trust the request — but it does mean
+  the live value is in the HTML of each document view (verified: one occurrence
+  in the server-rendered admin page), and from there in history and devtools for
+  anyone with the `editor` role. That is the designed trade, not a defect. It
+  becomes one if the secret is ever given a second job, or if "editor" stops
+  meaning "may read every draft" — and it is why rotating it means Vault plus a
+  redeploy, not just Vault.
 - **A cache miss is cached under the same tag as a hit**, so an unknown slug
   occupies an entry for an hour. Bounded by the revalidate floor, and load
   bearing: it is what makes publishing a draft take effect through T-11's purge

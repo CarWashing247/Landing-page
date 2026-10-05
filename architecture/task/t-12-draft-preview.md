@@ -132,3 +132,38 @@ npm run build | sed -n '/Route (app)/,/^$/p'          # still ○/●
   be checked yet — T-13 builds the sitemap. What *is* verified here is the
   input it will use: `publishedSlugs()` from T-10 excludes drafts, and the build
   output lists no draft route.
+
+## Found in review, not fixed
+
+A review of this task against a running build found five things. All of them are
+in `architecture/follow-ups.md`, with the measurements; they are listed here
+because this is the file someone will open when preview misbehaves.
+
+- **A3 — `safeLocalPath` passes `/\host`.** `/api/draft/exit?to=/\evil.example`
+  redirects off-site, with no secret and no cookie needed. The guard rejects
+  `//host` and absolute URLs but not the backslash form, which browsers read as
+  an authority. One line, plus a test row beside the existing `//` ones.
+- **A4 — a missing `PREVIEW_SECRET` makes `/api/draft` 500** with no `logger()`
+  line at all. `/api/revalidate` answers the same condition with 503 and an
+  ERROR line.
+- **A5 — the banner only renders on the two content templates.** Draft mode is
+  invisible and unexitable on `/` and on the 404 while the cookie stays set. It
+  belongs in `LocaleLayout`; that was measured and costs no build output.
+- **A6 — two rule slips**: the banner styles itself with inline `style` objects
+  against AGENT.md 6, and the exit side spells `to` and `locale` as literals
+  rather than through `PARAM`, which the contract module exists to prevent.
+- **B2 — the commit message for this task is wrong in two places.** It says
+  `/api/revalidate` was moved onto `secretMatches()` (it was not — the duplicate
+  comparison is still there, and `secrets.ts` claims the same thing in prose),
+  and it says the home pages read `draftMode()` (they do not).
+
+What the review did confirm, against the built server: 401 with no secret and
+with a wrong one, 400 for a missing slug, an unknown collection or an unserved
+locale, 404 with no `Set-Cookie` for a slug with no document, 307 plus the cookie
+on success; the draft renders for the cookie holder while an anonymous request to
+the same URL 404s or keeps the published version; the draft response carries
+`Cache-Control: private, no-cache, no-store` and leaves the published entry
+intact; the Preview button renders a relative `/api/draft?…` URL; the exit clears
+the cookie and sends an absolute or protocol-relative `to` to the locale home;
+and the build still lists both content routes as `●` with only the published slug
+prerendered, both home pages `○`, and both draft routes `ƒ`.
