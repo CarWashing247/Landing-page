@@ -1,5 +1,4 @@
-import type { Metadata } from 'next'
-
+import { notFoundMetadata } from '../components/seo/metadata'
 import './globals.css'
 
 /**
@@ -10,10 +9,15 @@ import './globals.css'
  * `lang`. This file must return a full document. Enabled by
  * `experimental.globalNotFound` in next.config.mjs.
  */
-export const metadata: Metadata = {
-  title: 'AutoWash247',
-  robots: { index: false, follow: false },
-}
+
+/**
+ * Assembled by `notFoundMetadata()` rather than written here, so the rule that
+ * no `Metadata` object is built outside `src/components/seo/metadata.ts` holds
+ * with no exception (AGENT.md 5.2). The brand is a literal because this page
+ * renders for URLs that match no route, so there is no request context to read
+ * `SiteSettings` for and nothing worth a database round trip on a 404.
+ */
+export const metadata = notFoundMetadata('AutoWash247')
 
 const GlobalNotFound = () => (
   <html lang="vi">

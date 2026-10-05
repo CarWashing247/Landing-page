@@ -6,6 +6,9 @@ import {
   isLocale,
   localeFromPath,
   otherLocales,
+  pathForHome,
+  pathForPage,
+  pathForService,
   prefixFor,
   urlFor,
 } from './locales'
@@ -91,5 +94,29 @@ describe('otherLocales', () => {
   it('lists the locales to advertise as alternates', () => {
     expect(otherLocales('vi')).toEqual(['en'])
     expect(otherLocales('en')).toEqual(['vi'])
+  })
+})
+
+describe('route shapes', () => {
+  it('leaves Vietnamese unprefixed and prefixes English', () => {
+    expect(pathForHome('vi')).toBe('/')
+    expect(pathForHome('en')).toBe('/en')
+    expect(pathForPage('bang-gia', 'vi')).toBe('/bang-gia')
+    expect(pathForPage('pricing', 'en')).toBe('/en/pricing')
+  })
+
+  it('localizes the service segment, not just the slug', () => {
+    // Design.md 1.1a and section 3 both give `/en/services/<slug>`. A shared
+    // segment would put a Vietnamese word in the middle of an English URL.
+    expect(pathForService('rua-xe-nhanh', 'vi')).toBe('/dich-vu/rua-xe-nhanh')
+    expect(pathForService('quick-wash', 'en')).toBe('/en/services/quick-wash')
+  })
+
+  it('round-trips through localeFromPath, so the rewrite and the builder agree', () => {
+    for (const path of [pathForService('quick-wash', 'en'), pathForPage('pricing', 'en')]) {
+      expect(localeFromPath(path).locale).toBe('en')
+    }
+
+    expect(localeFromPath(pathForService('rua-xe-nhanh', 'vi')).locale).toBe('vi')
   })
 })

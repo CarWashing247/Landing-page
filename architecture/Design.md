@@ -716,11 +716,28 @@ where it is quieter than it deserves. If a second such case appears, add
 `WARN` rather than promoting both to `ERROR` and training everyone to skim
 errors.
 
-**Slug-level static generation is still open.** `generateStaticParams()`
-cannot prerender per slug behind a literal folder name, so T-10's criterion —
-each CMS page listed as prerendered, not `ƒ` — remains at risk for content
-routes specifically. **Decide before T-09**: accept `ƒ` with the tag cache in
-front, or reintroduce a dynamic segment for content routes only.
+**Slug-level static generation — decided at T-09: dynamic segments.** Content
+routes are `[slug]/page.tsx` and `dich-vu/[slug]/page.tsx` under each locale
+folder, so `generateStaticParams()` can prerender one route per locale per
+document in T-10 and T-10's criterion stands as written.
+
+The rule the plain-word folders exist to protect is untouched: **the filesystem
+still does not produce the public URLs.** `landing-page` and `landing-page-en`
+remain plain words, the public path reaches them through a rewrite, and the
+`[slug]` segment is below that boundary rather than at it. What changed is that
+the rewrite table now ends in a catch-all — `/:path*` onto the Vietnamese
+folder — because the slugs come from the CMS and an editor adding a page must
+not need a deploy. It is last in the table, so `/api/**`, `/admin/**`, `/en/**`
+and `/` are all claimed before it is reached, and it is in `afterFiles`, so real
+files and `/_next/**` never see it.
+
+The cost is two more redirect rules, sending `/landing-page/<path>` and
+`/landing-page-en/<path>` back out, so no page is reachable at two URLs. Both
+exclude `opengraph-image`: Next generates that route's URL from the internal
+pathname, and redirecting it put a 308 in front of every share card.
+
+T-09 leaves the content routes `ƒ`, which is correct — `generateStaticParams()`
+is T-10's job and the route files are written to receive it.
 
 ---
 

@@ -31,6 +31,10 @@ HTML on the first request, with zero JavaScript required.
   constants, so no caller builds a tag string by hand.
 - `generateStaticParams()` on `[slug]/page.tsx` and
   `dich-vu/[slug]/page.tsx`, returning published slugs from the CMS.
+  **Four route files, not two**: each locale has its own folder, and the
+  English service segment is `services/[slug]` (Design.md 1.1a). T-09 created
+  all four; each one's slugs come from its own locale, so the route count is
+  locales x documents as section 4 says.
 - `next: { tags: [...], revalidate: 3600 }` on **every** Payload query that
   feeds a page.
 - `notFound()` for a slug that is not a published document.
@@ -44,10 +48,11 @@ HTML on the first request, with zero JavaScript required.
 ## Steps
 
 1. Write `src/lib/cache-tags.ts`. Keep it dependency-free.
-2. Add a thin query layer in `src/lib/payload.ts` (or alongside) so each
-   content fetch has one call site that already carries its tags. This is
-   what makes the "no inline tag literals" rule hold by construction rather
-   than by review.
+2. The thin query layer already exists: **`src/lib/content.ts`**, added by
+   T-09 for this purpose. Every public page reads through it, so attaching
+   tags there is an added option rather than a restructuring. Note it does two
+   reads per document — the rendered locale, and a `locale: 'all'` read for the
+   slug and canonical that must not be fallback-resolved — and both need tags.
 3. Add `generateStaticParams()` to both dynamic routes, filtering to
    `_status: 'published'`.
 4. Attach tags and `revalidate: 3600` to every query. The floor is a safety

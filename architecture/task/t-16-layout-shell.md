@@ -30,6 +30,16 @@ later.
 - Semantic landmarks (`<header>`, `<nav>`, `<main>`, `<footer>`) and a skip
   link.
 
+**In scope, added after T-09**
+
+- **A working 404 page.** T-09's catch-all rewrite made every URL match a
+  route, so `app/global-not-found.tsx` no longer renders for public paths and an
+  unknown slug returns a 404 with the right status and `noindex` but an **empty
+  body**. The shell is this task's subject, and a 404 that renders the header
+  and footer is the natural fix. Note that `not-found.tsx` per locale does
+  nothing while `experimental.globalNotFound` is on, and turning that flag off
+  leaves the same empty shell — both were measured in T-09. See that task file.
+
 **Out of scope**
 
 - The pages themselves (T-17, T-18, T-19).

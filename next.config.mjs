@@ -55,6 +55,30 @@ const nextConfig = {
     return [
       { source: '/landing-page', destination: '/', permanent: true },
       { source: '/landing-page-en', destination: '/en', permanent: true },
+      /**
+       * The content routes added in T-09 are nested, so the two rules above no
+       * longer cover every internal path. Without these, `/landing-page/bang-gia`
+       * serves the same page as `/bang-gia` and Google picks one of them.
+       *
+       * `opengraph-image` is excluded, and that exclusion is load-bearing. Next
+       * generates that route's URL from the *internal* pathname, so the
+       * `og:image` tag reads `/landing-page/opengraph-image?<hash>`. Redirecting
+       * it put a 308 in front of every share card — which Facebook does follow,
+       * but it is one more thing between Zalo and a picture, on the one image
+       * path that exists precisely because the alternative is no image at all.
+       * An image served at two URLs costs nothing: it is not a page, it is not
+       * in the sitemap, and nothing competes for a ranking with it.
+       */
+      {
+        source: '/landing-page/:path((?!opengraph-image$).*)',
+        destination: '/:path',
+        permanent: true,
+      },
+      {
+        source: '/landing-page-en/:path((?!opengraph-image$).*)',
+        destination: '/en/:path',
+        permanent: true,
+      },
       { source: '/crm/admin/:path*', destination: '/admin', permanent: false },
       { source: '/crm/api/:path*', destination: '/api/:path*', permanent: false },
     ]
@@ -87,6 +111,22 @@ const nextConfig = {
         { source: '/en', destination: '/landing-page-en' },
         { source: '/en/:path*', destination: '/landing-page-en/:path*' },
         { source: '/', destination: '/landing-page' },
+        // Vietnamese content paths. This has to be a catch-all: the slugs come
+        // from the CMS, so there is no finite list to enumerate here, and an
+        // editor adding a page must not need a deploy (project goal 2).
+        //
+        // It is last on purpose. These rules are matched in order, so every
+        // specific path above — `/api/**`, `/admin/**`, `/en/**`, `/` — is
+        // already claimed before this sees it. Being in `afterFiles` also means
+        // real files and `/_next/**` are never reached by it.
+        //
+        // Consequence worth knowing: with this rule, every URL matches a route,
+        // so `app/global-not-found.tsx` — which only renders for a URL matching
+        // no route at all — no longer runs for public paths. An unknown slug
+        // reaches `[slug]/page.tsx`, which calls `notFound()`. See the T-09 task
+        // file; a per-locale `not-found.tsx` does not fix it while
+        // `globalNotFound` is enabled.
+        { source: '/:path*', destination: '/landing-page/:path*' },
       ],
     }
   },

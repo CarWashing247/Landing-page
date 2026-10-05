@@ -24,7 +24,12 @@ than in the editor's memory.
 - `metadataBase` declared once, in `landing-page/layout.tsx`, from
   `NEXT_PUBLIC_SITE_URL`.
 - `generateMetadata()` on `landing-page/page.tsx`, `[slug]/page.tsx` and
-  `dich-vu/[slug]/page.tsx`, each delegating.
+  `dich-vu/[slug]/page.tsx`, each delegating — **and the English mirror of each**,
+  which the file list below originally omitted. Two locale folders means eight
+  route files, not four.
+- **Creating those `[slug]` routes at all**, plus the rewrite and redirect rules
+  that reach them. They did not exist before this task, and the acceptance
+  criteria below cannot be checked without them.
 - Fallback chain (Design.md 2.3):
   - blank `meta.title` → `${title} | ${brandName}` (via
     `SiteSettings.titleSuffix`)
@@ -63,13 +68,22 @@ than in the editor's memory.
 ## Files
 
 ```
-src/components/seo/metadata.ts
+src/components/seo/metadata.ts        # buildMetadata(), rootMetadata(), notFoundMetadata()
 src/components/seo/metadata.test.ts
-src/app/landing-page/layout.tsx
-src/app/landing-page/page.tsx
+src/components/seo/OpenGraphImage.tsx # the generated last-resort image
+src/components/ContentPage.tsx        # page body + its metadata helper, both locales
+src/components/ServicePage.tsx
+src/components/HomePage.tsx           # gains homeMetadata()
+src/lib/content.ts                    # the query layer; T-10 attaches tags here
+src/lib/locales.ts                    # SERVICE_SEGMENT and the pathFor* helpers
+next.config.mjs                       # catch-all rewrite + the matching redirects
+src/app/landing-page/{layout,page,opengraph-image}.tsx
 src/app/landing-page/[slug]/page.tsx
 src/app/landing-page/dich-vu/[slug]/page.tsx
-src/app/landing-page/opengraph-image.tsx
+src/app/landing-page-en/{layout,page,opengraph-image}.tsx
+src/app/landing-page-en/[slug]/page.tsx
+src/app/landing-page-en/services/[slug]/page.tsx
+src/app/global-not-found.tsx          # its inline Metadata moved into the builder
 ```
 
 ## Acceptance criteria
@@ -111,11 +125,74 @@ which is not what Zalo or Coc Coc sees.
 
 - `metadataBase` is the single most common cause of broken social previews
   in this stack. It is declared once, in the frontend root layout, and
-  nowhere else.
+  nowhere else. With two locale folders there are two root layouts, so both
+  get it from `rootMetadata()` rather than writing it twice.
 - Resist adding per-route tweaks inline "just this once". Every exception
   becomes the next page's precedent.
+- **Three behaviours shaped this task and none is visible from the config.**
+  - **`opengraph-image.tsx` does not cascade to nested route segments.**
+    Measured on a running server: `/` and `/en` carried an `og:image` from the
+    file in their own segment; `/bang-gia` and `/en/pricing` carried none at
+    all. Every CMS page would have shipped with no share image until someone
+    uploaded an `ogFallback` — the exact gap that file was added to close. So
+    `buildMetadata()` names the generated route by URL instead of relying on
+    the convention, and uses the public spelling (`/opengraph-image`,
+    `/en/opengraph-image`) rather than the internal folder Next would put in
+    the tag.
+  - **Payload's locale fallback makes a blank `canonical` actively wrong.**
+    `localization.fallback: true` means an English page that leaves the field
+    blank — which its own help text tells the editor to do — inherits the
+    Vietnamese page's canonical and tells Google the two are one page.
+    Reproduced before fixing: `/en/contact` emitted a canonical pointing at the
+    Vietnamese URL with `noindex` already released, so nothing said so. `slug`
+    has the same problem and breaks `hreflang` the same way. Both are read in
+    `src/lib/content.ts` with `locale: 'all'`, which is the only way to tell
+    "this locale has no value" from "its value equals the default's".
+  - **Next's `metadata` export is read only from a route module.** The one
+    `LocaleLayout.tsx` carried had never emitted anything, because that file is
+    a component, not an `app/**` layout.
+- The `og` image size is 1200x630 by construction (`fit: 'cover'`,
+  `withoutEnlargement: false` in `Media.ts`), so those dimensions are stated for
+  it. The *original* upload is whatever was uploaded, so its real `width` and
+  `height` are read from the `Media` record rather than assumed — Facebook sizes
+  the card from what it is told.
 
 ## Flags
 
-- None expected. If `NEXT_PUBLIC_SITE_URL` is still a `.vercel.app` URL
-  from T-04, note that canonicals will need revisiting at T-21.
+- If `NEXT_PUBLIC_SITE_URL` is still a `.vercel.app` URL from T-04, canonicals
+  will need revisiting at T-21.
+- **`/` is not CMS-backed, and T-09 does not decide that it should be.** T-23
+  lists `/` among the documents to create, but nothing in Design.md says which
+  slug the home document carries, and inventing one would commit two later tasks
+  to it — the `[slug]` route would have to refuse that slug so `/` and
+  `/trang-chu` are not one page at two URLs, and the sitemap would have to
+  special-case it. So the home route reads `SiteSettings` alone, which is
+  exactly the "blank SEO tab still ships complete tags" path. **T-17 owns the
+  decision**, since it builds the home body. Consequence today: the home
+  `<title>` is the brand name with no suffix appended, because
+  `AutoWash247 | AutoWash247` reads like a bug.
+- **The service path segment is localized** — `/dich-vu/<slug>` against
+  `/en/services/<slug>` (Design.md 1.1a and section 3, which say so twice).
+  AGENT.md section 4's layout sketch showed `dich-vu/[slug]` under both locale
+  folders; the sketch was the loose one and has been corrected.
+- **The 404 page renders an empty body for an unknown slug, and T-09 caused
+  it.** Before this task the public paths matched no route, so
+  `app/global-not-found.tsx` rendered with `lang="vi"`. T-09's catch-all rewrite
+  means every URL now matches a route, so an unknown slug reaches
+  `[slug]/page.tsx` and `notFound()` instead. Measured: 404 with
+  `<meta name="robots" content="noindex">` — so the status and the indexing are
+  correct — but `<html id="__next_error__">` with no `lang` and **no visible
+  body**.
+
+  Not fixed here, and not for want of trying. Adding `not-found.tsx` under each
+  locale folder does nothing while `experimental.globalNotFound` is enabled
+  (Next never builds the file). Turning that flag off makes the component render
+  into the RSC payload but the SSR shell stays `__next_error__` with the same
+  empty body — the flag exists because this app has two root layouts, which is
+  exactly the case Next's docs give for it. Fixing it properly is a 404
+  architecture decision, not a metadata one, so it is left out of T-09 rather
+  than half-done. **The 404 copy is still `TODO(copy)` either way**, so nothing
+  user-visible regressed in wording — only the shell.
+- The `admin.description` helper text added in T-08 and the placeholder bodies
+  here still carry `TODO(copy)`. Nothing in this task writes user-facing prose
+  beyond those placeholders.
