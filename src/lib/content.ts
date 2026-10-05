@@ -2,7 +2,7 @@ import { unstable_cache } from 'next/cache'
 import { cache } from 'react'
 
 import type { Page, Service, SiteSetting } from '../payload-types'
-import { GLOBALS_TAG, REVALIDATE_SECONDS, pageTag, serviceTag } from './cache-tags'
+import { GLOBALS_TAG, REVALIDATE_SECONDS, SITEMAP_TAG, pageTag, serviceTag } from './cache-tags'
 import { logger } from './log'
 import type { Locale } from './locales'
 import { pathForPage, pathForService } from './locales'
@@ -336,3 +336,82 @@ const pathsFrom = (
 
   return paths
 }
+
+/**
+ * One document's presence in the sitemap, per locale.
+ *
+ * `updatedAt` is not localized — one row, one timestamp — so publishing an
+ * English edit moves the Vietnamese entry's `lastModified` too. That is
+ * Payload's schema rather than a choice made here, and it is the honest answer
+ * anyway: the document did change.
+ */
+export type SitemapDocument = {
+  noindex: Partial<Record<Locale, boolean>>
+  slug: Partial<Record<Locale, string>>
+  updatedAt: string
+}
+
+/**
+ * Every published document in a collection, with each locale's slug and
+ * `noindex` flag, in **one** query.
+ *
+ * `locale: 'all'` returns the localized fields as per-locale maps, which is the
+ * only way to answer both questions this needs:
+ *
+ *  - **Does this locale have a slug of its own?** A normal read is
+ *    fallback-resolved, so a document with no English translation comes back
+ *    carrying the Vietnamese slug — and listing `/en/bang-gia` in the sitemap
+ *    would be advertising a URL that 404s.
+ *  - **Is this locale `noindex`?** The flag is localized precisely so an
+ *    untranslated English page can be hidden while the Vietnamese one ranks
+ *    (Design.md 2.3). Read through the fallback, the English flag would be
+ *    whatever Vietnamese says.
+ *
+ * Done per locale this would be one query for the list plus one per document
+ * — which is what `publishedSlugs` does for `generateStaticParams`, where the
+ * cost is paid once at build. A sitemap is served on request, so it gets the
+ * single-query form.
+ *
+ * `pagination: false` with `limit: 0` returns every row rather than the first
+ * page, so the filter cannot be quietly truncated by a default page size.
+ */
+const sitemapDocuments = async (collection: 'pages' | 'services'): Promise<SitemapDocument[]> => {
+  const payload = await getPayload()
+
+  const { docs } = await payload.find({
+    collection,
+    depth: 0,
+    limit: 0,
+    locale: 'all',
+    /**
+     * Published only, through the real access control rather than a second
+     * copy of `_status: 'published'` written here — `publishedOrStaff` from
+     * T-06 is what the public read path uses, and a sitemap that disagreed
+     * with it would advertise pages that 404.
+     */
+    overrideAccess: false,
+    pagination: false,
+    select: { meta: { noindex: true }, slug: true, updatedAt: true },
+  })
+
+  return (docs as unknown as Array<Record<string, unknown>>).map((doc) => ({
+    noindex: (doc.meta as { noindex?: Partial<Record<Locale, boolean>> } | undefined)?.noindex ?? {},
+    slug: (doc.slug ?? {}) as Partial<Record<Locale, string>>,
+    updatedAt: String(doc.updatedAt ?? new Date().toISOString()),
+  }))
+}
+
+/**
+ * The sitemap's input: both collections, under the `sitemap` tag.
+ *
+ * Tagged so T-11's purge reaches it — every `afterChange` and `afterDelete`
+ * already sends `SITEMAP_TAG`, which until now purged nothing because nothing
+ * cached was the sitemap.
+ */
+export const loadSitemap = cache(
+  async (): Promise<{ pages: SitemapDocument[]; services: SitemapDocument[] }> =>
+    tagged(SITEMAP_TAG, ['sitemap'], async () => ({
+      pages: await sitemapDocuments('pages'),
+      services: await sitemapDocuments('services'),
+    })),
+)
