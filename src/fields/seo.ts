@@ -167,19 +167,47 @@ const overrides: Record<string, Partial<Field>> = {
  * Passed to the plugin as its `fields` override: renames what it ships and
  * appends what it does not.
  */
+/**
+ * Apply an override without throwing away what the plugin put there.
+ *
+ * A plain `{ ...field, ...override }` is shallow, and every one of the plugin's
+ * fields keeps its custom React component under `admin.components`. Overriding
+ * `admin` to add a description replaced that object wholesale and silently
+ * unmounted the component: `MetaImageComponent` disappeared from the generated
+ * import map — no thumbnail, no generate button — while the field still looked
+ * configured. Caught by reading the import map, not the config.
+ */
+const applyOverride = (field: Field, override: Partial<Field>): Field => {
+  const fieldAdmin = ('admin' in field ? field.admin : undefined) ?? {}
+  const overrideAdmin = ('admin' in override ? override.admin : undefined) ?? {}
+
+  return {
+    ...field,
+    ...override,
+    admin: {
+      ...fieldAdmin,
+      ...overrideAdmin,
+      // The plugin's component is the whole point of using the plugin.
+      ...('components' in fieldAdmin ? { components: fieldAdmin.components } : {}),
+    },
+  } as Field
+}
+
 export const seoFields = ({ defaultFields }: { defaultFields: Field[] }): Field[] => [
   ...defaultFields.map((field) => {
+    // Every field the plugin ships is named, `overview` and `preview` included,
+    // so each one reaches this lookup; only the three in `overrides` are touched.
     const name = 'name' in field ? field.name : undefined
     const override = name ? overrides[name] : undefined
 
-    // The Overview and Preview fields are unnamed UI fields; they pass through.
-    return override ? ({ ...field, ...override } as Field) : field
+    return override ? applyOverride(field, override) : field
   }),
   ...customFields,
 ]
 
 /**
- * Force `noindex` on a translation that has no SEO text of its own.
+ * Keep an untranslated translation out of Google, and let it back in the moment
+ * it is translated.
  *
  * Design.md 2.3 asks for this, and the reason is specific: Payload's field-level
  * fallback means an English page with an empty SEO tab renders *Vietnamese* text
@@ -194,12 +222,25 @@ export const seoFields = ({ defaultFields }: { defaultFields: Field[] }): Field[
  * is the normal and expected state there: Design.md 2.3 itself says a page must
  * ship fine with the editor never opening it, and `buildMetadata()` fills the
  * gap. Applying it to `vi` would quietly de-index the entire site, one page at a
- * time. So the default locale is exempt, and the flag is explained in the task
- * file rather than left as a surprise.
+ * time. So the default locale is exempt.
  *
- * Only ever turns the flag **on**. An editor who ticked it by hand keeps it
- * ticked after translating, because un-ticking someone's deliberate choice is
- * not this hook's business.
+ * **`data.meta` is the whole group, not the editor's delta.** Payload merges the
+ * stored document into it before this hook runs — verified by logging it — so
+ * every key is always present and `'noindex' in data.meta` says nothing about
+ * what the editor touched. Anything built on key presence silently does the
+ * wrong thing: an attempt to "respect an explicit choice" that way treated the
+ * stored value as a fresh decision and the auto-flag was never released. What
+ * *is* reliable is comparing the incoming group against what this locale already
+ * holds, which is what the stored read below is for.
+ *
+ * So the rule is a transition, not a state:
+ *
+ *  - **While untranslated, `noindex` is forced on.** Including over an attempt to
+ *    clear it, because letting it be cleared is the outcome being prevented.
+ *  - **On the single transition from untranslated to translated**, an auto-set
+ *    flag is released, which is Design.md's "becomes indexable by itself".
+ *  - **Afterwards the hook never touches it again**, so an editor who hides a
+ *    translated page by hand keeps it hidden.
  */
 export const forceNoindexWhenUntranslated =
   (collection: 'pages' | 'services'): CollectionBeforeChangeHook =>
@@ -210,43 +251,50 @@ export const forceNoindexWhenUntranslated =
       return data
     }
 
-    const incoming = (data as { meta?: { description?: unknown; title?: unknown } }).meta
+    const incoming = (data as { meta?: Record<string, unknown> }).meta ?? {}
 
     /**
-     * A partial update may not carry `meta` at all, and `originalDoc` is
-     * fallback-resolved — it would show the Vietnamese title under `en` and make
-     * an untranslated page look translated. So the stored values are read for
-     * this locale with the fallback off, the same way the slug lock does it.
+     * What this locale already holds, read with the fallback off.
+     *
+     * `originalDoc` cannot answer it: it is fallback-resolved, so it shows the
+     * Vietnamese title under `en` and makes an untranslated page look
+     * translated. `draft: true` so the draft being edited is read rather than the
+     * last published row — otherwise translating a draft looks like no change.
      */
-    let title = incoming?.title
-    let description = incoming?.description
+    const stored =
+      originalDoc?.id === undefined
+        ? undefined
+        : ((await req.payload.findByID({
+            collection,
+            id: originalDoc.id as number | string,
+            depth: 0,
+            draft: true,
+            fallbackLocale: false,
+            locale,
+            overrideAccess: true,
+            req,
+          })) as { meta?: Record<string, unknown> } | undefined)
 
-    if (incoming === undefined && originalDoc?.id !== undefined) {
-      const stored = await req.payload.findByID({
-        collection,
-        id: originalDoc.id as number | string,
-        depth: 0,
-        fallbackLocale: false,
-        locale,
-        overrideAccess: true,
-        req,
-      })
-
-      const storedMeta = (stored as { meta?: { description?: unknown; title?: unknown } } | undefined)
-        ?.meta
-
-      title = storedMeta?.title
-      description = storedMeta?.description
-    }
+    const storedMeta = stored?.meta ?? {}
 
     const isEmpty = (value: unknown): boolean =>
       value === null || value === undefined || (typeof value === 'string' && value.trim() === '')
 
-    if (isEmpty(title) && isEmpty(description)) {
-      return {
-        ...data,
-        meta: { ...(incoming ?? {}), noindex: true },
-      }
+    const hasNoSeoText = (meta: Record<string, unknown>): boolean =>
+      isEmpty(meta.title) && isEmpty(meta.description)
+
+    const nowUntranslated = hasNoSeoText(incoming)
+
+    if (nowUntranslated) {
+      return storedMeta.noindex === true && incoming.noindex === true
+        ? data
+        : { ...data, meta: { ...incoming, noindex: true } }
+    }
+
+    // The one transition: it had no SEO text, it does now, and the flag on it was
+    // this hook's doing.
+    if (hasNoSeoText(storedMeta) && storedMeta.noindex === true) {
+      return { ...data, meta: { ...incoming, noindex: false } }
     }
 
     return data

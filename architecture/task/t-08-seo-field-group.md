@@ -121,6 +121,21 @@ grep -n "meta" src/payload-types.ts | head -20
   mistake to fall.
 - `keywordFocus` is never rendered. Its only job is to stop two editors
   writing two pages against the same term (Design.md section 3).
+- **Two Payload behaviours shape the `noindex` guardrail, and both are
+  invisible from the config.**
+  - `data.meta` in a `beforeChange` hook is the **whole merged group**, not the
+    editor's delta: Payload folds the stored document into it first, so every
+    key is always present and `'noindex' in data.meta` says nothing about what
+    was touched. Logic built on key presence reads a stored value as a fresh
+    decision — which is how a first attempt at this guardrail left the auto-flag
+    permanently on. Compare against a separate read of the stored row instead.
+  - Overriding a plugin field's `admin` **replaces** `admin.components`, which
+    silently unmounts the plugin's own React component. `MetaImageComponent`
+    vanished from the import map that way. Merge `admin` and carry `components`
+    across.
+- **Overriding a plugin field needs the import map regenerated**, and the
+  generated file is the only place the omission is visible — the config still
+  looks right.
 
 ## Flags
 
