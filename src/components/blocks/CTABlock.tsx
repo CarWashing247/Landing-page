@@ -1,0 +1,2 @@
+import { Button } from '../ui/Button'
+export const CTABlock=()=> <section className="bg-[var(--color-brand-primary)] py-24 text-white"><div className="mx-auto max-w-[1260px] px-5 lg:px-0"><h2 className="max-w-4xl text-[42px] font-bold leading-tight tracking-[-0.03em]">Sẵn sàng cho một cách rửa xe mới?</h2><p className="mt-5 max-w-2xl text-[17px]">Tìm trạm AutoWash247 gần bạn và bắt đầu trải nghiệm.</p><div className="mt-10"><Button href="#lien-he" variant="light">Tìm trạm AutoWash247</Button></div></div></section>
