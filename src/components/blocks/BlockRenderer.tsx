@@ -8,14 +8,14 @@ import { TechnologyBlock } from './TechnologyBlock'
 
 type Block = { id?: string | null; blockType: string; [key: string]: unknown }
 
-export const BlockRenderer = ({ blocks }: { blocks?: Block[] | null }) => (
+export const BlockRenderer = ({ blocks, locale }: { blocks?: Block[] | null; locale: 'vi' | 'en' }) => (
   <>
     {blocks?.map((block) => {
       switch (block.blockType) {
         case 'hero': return <HeroBlock key={block.id} />
         case 'benefits': return <BenefitsBlock key={block.id} />
         case 'steps': return <StepsBlock key={block.id} />
-        case 'pricing': return <PricingBlock key={block.id} />
+        case 'pricing': return <PricingBlock key={block.id} locale={locale} />
         case 'technology': return <TechnologyBlock key={block.id} />
         case 'faq': return <FAQBlock key={block.id} />
         case 'cta': return <CTABlock key={block.id} />
