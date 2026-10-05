@@ -73,3 +73,23 @@ export const canUseAdminPanel = ({ req: { user } }: { req: PayloadRequest }): bo
  * content from T-06 onward.
  */
 export const anyone: Access = () => true
+
+/**
+ * Public reads see published documents; staff see drafts as well.
+ *
+ * This is `anyone` for anything with `versions: { drafts: true }`, and it has to
+ * be a `Where` rather than a boolean for the same reason `isAdminOrSelf` does:
+ * Payload filters the rows instead of refusing the request. A flat `anyone` on
+ * a drafted collection serves unpublished work to `GET /api/pages` — and to
+ * crawlers — because the draft filter is a query concern, not an access one.
+ *
+ * Staff keep the unfiltered view so the admin list shows drafts, which is the
+ * whole point of having them.
+ */
+export const publishedOrStaff: Access = ({ req: { user } }) => {
+  if (isStaff(user)) {
+    return true
+  }
+
+  return { _status: { equals: 'published' } }
+}

@@ -3,6 +3,7 @@ import * as migration_20261003_130303_media from './20261003_130303_media';
 import * as migration_20261003_133714_roles from './20261003_133714_roles';
 import * as migration_20261003_141502_localization from './20261003_141502_localization';
 import * as migration_20261004_151139_globals from './20261004_151139_globals';
+import * as migration_20261005_082937_pages from './20261005_082937_pages';
 
 export const migrations = [
   {
@@ -28,6 +29,11 @@ export const migrations = [
   {
     up: migration_20261004_151139_globals.up,
     down: migration_20261004_151139_globals.down,
-    name: '20261004_151139_globals'
+    name: '20261004_151139_globals',
+  },
+  {
+    up: migration_20261005_082937_pages.up,
+    down: migration_20261005_082937_pages.down,
+    name: '20261005_082937_pages'
   },
 ];
