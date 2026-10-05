@@ -1,58 +1,54 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, PayloadRequest } from 'payload'
 
+import type { AdminMessageKey } from '../i18n/admin-translations'
+import { adminMessage } from '../i18n/admin-translations'
 import { isAdmin, isAdminOrEditor, publishedOrStaff } from '../lib/access'
 import { recordSlugsAfterRestore, slugField } from '../lib/slug-field'
 
 /**
- * A whole number, at or above `minimum`.
+ * A whole number, at or above `minimum`, and present when the field says so.
  *
- * Both halves are here on purpose, because **a custom `validate` replaces
- * Payload's built-in number validation rather than adding to it.** Found by
- * testing: with only an integer check in `validate`, the `min` on these fields
- * stopped being enforced entirely and the API accepted `durationMinutes: 0`,
- * `-5` and `price: -1` with a 201. `min` is still declared on each field — it
- * drives the admin input's attributes and documents the intent — but it is this
- * function that enforces it.
+ * All three checks are here because **a user-supplied `validate` replaces
+ * Payload's default field validation rather than adding to it** — it is
+ * installed only when `field.validate === undefined`
+ * (`node_modules/payload/dist/fields/config/sanitize.js`), and
+ * `validations.number` is the only place `min` and `required` are enforced.
  *
- * Integers because Payload maps a `number` field to Postgres `numeric`, so
- * `150000.5` stores and round-trips happily, then reaches the page as an odd
- * price and the JSON-LD `Offer` as a price Google reads literally. Dong has no
- * subunit in practice and a wash is not timed to the half minute, so a
- * fractional value here is always a typo.
+ * That trap bit twice, both times found by testing rather than reading:
+ *
+ *  1. with only an integer check here, `min` stopped applying and the API took
+ *     `durationMinutes: 0`, `-5` and `price: -1` with a 201;
+ *  2. `required` stopped applying too, so a service could be created and
+ *     published with `price: null` while `payload-types.ts` promises a
+ *     `number` — T-14's JSON-LD `Offer` and T-18's page would both read null.
+ *
+ * `required` is read from the options rather than hard-coded, because Payload
+ * spreads the field config into them. Drafts stay saveable while incomplete:
+ * Payload skips the whole `validate` call for a draft
+ * (`skipValidation: isSavingDraft`), so this only ever runs on publish.
+ *
+ * Integers, because Payload maps a `number` field to Postgres `numeric`, so
+ * `150000.5` stores and round-trips happily and then reaches Google as a price
+ * it reads literally. Dong has no subunit in practice and a wash is not timed to
+ * the half minute, so a fractional value here is always a typo.
  */
 const wholeNumberAtLeast =
-  (minimum: number, message: string) =>
-  (value: number | null | undefined): string | true => {
+  (minimum: number, messageKey: AdminMessageKey) =>
+  (
+    value: number | null | undefined,
+    options: { req: PayloadRequest; required?: boolean },
+  ): string | true => {
     if (value === null || value === undefined) {
-      // Absence is `required`'s business, not this validator's.
-      return true
+      // Payload's own string, so it matches every other required field's
+      // wording in whichever language the panel is set to.
+      return options.required ? options.req.t('validation:required') : true
     }
 
-    return Number.isInteger(value) && value >= minimum ? true : message
+    return Number.isInteger(value) && value >= minimum
+      ? true
+      : adminMessage(options.req, messageKey)
   }
 
-/**
- * One document per wash package, each becoming `/dich-vu/<slug>`.
- *
- * **Price is the field that needs care.** It is rendered on the page *and*
- * emitted as a JSON-LD `Offer` (T-14) — two consumers that must not disagree
- * about whether `150000` means dong or thousands of dong. So the number is
- * stored as an integer count of dong and the unit is a separate, visible,
- * read-only field rather than a convention in a developer's head. A formatted
- * string would be worse than either: `"150.000₫"` cannot be compared, summed or
- * put in an `Offer` without being parsed back.
- *
- * `name`, `slug` and `includes` are **localized**; `price`, `durationMinutes`
- * and `image` are not (Design.md 2.1) — one price and one photo, whatever
- * language you read them in. That split is a schema decision, so it is settled
- * here rather than revisited later.
- *
- * The slug behaves exactly as on `Pages`, through the same shared field: locked
- * once published, generated from `name`, separate per locale. See
- * `src/lib/slug-field.ts` for the three traps that live behind it.
- *
- * The SEO tab is deliberately absent — T-08 owns it.
- */
 export const Services: CollectionConfig = {
   slug: 'services',
   labels: {
@@ -114,10 +110,7 @@ export const Services: CollectionConfig = {
           // Dong has no subunit in practice, and a fractional price would reach
           // the JSON-LD `Offer` as `150000.5`.
           min: 0,
-          validate: wholeNumberAtLeast(
-            0,
-            'Giá phải là số nguyên không âm, ví dụ 150000. / The price must be a whole number, zero or more, e.g. 150000.',
-          ),
+          validate: wholeNumberAtLeast(0, 'priceMustBeWholeNumber'),
           label: { en: 'Price', vi: 'Giá' },
           admin: {
             width: '35%',
@@ -163,10 +156,7 @@ export const Services: CollectionConfig = {
           // Zero or negative is not a short wash, it is a typo — and it would
           // reach the page as "0 phút".
           min: 1,
-          validate: wholeNumberAtLeast(
-            1,
-            'Thời lượng phải là số nguyên phút, ít nhất 1. / The duration must be a whole number of minutes, at least 1.',
-          ),
+          validate: wholeNumberAtLeast(1, 'durationMustBeWholeMinutes'),
           label: { en: 'Duration (minutes)', vi: 'Thời lượng (phút)' },
           admin: {
             width: '45%',
