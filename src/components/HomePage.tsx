@@ -1,53 +1,40 @@
 import type { Metadata } from 'next'
-
-import { loadSiteSettings } from '../lib/content'
+import { BenefitsBlock } from './blocks/BenefitsBlock'
+import { CTABlock } from './blocks/CTABlock'
+import { FAQBlock } from './blocks/FAQBlock'
+import { HeroBlock } from './blocks/HeroBlock'
+import { PricingBlock } from './blocks/PricingBlock'
+import { StepsBlock } from './blocks/StepsBlock'
+import { TechnologyBlock } from './blocks/TechnologyBlock'
+import { Footer } from './layout/Footer'
+import { Header } from './layout/Header'
+import { loadServices, loadSiteSettings } from '../lib/content'
 import type { Locale } from '../lib/locales'
 import { LOCALES, pathForHome } from '../lib/locales'
 import { buildMetadata } from './seo/metadata'
 
-/**
- * Placeholder home page, shared by both locales.
- *
- * Real content is T-23 and the blocks that render it are T-17. The locale
- * arrives as a prop from the per-locale folder, so it is a build-time
- * constant and this stays statically prerenderable.
- *
- * Interface strings move to the T-15A catalog; the literals below are the
- * ones that task converts.
- */
-export const HomePage = ({ locale }: { locale: Locale }) => (
-  <main>
-    <h1>AutoWash247</h1>
-    <p>
-      {locale === 'vi'
-        ? 'TODO(copy): nội dung trang chủ — xem T-17 (blocks) và T-23 (seed).'
-        : 'TODO(copy): home page content — see T-17 (blocks) and T-23 (seed).'}
-    </p>
-  </main>
-)
+export const HomePage = async ({ locale }: { locale: Locale }) => {
+  const services = await loadServices(locale)
+  return (
+    <>
+      <Header locale={locale} />
+      <main>
+        <HeroBlock />
+        <BenefitsBlock />
+        <StepsBlock />
+        <PricingBlock services={services} locale={locale} />
+        <TechnologyBlock />
+        <FAQBlock />
+        <CTABlock />
+      </main>
+      <Footer locale={locale} />
+    </>
+  )
+}
 
-/**
- * Home-page metadata — fallbacks only, deliberately.
- *
- * **`/` is not CMS-backed yet, and T-09 does not decide that it should be.**
- * T-23 step 1 lists `/` among the documents to create, but nothing in Design.md
- * says which slug the home document carries, and inventing one here would
- * commit two later tasks to it: the `[slug]` route would have to refuse that
- * slug so `/` and `/trang-chu` are not the same page at two URLs, and the
- * sitemap would have to special-case it. So the home route reads
- * `SiteSettings` alone, which is exactly the "blank SEO tab still ships
- * complete tags" path, and T-17 — which builds the home body — wires a document
- * in if that is what it wants.
- *
- * The consequence to know: the home `<title>` is the brand name, with no
- * suffix appended, because appending `| AutoWash247` to `AutoWash247` reads
- * like a bug. Its description is `SiteSettings.defaultDescription`.
- */
 export const homeMetadata = async (locale: Locale): Promise<Metadata> =>
   buildMetadata({
     locale,
-    // Both locales always serve a home page, so both `hreflang` links are
-    // always honest here — unlike a document, which may exist in only one.
     paths: Object.fromEntries(LOCALES.map((candidate) => [candidate, pathForHome(candidate)])),
     settings: await loadSiteSettings(locale),
   })
