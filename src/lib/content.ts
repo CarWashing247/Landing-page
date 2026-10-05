@@ -340,12 +340,17 @@ const pathsFrom = (
 /**
  * One document's presence in the sitemap, per locale.
  *
- * `updatedAt` is not localized — one row, one timestamp — so publishing an
- * English edit moves the Vietnamese entry's `lastModified` too. That is
- * Payload's schema rather than a choice made here, and it is the honest answer
- * anyway: the document did change.
+ * **Two timestamps, because they answer different questions.**
+ * `localeUpdatedAt` is the localized stamp from `src/fields/locale-updated-at.ts`
+ * and is the one that belongs in `lastmod`: it moves only when *that* locale was
+ * written. `updatedAt` is Payload's own, one per row, and is kept as the
+ * fallback for a locale that has no stamp yet — a document last written before
+ * the field existed, or one written through a `locale: 'all'` API call. The
+ * fallback is applied by `lastModifiedFor()` in `src/lib/sitemap.ts`, where it is
+ * tested, rather than silently here.
  */
 export type SitemapDocument = {
+  localeUpdatedAt: Partial<Record<Locale, null | string>>
   noindex: Partial<Record<Locale, boolean>>
   slug: Partial<Record<Locale, string>>
   updatedAt: string
@@ -391,10 +396,11 @@ const sitemapDocuments = async (collection: 'pages' | 'services'): Promise<Sitem
      */
     overrideAccess: false,
     pagination: false,
-    select: { meta: { noindex: true }, slug: true, updatedAt: true },
+    select: { localeUpdatedAt: true, meta: { noindex: true }, slug: true, updatedAt: true },
   })
 
   return (docs as unknown as Array<Record<string, unknown>>).map((doc) => ({
+    localeUpdatedAt: (doc.localeUpdatedAt ?? {}) as Partial<Record<Locale, null | string>>,
     noindex: (doc.meta as { noindex?: Partial<Record<Locale, boolean>> } | undefined)?.noindex ?? {},
     slug: (doc.slug ?? {}) as Partial<Record<Locale, string>>,
     updatedAt: String(doc.updatedAt ?? new Date().toISOString()),
@@ -410,7 +416,16 @@ const sitemapDocuments = async (collection: 'pages' | 'services'): Promise<Sitem
  */
 export const loadSitemap = cache(
   async (): Promise<{ pages: SitemapDocument[]; services: SitemapDocument[] }> =>
-    tagged(SITEMAP_TAG, ['sitemap'], async () => ({
+    /**
+     * **The `v2` in the key is the shape of `SitemapDocument`, not decoration.**
+     * `unstable_cache` entries survive a deployment on purpose, so changing the
+     * shape of a cached value without changing its key hands the next build the
+     * previous one's data under the new type. Adding `localeUpdatedAt` did
+     * exactly that and the build failed on a `TypeError` in `lastModifiedFor` —
+     * a crash in the one route whose output nobody reads. Bump this whenever a
+     * field is added to or removed from `SitemapDocument`.
+     */
+    tagged(SITEMAP_TAG, ['sitemap', 'v2'], async () => ({
       pages: await sitemapDocuments('pages'),
       services: await sitemapDocuments('services'),
     })),

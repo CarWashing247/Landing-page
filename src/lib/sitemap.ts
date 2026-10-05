@@ -36,6 +36,34 @@ export const indexableLocales = (doc: SitemapDocument): Locale[] =>
   LOCALES.filter((locale) => Boolean(doc.slug[locale]) && doc.noindex[locale] !== true)
 
 /**
+ * What `lastmod` should say for one locale of one document.
+ *
+ * `localeUpdatedAt` is stamped per locale, so it is the honest answer: an
+ * English edit moves the English entry and leaves the Vietnamese one alone.
+ * `updatedAt` is the fallback for a locale with no stamp — a row last written
+ * before the field existed, or one written through a `locale: 'all'` API call,
+ * where Payload has no single locale to stamp.
+ *
+ * **The fallback direction is chosen, not incidental.** `updatedAt` is never
+ * older than the stamp it stands in for, so falling back to it can overstate a
+ * locale's `lastmod` but can never claim a change happened before it did.
+ * Overstating costs a wasted crawl; the opposite — telling Google a URL is older
+ * than its content — costs the update not being picked up at all.
+ *
+ * **`localeUpdatedAt` is read optionally even though the type says it is always
+ * there, and that guard is load-bearing.** Adding the field to `SitemapDocument`
+ * broke the build immediately: `unstable_cache` persists across deployments by
+ * design, so the previous build's cached value — written before the field
+ * existed — came back and was handed to this function as the new type without
+ * ever passing through the mapper that supplies the default. TypeScript cannot
+ * see that, because the boundary is a cache deserialization. The cache key below
+ * is versioned so the new shape gets its own entry, and this guard is what means
+ * getting that wrong degrades to `updatedAt` instead of 500ing the sitemap.
+ */
+export const lastModifiedFor = (doc: SitemapDocument, locale: Locale): Date =>
+  new Date(doc.localeUpdatedAt?.[locale] ?? doc.updatedAt)
+
+/**
  * One entry per indexable locale, each declaring the others.
  *
  * **`alternates` only ever names locales that passed the same filter.** A
@@ -66,7 +94,7 @@ export const sitemapEntries = (
 
     return locales.map((locale) => ({
       alternates: { languages },
-      lastModified: new Date(doc.updatedAt),
+      lastModified: lastModifiedFor(doc, locale),
       url: `${base}${path(doc.slug[locale]!, locale)}`,
     }))
   })

@@ -3,6 +3,7 @@ import type { CollectionConfig } from 'payload'
 import { isAdmin, isAdminOrEditor, publishedOrStaff } from '../lib/access'
 import { previewUrl } from '../lib/preview'
 import { getSecret } from '../lib/secrets'
+import { localeUpdatedAtField, stampLocaleUpdatedAt } from '../fields/locale-updated-at'
 import { forceNoindexWhenUntranslated } from '../fields/seo'
 import {
   recordSlugsBeforeDelete,
@@ -86,7 +87,11 @@ export const Pages: CollectionConfig = {
      * to non-default locales — see src/fields/seo.ts for why that scoping is not
      * what Design.md literally says.
      */
-    beforeChange: [forceNoindexWhenUntranslated('pages')],
+    /**
+     * Order matters only in that both are independent: the guardrail decides
+     * `meta.noindex`, the stamp records when this locale was last written.
+     */
+    beforeChange: [forceNoindexWhenUntranslated('pages'), stampLocaleUpdatedAt()],
     afterChange: [recordSlugsAfterRestore('pages'), revalidateAfterChange('pages')],
     /**
      * A deleted document must stop serving. The per-locale slugs are read in
@@ -179,5 +184,6 @@ export const Pages: CollectionConfig = {
       ],
     },
     slugField({ collection: 'pages', example: 'bang-gia', from: 'title' }),
+    localeUpdatedAtField,
   ],
 }

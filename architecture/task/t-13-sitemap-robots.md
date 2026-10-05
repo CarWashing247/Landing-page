@@ -21,7 +21,8 @@ should index, and `/robots.txt` keeping crawlers out of `/admin` and
 - `src/app/landing-page/sitemap.ts`: all published, indexable `Pages` and
   `Services`, plus the static routes.
 - Exclusions: `_status !== 'published'`, `meta.noindex === true`.
-- `lastModified` from `updatedAt` — accurate, not `new Date()`.
+- `lastModified` from a real stored timestamp, never `new Date()`: the localized
+  `localeUpdatedAt` stamp per locale, falling back to `updatedAt`.
 - `src/app/robots.ts`: `Disallow: /admin`, `Disallow: /api`, `Sitemap:`
   pointing at the absolute sitemap URL. **At the root of `app/`, not under the
   locale folder** — see Notes; the path given here originally does not work.
@@ -56,6 +57,11 @@ src/app/robots.ts               # NOT under the locale folder — see Notes
 src/lib/sitemap.ts              # the exclusion rules, pure and tested
 src/lib/sitemap.test.ts
 src/lib/content.ts              # the narrow, single-query sitemap read
+src/fields/locale-updated-at.ts # the localized lastModified stamp
+src/collections/Pages.ts        # wire the field and its beforeChange hook
+src/collections/Services.ts     # the same
+src/lib/revalidate.ts           # a SiteSettings save now purges `sitemap` too
+src/migrations/20261005_155731_locale_updated_at.ts
 ```
 
 ## Acceptance criteria
@@ -129,11 +135,39 @@ curl -s localhost:3000/sitemap.xml | grep -c '<noindexed-slug>'   # expect 0
   its SEO title and description released the flag and the URL appeared —
   without a rebuild. That is the full T-08 → T-11 → T-13 chain, and the first
   point at which it is observable.
-- **`lastModified` moves for both locales when either is edited.** `updatedAt`
-  is not localized — one row, one timestamp — so publishing an English edit
-  updates the Vietnamese entry's `lastmod` too. That is Payload's schema rather
-  than a choice made here, and it is defensible: the document did change.
-- The home entries carry **no `lastModified`**. `/` is not a CMS document
-  (see the T-09 flag), so there is no real timestamp to report, and
-  `new Date()` would be a fresh one on every request — which teaches Google to
-  ignore the field everywhere else in the file.
+- ~~**`lastModified` moves for both locales when either is edited.**~~ **Fixed.**
+  `updatedAt` is not localized — one row, one timestamp — so publishing an
+  English edit moved the Vietnamese entry's `lastmod` too. Payload offers no
+  localized equivalent, so `src/fields/locale-updated-at.ts` adds one: a
+  localized `date` stamped in `beforeChange` for the locale being written, which
+  `lastModifiedFor()` prefers and falls back from. Verified against a real
+  document: an English-only edit at `16:01:31` moved `/en/pricing` alone and left
+  `/bang-gia` at `16:01:10.388`, while the shared `updatedAt` moved to `.324` —
+  the value both entries used to report.
+- ~~The home entries carry **no `lastModified`**.~~ **Fixed, within a stated
+  bound.** They now carry `SiteSettings.updatedAt`. That is the right timestamp
+  because everything Google indexes about `/` that is not placeholder copy comes
+  from that one global — `brandName` is the `<title>`, `defaultDescription` the
+  description, `ogFallback` the share image — so the global's timestamp bounds
+  when the indexable part of the URL last changed. What it does not cover is the
+  hardcoded body, which moves only on a deploy; that makes it understate rather
+  than overstate, which is the safe direction, and the attribute is omitted
+  entirely on a fresh install where the global has never been saved. It stops
+  being a bound at all once `/` becomes a CMS document (T-17/T-23).
+
+## Flags still open
+
+- **A `SiteSettings` save now purges `sitemap` as well as `globals`.**
+  `revalidateGlobal` names the globals that feed the sitemap rather than purging
+  it for every global, so `BusinessInfo` still purges `globals` alone — verified
+  from the hook's own log line: `business-info` `count=1 tags=globals`,
+  `site-settings` `count=2 tags=globals,sitemap`.
+- **The sitemap's cache key carries a shape version (`['sitemap', 'v2']`), and it
+  has to be bumped by hand.** `unstable_cache` entries survive a deployment by
+  design, so adding `localeUpdatedAt` to `SitemapDocument` without changing the
+  key handed the new build the old build's data under the new type. It was not
+  subtle — the build failed outright on a `TypeError` in `lastModifiedFor` — but
+  nothing enforces the bump, so `lastModifiedFor` reads the map optionally
+  against its own type to make a missed bump degrade to `updatedAt` rather than
+  500 the route. Anyone adding or removing a field on `SitemapDocument` must bump
+  it.

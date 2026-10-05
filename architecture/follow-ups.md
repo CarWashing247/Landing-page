@@ -118,6 +118,11 @@ Today the home route reads `SiteSettings` alone — the "blank SEO tab still shi
 complete tags" path. Consequence: the home `<title>` is the brand name with no
 suffix, because `AutoWash247 | AutoWash247` reads like a bug.
 
+A second consequence, added by T-13: the home entries' sitemap `lastModified` is
+`SiteSettings.updatedAt`, which bounds when the indexable part of `/` changed but
+not when its hardcoded body did. Deciding this question replaces that bound with
+a real document timestamp.
+
 ### D2 · What to salvage from the closed Phase 3 PR
 
 **Owner: T-15 — not recorded in the task files**
@@ -186,3 +191,12 @@ surrounding assumption changed.
   occupies an entry for an hour. Bounded by the revalidate floor, and load
   bearing: it is what makes publishing a draft take effect through T-11's purge
   rather than only through the floor.
+- **Changing the shape of anything cached in `src/lib/content.ts` needs its cache
+  key bumped, and nothing enforces that.** `unstable_cache` entries survive a
+  deployment on purpose, so a new build is handed the previous build's values
+  deserialized into the new type — a boundary TypeScript cannot see. T-13 hit it
+  for real: adding a field to `SitemapDocument` failed the build on a `TypeError`
+  reading the missing key, which is why `loadSitemap`'s key is now
+  `['sitemap', 'v2']`. The other cached reads (`loadPage`, `loadService`,
+  `siteSettings`) return Payload documents whose shape follows the collection, so
+  they carry the same hazard without the same reminder.
