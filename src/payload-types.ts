@@ -140,10 +140,6 @@ export interface Page {
    */
   title: string;
   /**
-   * The part of the URL after the domain, for example "bang-gia". Left blank, it is generated automatically. Each language has its own address. Once published this cannot be changed, because the old URL is already indexed.
-   */
-  slug: string;
-  /**
    * Add and reorder blocks to build the page.
    */
   layout?:
@@ -168,51 +164,30 @@ export interface Page {
         blockType: 'content';
       }[]
     | null;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * One entry per wash package. Each becomes its own page, and its price and duration are also sent to Google as structured data.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "services".
- */
-export interface Service {
-  id: number;
+  meta?: {
+    title?: string | null;
+    description?: string | null;
+    /**
+     * The image shown when someone shares this page. Left blank, the default from Site settings is used. The 1200×630 version is generated on upload.
+     */
+    image?: (number | null) | Media;
+    /**
+     * Normally leave this blank — the system fills in this page’s own address. Only set it when the same content already lives at another URL and you want Google to credit that one instead.
+     */
+    canonical?: string | null;
+    /**
+     * The page still works normally, it just will not appear in search results. The system turns this on by itself for a translation that has no SEO title or description of its own yet.
+     */
+    noindex?: boolean | null;
+    /**
+     * Never sent to Google and has no effect on ranking. Its only job is to stop two editors writing two different pages against the same term.
+     */
+    keywordFocus?: string | null;
+  };
   /**
-   * What customers call this package. Used as the page heading.
-   */
-  name: string;
-  /**
-   * The part of the URL after the domain, for example "rua-xe-nhanh". Left blank, it is generated automatically. Each language has its own address. Once published this cannot be changed, because the old URL is already indexed.
+   * The part of the URL after the domain, for example "bang-gia". Left blank, it is generated automatically. Each language has its own address. Once published this cannot be changed, because the old URL is already indexed.
    */
   slug: string;
-  /**
-   * Enter the amount in VND as plain digits, for example 150000. No dots, spaces or ₫ — the page adds those when it displays it.
-   */
-  price: number;
-  /**
-   * All prices are in Vietnamese dong.
-   */
-  currency: 'VND';
-  /**
-   * Roughly how long the wash takes, in minutes. Whole numbers.
-   */
-  durationMinutes: number;
-  /**
-   * One line per thing the package covers. Drag to reorder — they are shown in this order.
-   */
-  includes?:
-    | {
-        item: string;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * A photo of this wash. Used at the top of the service page and as the share image. Not localized — one photo for both languages.
-   */
-  image: number | Media;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -278,6 +253,71 @@ export interface Media {
       filename?: string | null;
     };
   };
+}
+/**
+ * One entry per wash package. Each becomes its own page, and its price and duration are also sent to Google as structured data.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "services".
+ */
+export interface Service {
+  id: number;
+  /**
+   * What customers call this package. Used as the page heading.
+   */
+  name: string;
+  /**
+   * Enter the amount in VND as plain digits, for example 150000. No dots, spaces or ₫ — the page adds those when it displays it.
+   */
+  price: number;
+  /**
+   * All prices are in Vietnamese dong.
+   */
+  currency: 'VND';
+  /**
+   * Roughly how long the wash takes, in minutes. Whole numbers.
+   */
+  durationMinutes: number;
+  /**
+   * One line per thing the package covers. Drag to reorder — they are shown in this order.
+   */
+  includes?:
+    | {
+        item: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * A photo of this wash. Used at the top of the service page and as the share image. Not localized — one photo for both languages.
+   */
+  image: number | Media;
+  meta?: {
+    title?: string | null;
+    description?: string | null;
+    /**
+     * The image shown when someone shares this page. Left blank, the default from Site settings is used. The 1200×630 version is generated on upload.
+     */
+    image?: (number | null) | Media;
+    /**
+     * Normally leave this blank — the system fills in this page’s own address. Only set it when the same content already lives at another URL and you want Google to credit that one instead.
+     */
+    canonical?: string | null;
+    /**
+     * The page still works normally, it just will not appear in search results. The system turns this on by itself for a translation that has no SEO title or description of its own yet.
+     */
+    noindex?: boolean | null;
+    /**
+     * Never sent to Google and has no effect on ranking. Its only job is to stop two editors writing two different pages against the same term.
+     */
+    keywordFocus?: string | null;
+  };
+  /**
+   * The part of the URL after the domain, for example "rua-xe-nhanh". Left blank, it is generated automatically. Each language has its own address. Once published this cannot be changed, because the old URL is already indexed.
+   */
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -397,7 +437,6 @@ export interface PayloadMigration {
  */
 export interface PagesSelect<T extends boolean = true> {
   title?: T;
-  slug?: T;
   layout?:
     | T
     | {
@@ -409,6 +448,17 @@ export interface PagesSelect<T extends boolean = true> {
               blockName?: T;
             };
       };
+  meta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
+        canonical?: T;
+        noindex?: T;
+        keywordFocus?: T;
+      };
+  slug?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -419,7 +469,6 @@ export interface PagesSelect<T extends boolean = true> {
  */
 export interface ServicesSelect<T extends boolean = true> {
   name?: T;
-  slug?: T;
   price?: T;
   currency?: T;
   durationMinutes?: T;
@@ -430,6 +479,17 @@ export interface ServicesSelect<T extends boolean = true> {
         id?: T;
       };
   image?: T;
+  meta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
+        canonical?: T;
+        noindex?: T;
+        keywordFocus?: T;
+      };
+  slug?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;

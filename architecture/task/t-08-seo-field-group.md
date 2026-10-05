@@ -57,7 +57,11 @@ goal 2 — editing SEO without a developer and without a deploy.
    60 / 160.
 6. Give `meta.canonical` an `admin.description` making clear that blank is
    the normal case.
-7. `npx payload generate:types`, migration, apply.
+7. `npm run generate:importmap` — **not optional.** The plugin's fields are
+   custom client components, and without an import-map entry they render as
+   plain inputs: no counters, no preview, and the task silently unmet. Found by
+   checking the served edit screen rather than trusting the config.
+8. `npx payload generate:types`, migration, apply.
 
 ## Files
 
@@ -82,7 +86,12 @@ Inherits AGENT.md section 8. In addition:
 - [ ] `meta.image` accepts only Media, and the og size is available.
 - [ ] The group is defined **once** and imported by both collections — no
       duplicated field array.
-- [ ] No fallback or defaulting logic lives in the CMS config.
+- [ ] No fallback or defaulting logic lives in the CMS config. The one write
+      the CMS does perform is the `noindex` guardrail below, which stores a real
+      value rather than defaulting a rendered one.
+- [ ] An untranslated non-default locale is forced to `noindex`, and filling in
+      its SEO title or description makes it indexable again. A Vietnamese page
+      with an empty SEO tab is **not** touched.
 
 ## Verification
 
@@ -100,6 +109,16 @@ grep -n "meta" src/payload-types.ts | head -20
 - Counters warn, `maxLength` blocks. Warning at 60 while allowing 70 is
   deliberate: Google truncates around 60 but a slightly longer title is a
   judgement call, not an error.
+- **Those are two numbers from one field, and the plugin couples them.** Its
+  counter takes its green band straight from the field's own
+  `minLength`/`maxLength` (`MetaTitleComponent.js` reads `field.maxLength`),
+  and Payload enforces that same `maxLength` as a hard limit. So `maxLength` is
+  set to the *counter's* number (60 / 160) and the real limit (70 / 180) is
+  enforced by `validate`, relying on a supplied `validate` replacing Payload's
+  default field validation. The consequence to know: **`maxLength` on these two
+  fields does not block.** Deleting the `validate` tightens the limit to the
+  counter's number rather than removing it, which is the safe direction for a
+  mistake to fall.
 - `keywordFocus` is never rendered. Its only job is to stop two editors
   writing two pages against the same term (Design.md section 3).
 
@@ -108,3 +127,18 @@ grep -n "meta" src/payload-types.ts | head -20
 - The six Vietnamese labels are given verbatim in Design.md — use them as
   written. Any *additional* helper text you add is new user-facing copy:
   write `TODO(copy)` if unsure.
+- **The `noindex` guardrail from Design.md 2.3 is scoped to non-default
+  locales, which Design.md does not say.** Read literally — "forces
+  `meta.noindex` on for a locale whose `meta.title` and `meta.description` are
+  both empty" — it fires on every Vietnamese page too, because an empty SEO tab
+  is the normal state there: Design.md 2.3 itself says a page must ship fine
+  with the editor never opening it, and `buildMetadata()` fills the gap.
+  Unscoped, it would de-index the entire site one page at a time. The default
+  locale is therefore exempt.
+- This task file's scope omitted the guardrail entirely; Design.md 2.3 owns it
+  and T-13 depends on it, so it is delivered here. It is not a *fallback* — it
+  writes a stored value rather than deciding a rendered one — so it does not
+  contradict the out-of-scope rule above it.
+- `src/fields/seo.ts` establishes `src/fields/`. `src/lib/slug-field.ts` (T-07)
+  is the same kind of thing and arguably belongs beside it; left where it is
+  rather than moved as a drive-by.

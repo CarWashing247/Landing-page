@@ -120,6 +120,9 @@ src/
     Pages.ts  Services.ts  Media.ts  Users.ts
   globals/
     BusinessInfo.ts  SiteSettings.ts
+  fields/
+    seo.ts                  # the SEO group, shared by Pages and Services,
+                            # plus the untranslated-locale noindex guardrail
   components/
     seo/metadata.ts         # buildMetadata() — the ONLY place metadata is built
     seo/JsonLd.tsx
