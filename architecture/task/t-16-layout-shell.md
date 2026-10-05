@@ -40,6 +40,18 @@ later.
   nothing while `experimental.globalNotFound` is on, and turning that flag off
   leaves the same empty shell — both were measured in T-09. See that task file.
 
+**In scope, added after T-12**
+
+- **The draft banner belongs in this shell.** T-12 renders `<DraftBanner>` inside
+  `ContentPage` and `ServicePage`, so draft mode is invisible and unexitable
+  everywhere else — including `/` and the 404 — while the cookie stays set
+  site-wide. Next's draft-mode guide says to render the indicator from the root
+  layout. Moving it into `LocaleLayout` was measured during the T-12 review and
+  changes no build output (content routes still `●`, home pages still `○`);
+  remove the per-page copies in the same change or two banners render. Its
+  strings are also T-15A's to catalogue, and its inline styles are yours to
+  replace with tokens. See `follow-ups.md` A5 and A6.
+
 **Out of scope**
 
 - The pages themselves (T-17, T-18, T-19).
