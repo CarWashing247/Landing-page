@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { isAdmin, isAdminOrEditor, publishedOrStaff } from '../lib/access'
+import { forceNoindexWhenUntranslated } from '../fields/seo'
 import { recordSlugsAfterRestore, slugField } from '../lib/slug-field'
 
 /**
@@ -56,6 +57,12 @@ export const Pages: CollectionConfig = {
     delete: isAdmin,
   },
   hooks: {
+    /**
+     * Keeps an untranslated locale out of Google's index (Design.md 2.3). Scoped
+     * to non-default locales — see src/fields/seo.ts for why that scoping is not
+     * what Design.md literally says.
+     */
+    beforeChange: [forceNoindexWhenUntranslated('pages')],
     afterChange: [recordSlugsAfterRestore('pages')],
   },
   versions: {
@@ -64,62 +71,81 @@ export const Pages: CollectionConfig = {
     // of a page's life in Postgres forever.
     maxPerDoc: 50,
   },
+  /**
+   * The content fields live in a tab of their own so the SEO tab is visually
+   * separate (AGENT.md 5.6). The plugin appends its SEO tab to this array —
+   * it only creates a `Content` tab itself when there is none, and that one
+   * would be labelled from `labels.singular` ("Trang") rather than "Nội dung".
+   *
+   * `slug` stays outside the tabs, at the top level, so it keeps its sidebar
+   * position; the plugin preserves everything after the tabs field.
+   */
   fields: [
     {
-      name: 'title',
-      type: 'text',
-      required: true,
-      localized: true,
-      label: { en: 'Title', vi: 'Tiêu đề' },
-      admin: {
-        description: {
-          en: 'Shown as the page heading, and used to suggest the address below.',
-          vi: 'Hiển thị làm tiêu đề trang, và dùng để gợi ý đường dẫn bên dưới.',
-        },
-      },
-    },
-    slugField({ collection: 'pages', example: 'bang-gia', from: 'title' }),
-    {
-      name: 'layout',
-      type: 'blocks',
-      localized: true,
-      label: { en: 'Content', vi: 'Nội dung' },
-      labels: {
-        singular: { en: 'Block', vi: 'Khối' },
-        plural: { en: 'Blocks', vi: 'Các khối' },
-      },
-      admin: {
-        description: {
-          en: 'Add and reorder blocks to build the page.',
-          vi: 'Thêm và sắp xếp các khối để tạo nên trang.',
-        },
-      },
-      /**
-       * One block, deliberately.
-       *
-       * T-17 owns the real set (Hero, Pricing, Steps, Faq, Cta). An empty
-       * `blocks: []` would type-check and then hand an editor a content field
-       * with nothing to put in it, so the layout could not be exercised at all
-       * before T-17 lands — including by T-23's seed data. Rich text is the one
-       * block that survives whatever T-17 decides, so it is not throwaway.
-       */
-      blocks: [
+      type: 'tabs',
+      tabs: [
         {
-          slug: 'content',
-          labels: {
-            singular: { en: 'Text', vi: 'Văn bản' },
-            plural: { en: 'Text blocks', vi: 'Các khối văn bản' },
-          },
+          label: { en: 'Content', vi: 'Nội dung' },
           fields: [
             {
-              name: 'richText',
-              type: 'richText',
+              name: 'title',
+              type: 'text',
               required: true,
-              label: { en: 'Text', vi: 'Văn bản' },
+              localized: true,
+              label: { en: 'Title', vi: 'Tiêu đề' },
+              admin: {
+                description: {
+                  en: 'Shown as the page heading, and used to suggest the address below.',
+                  vi: 'Hiển thị làm tiêu đề trang, và dùng để gợi ý đường dẫn bên dưới.',
+                },
+              },
+            },
+            {
+              name: 'layout',
+              type: 'blocks',
+              localized: true,
+              label: { en: 'Content', vi: 'Nội dung' },
+              labels: {
+                singular: { en: 'Block', vi: 'Khối' },
+                plural: { en: 'Blocks', vi: 'Các khối' },
+              },
+              admin: {
+                description: {
+                  en: 'Add and reorder blocks to build the page.',
+                  vi: 'Thêm và sắp xếp các khối để tạo nên trang.',
+                },
+              },
+              /**
+               * One block, deliberately.
+               *
+               * T-17 owns the real set (Hero, Pricing, Steps, Faq, Cta). An empty
+               * `blocks: []` would type-check and then hand an editor a content field
+               * with nothing to put in it, so the layout could not be exercised at all
+               * before T-17 lands — including by T-23's seed data. Rich text is the one
+               * block that survives whatever T-17 decides, so it is not throwaway.
+               */
+              blocks: [
+                {
+                  slug: 'content',
+                  labels: {
+                    singular: { en: 'Text', vi: 'Văn bản' },
+                    plural: { en: 'Text blocks', vi: 'Các khối văn bản' },
+                  },
+                  fields: [
+                    {
+                      name: 'richText',
+                      type: 'richText',
+                      required: true,
+                      label: { en: 'Text', vi: 'Văn bản' },
+                    },
+                  ],
+                },
+              ],
             },
           ],
         },
       ],
     },
+    slugField({ collection: 'pages', example: 'bang-gia', from: 'title' }),
   ],
 }

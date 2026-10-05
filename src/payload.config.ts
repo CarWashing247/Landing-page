@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url'
 
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import { seoPlugin } from '@payloadcms/plugin-seo'
 import { s3Storage } from '@payloadcms/storage-s3'
 import { buildConfig } from 'payload'
 import sharp from 'sharp'
@@ -10,6 +11,7 @@ import sharp from 'sharp'
 import { Media } from './collections/Media'
 import { Pages } from './collections/Pages'
 import { Services } from './collections/Services'
+import { seoFields } from './fields/seo'
 import { Users } from './collections/Users'
 import { BusinessInfo } from './globals/BusinessInfo'
 import { SiteSettings } from './globals/SiteSettings'
@@ -123,7 +125,31 @@ const buildConfigFromVault = async () => {
     // Required for upload.imageSizes; without it Payload stores the original
     // and silently generates no sizes.
     sharp,
-    plugins: r2
+    plugins: [
+      /**
+       * The SEO tab both content collections carry (T-08). The plugin supplies
+       * the live Google-style preview and the character counters; `seoFields`
+       * renames its fields into Vietnamese and adds canonical, noindex and
+       * keywordFocus (src/fields/seo.ts).
+       *
+       * `tabbedUI` appends an SEO tab to the tabs each collection already
+       * declares, which is why those collections wrap their content fields in a
+       * tab of their own — left to the plugin, the first tab would be labelled
+       * from `labels.singular` rather than "Nội dung".
+       *
+       * No `generateTitle`/`generateDescription`/`generateImage`: those would
+       * write a value into the stored document, and the fallbacks belong in
+       * `buildMetadata()` (T-09) so a blank field stays blank. The counters and
+       * preview work without them; what is lost is only the "auto-generate"
+       * button.
+       */
+      seoPlugin({
+        collections: ['pages', 'services'],
+        fields: seoFields,
+        tabbedUI: true,
+        uploadsCollection: 'media',
+      }),
+      ...(r2
       ? [
           s3Storage({
             collections: {
@@ -150,7 +176,8 @@ const buildConfigFromVault = async () => {
             },
           }),
         ]
-      : [],
+      : []),
+    ],
     // Nothing in Design.md uses GraphQL. Left on, it serves a public schema
     // playground in production and a second login path (a `login` mutation)
     // that controls on /api/users/login would not cover.

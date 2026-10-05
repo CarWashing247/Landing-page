@@ -31,6 +31,10 @@ export const adminTranslations = {
         'The price must be a whole number of dong, zero or more — for example 150000. No dots, spaces or ₫.',
       durationMustBeWholeMinutes:
         'The duration must be a whole number of minutes, at least 1.',
+      metaTitleTooLong:
+        'The Google title cannot be longer than 70 characters. Aim for 50 to 60 — Google cuts it off around there.',
+      metaDescriptionTooLong:
+        'The description cannot be longer than 180 characters. Aim for 140 to 160 — Google cuts it off around there.',
     },
   },
   vi: {
@@ -45,6 +49,10 @@ export const adminTranslations = {
         'Giá phải là số nguyên tiền đồng, từ 0 trở lên — ví dụ 150000. Không dùng dấu chấm, dấu cách hay ₫.',
       durationMustBeWholeMinutes:
         'Thời lượng phải là số nguyên phút, ít nhất 1.',
+      metaTitleTooLong:
+        'Tiêu đề trên Google không được dài hơn 70 ký tự. Nên viết 50 đến 60 ký tự — Google cắt bớt quanh mức đó.',
+      metaDescriptionTooLong:
+        'Mô tả không được dài hơn 180 ký tự. Nên viết 140 đến 160 ký tự — Google cắt bớt quanh mức đó.',
     },
   },
 } as const
