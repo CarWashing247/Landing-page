@@ -1,6 +1,7 @@
 import type { Field, GlobalConfig } from 'payload'
 
 import { anyone, isAdmin } from '../lib/access'
+import { revalidateGlobal } from '../lib/revalidate'
 
 /**
  * The one place the business's identity lives: name, address, phone, hours.
@@ -80,6 +81,14 @@ export const BusinessInfo: GlobalConfig = {
         'hiện ở chân trang, trang liên hệ, và trong dữ liệu có cấu trúc mà ' +
         'Google đọc. Phải khớp chính xác từng ký tự với Google Business Profile.',
     },
+  },
+  hooks: {
+    /**
+     * Both globals feed the header, the footer and the JSON-LD on every page,
+     * so a change here purges the site-wide `globals` tag. Expensive and rare,
+     * which Design.md 1.3 calls the correct trade.
+     */
+    afterChange: [revalidateGlobal('business-info')],
   },
   access: {
     // Public: every value here is already printed in the footer of every page.
