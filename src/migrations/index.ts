@@ -6,6 +6,7 @@ import * as migration_20261004_151139_globals from './20261004_151139_globals';
 import * as migration_20261005_082937_pages from './20261005_082937_pages';
 import * as migration_20261005_090150_services from './20261005_090150_services';
 import * as migration_20261005_092701_seo from './20261005_092701_seo';
+import * as migration_20261005_155731_locale_updated_at from './20261005_155731_locale_updated_at';
 
 export const migrations = [
   {
@@ -46,6 +47,11 @@ export const migrations = [
   {
     up: migration_20261005_092701_seo.up,
     down: migration_20261005_092701_seo.down,
-    name: '20261005_092701_seo'
+    name: '20261005_092701_seo',
+  },
+  {
+    up: migration_20261005_155731_locale_updated_at.up,
+    down: migration_20261005_155731_locale_updated_at.down,
+    name: '20261005_155731_locale_updated_at'
   },
 ];

@@ -188,6 +188,7 @@ export interface Page {
    * The part of the URL after the domain, for example "bang-gia". Left blank, it is generated automatically. Each language has its own address. Once published this cannot be changed, because the old URL is already indexed.
    */
   slug: string;
+  localeUpdatedAt?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -315,6 +316,7 @@ export interface Service {
    * The part of the URL after the domain, for example "rua-xe-nhanh". Left blank, it is generated automatically. Each language has its own address. Once published this cannot be changed, because the old URL is already indexed.
    */
   slug: string;
+  localeUpdatedAt?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -459,6 +461,7 @@ export interface PagesSelect<T extends boolean = true> {
         keywordFocus?: T;
       };
   slug?: T;
+  localeUpdatedAt?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -490,6 +493,7 @@ export interface ServicesSelect<T extends boolean = true> {
         keywordFocus?: T;
       };
   slug?: T;
+  localeUpdatedAt?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;

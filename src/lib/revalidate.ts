@@ -336,18 +336,35 @@ export const revalidateAfterDelete =
   }
 
 /**
- * Purge the site-wide tag after a global changes.
+ * The globals the sitemap's own output depends on.
  *
- * `globals` only, not `sitemap`: neither `BusinessInfo` nor `SiteSettings`
- * contributes a URL or a `lastModified` to the sitemap, so adding it would make
- * every opening-hours edit re-render every route for nothing. A `globals` purge
- * is already site-wide and expensive, which Design.md 1.3 calls correct and
- * rare.
+ * `SiteSettings` is in because T-13 takes the home entries' `lastModified` from
+ * its `updatedAt` — the home pages are not CMS documents, so there is no
+ * document timestamp to use, and `new Date()` would be a fresh one on every
+ * request. `BusinessInfo` is out: it contributes neither a URL nor a timestamp.
+ *
+ * Named rather than purged unconditionally because the two are genuinely
+ * different, and because the sitemap route would otherwise be re-rendered by
+ * every opening-hours edit for nothing. The extra cost when it does apply is one
+ * route: a `globals` purge is already site-wide, which Design.md 1.3 calls
+ * correct and rare.
+ *
+ * This is deliberately explicit rather than left to tag propagation. The sitemap
+ * route reads `SiteSettings` through the `globals`-tagged query, so a `globals`
+ * purge would very likely reach it anyway — but that depends on Next
+ * associating an `unstable_cache` tag with the prerendered route that read it,
+ * which is not a behaviour this repo should silently rely on for the one route
+ * whose staleness nobody would notice.
  */
+const SITEMAP_GLOBALS: ReadonlySet<string> = new Set(['site-settings'])
+
+/** Purge the site-wide tag, and the sitemap where that global feeds it, after a global changes. */
 export const revalidateGlobal =
   (name: string): GlobalAfterChangeHook =>
   async ({ doc }) => {
-    purgeAfterCommit([GLOBALS_TAG], `${name}:afterChange`)
+    const tags = SITEMAP_GLOBALS.has(name) ? [GLOBALS_TAG, SITEMAP_TAG] : [GLOBALS_TAG]
+
+    purgeAfterCommit(tags, `${name}:afterChange`)
 
     return doc
   }
