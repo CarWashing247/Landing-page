@@ -130,6 +130,7 @@ type PerLocale = {
 const unfallenBack = async (
   collection: 'pages' | 'services',
   id: number | string,
+  draft = false,
 ): Promise<PerLocale> =>
   (await (
     await getPayload()
@@ -137,8 +138,9 @@ const unfallenBack = async (
     collection,
     id,
     depth: 0,
+    draft,
     locale: 'all',
-    overrideAccess: false,
+    overrideAccess: draft,
     select: { meta: { canonical: true }, slug: true },
   })) as unknown as PerLocale
 
@@ -146,6 +148,7 @@ const loadBySlug = async <T extends { id: number }>(
   collection: 'pages' | 'services',
   slug: string,
   locale: Locale,
+  draft = false,
 ): Promise<Localized<T> | null> => {
   const log = logger(`content:${collection}`)
   const payload = await getPayload()
@@ -153,23 +156,34 @@ const loadBySlug = async <T extends { id: number }>(
   const { docs } = await payload.find({
     collection,
     depth: 1,
+    draft,
     limit: 1,
     locale,
-    // Drafts and unpublished documents are not public. See the note above on
-    // why this cannot be left to the default.
-    overrideAccess: false,
+    /**
+     * Drafts and unpublished documents are not public. See the note above on
+     * why this cannot be left to the default.
+     *
+     * **`draft` flips it**, and that is the whole authorisation model for
+     * preview. `publishedOrStaff` filters by `_status` for anyone who is not a
+     * logged-in editor, and a draft-cookie holder is not a Payload user — so
+     * access control alone would hide the very content preview exists to show.
+     * What stands in for it is the cookie itself: `/api/draft` sets it only
+     * after checking `PREVIEW_SECRET`, and Next signs it. The check moved
+     * earlier rather than disappearing.
+     */
+    overrideAccess: draft,
     where: { slug: { equals: slug } },
   })
 
   const doc = docs[0] as T | undefined
 
   if (!doc) {
-    log.debug('no published document', { locale, slug })
+    log.debug('no document', { draft, locale, slug })
 
     return null
   }
 
-  const perLocale = await unfallenBack(collection, doc.id)
+  const perLocale = await unfallenBack(collection, doc.id, draft)
 
   return {
     /**
@@ -210,22 +224,38 @@ const tagged = <T>(
     tags: [tag],
   })()
 
-/** A CMS page by its slug in the rendered locale, or `null` if none is published. */
+/**
+ * A draft read goes straight to Postgres, with no tag and no cache entry.
+ *
+ * Next already bypasses `unstable_cache` for a draft-mode request, in both
+ * directions — it neither reads an entry nor writes one. Skipping the wrapper
+ * entirely rather than relying on that is belt and braces for the one mistake
+ * that would be worst here: a draft response captured under a public tag, and
+ * then served to everyone until the next purge.
+ */
+const read = <T>(
+  draft: boolean,
+  tag: string,
+  key: readonly string[],
+  load: () => Promise<T>,
+): Promise<T> => (draft ? load() : tagged(tag, key, load))
+
+/** A CMS page by its slug in the rendered locale, or `null` if there is none. */
 export const loadPage = cache(
-  async (slug: string, locale: Locale): Promise<Localized<Page> | null> => {
-    const found = await tagged(pageTag(locale, slug), ['pages', locale, slug], () =>
-      loadBySlug<Page>('pages', slug, locale),
+  async (slug: string, locale: Locale, draft = false): Promise<Localized<Page> | null> => {
+    const found = await read(draft, pageTag(locale, slug), ['pages', locale, slug], () =>
+      loadBySlug<Page>('pages', slug, locale, draft),
     )
 
     return found && { ...found, paths: pathsFrom(found.paths, pathForPage) }
   },
 )
 
-/** A service by its slug in the rendered locale, or `null` if none is published. */
+/** A service by its slug in the rendered locale, or `null` if there is none. */
 export const loadService = cache(
-  async (slug: string, locale: Locale): Promise<Localized<Service> | null> => {
-    const found = await tagged(serviceTag(locale, slug), ['services', locale, slug], () =>
-      loadBySlug<Service>('services', slug, locale),
+  async (slug: string, locale: Locale, draft = false): Promise<Localized<Service> | null> => {
+    const found = await read(draft, serviceTag(locale, slug), ['services', locale, slug], () =>
+      loadBySlug<Service>('services', slug, locale, draft),
     )
 
     return found && { ...found, paths: pathsFrom(found.paths, pathForService) }

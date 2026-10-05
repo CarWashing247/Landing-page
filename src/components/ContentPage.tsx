@@ -1,8 +1,11 @@
 import type { Metadata } from 'next'
+import { draftMode } from 'next/headers'
 import { notFound } from 'next/navigation'
 
 import { loadPage, loadSiteSettings } from '../lib/content'
 import type { Locale } from '../lib/locales'
+import { pathForPage } from '../lib/locales'
+import { DraftBanner } from './DraftBanner'
 import { buildMetadata } from './seo/metadata'
 
 /**
@@ -20,7 +23,8 @@ import { buildMetadata } from './seo/metadata'
  */
 
 export const contentPageMetadata = async (slug: string, locale: Locale): Promise<Metadata> => {
-  const found = await loadPage(slug, locale)
+  const { isEnabled: draft } = await draftMode()
+  const found = await loadPage(slug, locale, draft)
 
   /**
    * Nothing to describe: the page below calls `notFound()` for this same slug,
@@ -39,20 +43,24 @@ export const contentPageMetadata = async (slug: string, locale: Locale): Promise
 }
 
 export const ContentPage = async ({ locale, slug }: { locale: Locale; slug: string }) => {
-  const found = await loadPage(slug, locale)
+  const { isEnabled: draft } = await draftMode()
+  const found = await loadPage(slug, locale, draft)
 
   if (!found) {
     notFound()
   }
 
   return (
-    <main>
-      <h1>{found.doc.title}</h1>
-      <p>
-        {locale === 'vi'
-          ? 'TODO(copy): nội dung trang — các khối nội dung là T-17, nội dung thật là T-23.'
-          : 'TODO(copy): page body — blocks are T-17, real content is T-23.'}
-      </p>
-    </main>
+    <>
+      <DraftBanner locale={locale} path={pathForPage(slug, locale)} />
+      <main>
+        <h1>{found.doc.title}</h1>
+        <p>
+          {locale === 'vi'
+            ? 'TODO(copy): nội dung trang — các khối nội dung là T-17, nội dung thật là T-23.'
+            : 'TODO(copy): page body — blocks are T-17, real content is T-23.'}
+        </p>
+      </main>
+    </>
   )
 }

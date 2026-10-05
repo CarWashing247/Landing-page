@@ -3,6 +3,8 @@ import type { CollectionConfig, PayloadRequest } from 'payload'
 import type { AdminMessageKey } from '../i18n/admin-translations'
 import { adminMessage } from '../i18n/admin-translations'
 import { isAdmin, isAdminOrEditor, publishedOrStaff } from '../lib/access'
+import { previewUrl } from '../lib/preview'
+import { getSecret } from '../lib/secrets'
 import { forceNoindexWhenUntranslated } from '../fields/seo'
 import {
   recordSlugsBeforeDelete,
@@ -62,6 +64,23 @@ export const Services: CollectionConfig = {
     plural: { en: 'Services', vi: 'Các dịch vụ' },
   },
   admin: {
+    /**
+     * The Preview button. Returns a relative URL so an editor working against
+     * a preview deployment is never sent to production, and `null` when this
+     * locale has no slug yet — Payload then hides the button rather than
+     * offering one that cannot resolve.
+     *
+     * The secret is read from Vault at click time and travels in the URL,
+     * which is the contract `/api/draft` checks. It is not logged, and the
+     * link is only ever rendered inside the authenticated admin.
+     */
+    preview: async (doc, { locale }) =>
+      previewUrl({
+        collection: 'services',
+        locale,
+        secret: await getSecret('PREVIEW_SECRET'),
+        slug: doc?.slug,
+      }),
     useAsTitle: 'name',
     // Price and duration are what an editor compares across rows; they are the
     // reason to open the list at all.

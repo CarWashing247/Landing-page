@@ -92,7 +92,43 @@ npm run build | sed -n '/Route (app)/,/^$/p'          # still ○/●
 - `draftMode()` opts the request out of the full route cache. That is
   intended and scoped to the cookie holder; it must not leak into the
   published path.
+- **Reading `draftMode()` in a page does *not* make the route dynamic.** It was
+  the main risk in this task — `cookies()` and `headers()` both do — and the
+  build output settles it: every content route is still `●` and both home pages
+  `○` with `draftMode()` read in the page component and in the banner. Next
+  treats it specially; the API reference says as much by noting `isEnabled` is
+  readable inside a cache scope while `cookies()` is not.
+- **Next already bypasses `unstable_cache` for a draft request**, in both
+  directions: it neither reads an entry nor writes one, and the response goes
+  out as `Cache-Control: private, no-cache, no-store, max-age=0,
+  must-revalidate`. The query layer skips the wrapper anyway, because the one
+  failure that would matter most here is a draft response captured under a
+  public tag and then served to everyone.
+- **`overrideAccess: true` on a draft read is the authorisation model, not a
+  hole in it.** `publishedOrStaff` filters by `_status` for anyone who is not a
+  logged-in editor, and a draft-cookie holder is not a Payload user — so access
+  control alone would hide the very content preview exists to show. The cookie
+  stands in for it: `/api/draft` sets it only after checking `PREVIEW_SECRET`,
+  and Next signs it. The check moved earlier rather than disappearing.
+- **The draft route verifies the slug before setting the cookie.** Otherwise it
+  hands a cache-bypassing cookie to anyone who can guess the secret *and* get
+  the slug wrong, and an editor sent to a page that does not exist ends up with
+  a draft session attached to nothing.
+- `GET` on the entry route and `POST` on the exit is deliberate and follows
+  Next's own guide: the entry is a browser following the admin's Preview button
+  in a new tab, which is a `GET`, and the shared secret is what closes it. The
+  exit has no such constraint, so it is a `POST` — which also means a link
+  prefetch cannot end an editor's preview session.
 
 ## Flags
 
-- None expected.
+- **The banner's strings are `TODO(copy)`.** T-15A owns the interface catalog
+  and already lists the draft banner among the keys it converts, so they are
+  placeholders rather than machine-translated Vietnamese (CLAUDE.md).
+- `PREVIEW_SECRET` needed no new work: T-04B already had it in `SECRET_KEYS`
+  and in `scripts/vault-seed.sh`, at all three paths and out of `.env.example`.
+  Step 6 of this file was already satisfied.
+- The sitemap criterion ("a draft page is excluded from `/sitemap.xml`") cannot
+  be checked yet — T-13 builds the sitemap. What *is* verified here is the
+  input it will use: `publishedSlugs()` from T-10 excludes drafts, and the build
+  output lists no draft route.
