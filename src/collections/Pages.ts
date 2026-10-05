@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { isAdmin, isAdminOrEditor, publishedOrStaff } from '../lib/access'
 import { forceNoindexWhenUntranslated } from '../fields/seo'
+import { revalidateAfterChange, revalidateAfterDelete } from '../lib/revalidate'
 import { recordSlugsAfterRestore, slugField } from '../lib/slug-field'
 
 /**
@@ -63,7 +64,13 @@ export const Pages: CollectionConfig = {
      * what Design.md literally says.
      */
     beforeChange: [forceNoindexWhenUntranslated('pages')],
-    afterChange: [recordSlugsAfterRestore('pages')],
+    afterChange: [recordSlugsAfterRestore('pages'), revalidateAfterChange('pages')],
+    /**
+     * A deleted document must stop serving. Its slug tag is purged in every
+     * locale, because by the time this runs the row is gone and the per-locale
+     * slugs can no longer be read back.
+     */
+    afterDelete: [revalidateAfterDelete('pages')],
   },
   versions: {
     drafts: true,

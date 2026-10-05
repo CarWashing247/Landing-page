@@ -108,6 +108,36 @@ Expect `401, 400, 200`, and the new description without a deploy.
 
 ## Notes
 
+- **`revalidateTag` takes two arguments in Next 16**, and the recommended
+  `'max'` profile serves stale content for up to a year while a revalidation
+  runs in the background. That is wrong here: after a slug rename the old URL
+  would keep serving the moved content to the next visitor, which one of the
+  criteria above forbids outright, and an editor who published and reloaded
+  would still see the old page. The endpoint passes `{ expire: 0 }`, making the
+  next request a blocking revalidate. The single-argument form is deprecated and
+  behaves the same way, but relying on a deprecation is not a decision.
+- **A tag over 256 characters is silently ignored** by Next — never assigned to
+  cached data, so revalidating it does nothing and reports nothing. The endpoint
+  rejects one with 400 rather than returning a success that did not happen.
+- **`req.locale` is `'all'` in an `afterChange` hook**, even for a request that
+  named a single locale. Measured with a temporary probe, not assumed. The
+  consequence is that the old slug is purged in every locale rather than only
+  the edited one — safe, one extra tag, and on a path T-06 already makes rare
+  since a published slug cannot change at all.
+- **The per-locale slug read deliberately omits `draft: true`**, which is the
+  opposite of what `content.ts` needs. That read renders the document an editor
+  is working on; this one chooses which *cache entry* to discard, and only the
+  published slug was ever cached. Measured: during a draft rename it returns the
+  old still-published slug, and returns the new one only once the document is
+  published — the correct sequence, because nothing was cached under the new URL
+  until it went live.
+- **A `globals` purge reaches pages that merely read the globals.** Verified:
+  changing `SiteSettings.titleSuffix` updated `/bang-gia`'s `<title>` without
+  that page's own tag being purged, because Next associates every tag consumed
+  during a render with the route's cache entry. This is also why the `globals`
+  tag is expensive, and why `sitemap` is *not* sent with it — neither global
+  contributes a URL or a `lastModified` to the sitemap.
+
 - If an edit does not appear live, the usual cause is a query that carries no
   tag — `revalidateTag` then has nothing to purge, and reports nothing either.
   Check the query, not the webhook. T-10 put every content read behind a tag in
@@ -131,4 +161,10 @@ Expect `401, 400, 200`, and the new description without a deploy.
 
 ## Flags
 
-- None expected.
+- **The Vercel-deployments check in the criteria cannot be run locally.** The
+  equivalent evidence is that no build was run between the edit and the `curl`
+  that showed the new content — stated here because "no build triggered" is
+  otherwise unfalsifiable from a local session.
+- `REVALIDATE_SECRET` needed no new work: T-04B already had it in `SECRET_KEYS`
+  and in `scripts/vault-seed.sh`, at all three paths and out of `.env.example`.
+  Step 6 of this file is therefore already satisfied.

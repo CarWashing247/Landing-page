@@ -40,21 +40,7 @@ architecture decision, so it belongs with the shell.
 The 404 copy is still `TODO(copy)`, so no finished wording regressed — only the
 shell.
 
-### A2 · A slug rename leaves the other locale's `hreflang` stale
-
-**Owner: T-11** (recorded in `task/t-11-revalidation-webhook.md`)
-
-Page and service tags are locale-scoped (`page:<locale>:<slug>`) so that
-publishing an English edit does not throw away the cached Vietnamese page. A
-slug *rename* is the one case where that under-purges: the Vietnamese page's
-cached render contains the English `hreflang` URL, so renaming the English slug
-leaves the Vietnamese page advertising a URL that now 404s.
-
-Self-corrects within the one-hour revalidate floor. The hook knows the document
-id and can read every locale's slug, so it should purge each locale's tag plus
-`previousDoc`'s slug in the locale that changed.
-
-### A3 · `titleSuffix`'s placeholder produces `Liên hệ| AutoWash247`
+### A2 · `titleSuffix`'s placeholder produces `Liên hệ| AutoWash247`
 
 **Owner: `src/globals/SiteSettings.ts` (T-05's file) — not recorded elsewhere**
 

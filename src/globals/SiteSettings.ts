@@ -1,6 +1,7 @@
 import type { GlobalConfig } from 'payload'
 
 import { anyone, isAdmin } from '../lib/access'
+import { revalidateGlobal } from '../lib/revalidate'
 
 /**
  * Site-wide defaults: the brand, the metadata fallbacks, the social links.
@@ -27,6 +28,14 @@ export const SiteSettings: GlobalConfig = {
         'Thương hiệu, giá trị SEO mặc định và liên kết mạng xã hội dùng cho ' +
         'toàn bộ trang web.',
     },
+  },
+  hooks: {
+    /**
+     * Both globals feed the header, the footer and the JSON-LD on every page,
+     * so a change here purges the site-wide `globals` tag. Expensive and rare,
+     * which Design.md 1.3 calls the correct trade.
+     */
+    afterChange: [revalidateGlobal('site-settings')],
   },
   access: {
     // The brand name and the GA4 ID reach the browser on every page anyway;
