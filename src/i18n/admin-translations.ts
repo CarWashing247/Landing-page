@@ -26,7 +26,11 @@ export const adminTranslations = {
       lastAdminCannotChangeRole:
         'The last administrator’s role cannot be changed. Create another administrator first.',
       publishedSlugCannotChange:
-        'The address of a published page cannot be changed — the old URL is already indexed by Google and links to it would break. Unpublish it first, or create a new page.',
+        'The address cannot be changed after publishing — the old URL is already indexed by Google and links to it would break. Unpublish it first, or create a new entry.',
+      priceMustBeWholeNumber:
+        'The price must be a whole number of dong, zero or more — for example 150000. No dots, spaces or ₫.',
+      durationMustBeWholeMinutes:
+        'The duration must be a whole number of minutes, at least 1.',
     },
   },
   vi: {
@@ -36,7 +40,11 @@ export const adminTranslations = {
       lastAdminCannotChangeRole:
         'Không thể đổi vai trò của quản trị viên cuối cùng. Hãy tạo một quản trị viên khác trước.',
       publishedSlugCannotChange:
-        'Không thể đổi đường dẫn của trang đã xuất bản — Google đã lập chỉ mục đường dẫn cũ và các liên kết tới trang sẽ bị lỗi. Hãy huỷ xuất bản trước, hoặc tạo một trang mới.',
+        'Không thể đổi đường dẫn sau khi đã xuất bản — Google đã lập chỉ mục đường dẫn cũ và các liên kết sẽ bị lỗi. Hãy huỷ xuất bản trước, hoặc tạo mục mới.',
+      priceMustBeWholeNumber:
+        'Giá phải là số nguyên tiền đồng, từ 0 trở lên — ví dụ 150000. Không dùng dấu chấm, dấu cách hay ₫.',
+      durationMustBeWholeMinutes:
+        'Thời lượng phải là số nguyên phút, ít nhất 1.',
     },
   },
 } as const

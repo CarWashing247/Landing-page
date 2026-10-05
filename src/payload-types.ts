@@ -68,6 +68,7 @@ export interface Config {
   blocks: {};
   collections: {
     pages: Page;
+    services: Service;
     media: Media;
     users: User;
     'payload-kv': PayloadKv;
@@ -78,6 +79,7 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     pages: PagesSelect<false> | PagesSelect<true>;
+    services: ServicesSelect<false> | ServicesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -138,7 +140,7 @@ export interface Page {
    */
   title: string;
   /**
-   * The part of the URL after the domain, for example "bang-gia". Left blank, it is generated from the title. Each language has its own address. Once the page is published this cannot be changed, because the old URL is already indexed.
+   * The part of the URL after the domain, for example "bang-gia". Left blank, it is generated automatically. Each language has its own address. Once published this cannot be changed, because the old URL is already indexed.
    */
   slug: string;
   /**
@@ -166,6 +168,51 @@ export interface Page {
         blockType: 'content';
       }[]
     | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * One entry per wash package. Each becomes its own page, and its price and duration are also sent to Google as structured data.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "services".
+ */
+export interface Service {
+  id: number;
+  /**
+   * What customers call this package. Used as the page heading.
+   */
+  name: string;
+  /**
+   * The part of the URL after the domain, for example "rua-xe-nhanh". Left blank, it is generated automatically. Each language has its own address. Once published this cannot be changed, because the old URL is already indexed.
+   */
+  slug: string;
+  /**
+   * Enter the amount in VND as plain digits, for example 150000. No dots, spaces or ₫ — the page adds those when it displays it.
+   */
+  price: number;
+  /**
+   * All prices are in Vietnamese dong.
+   */
+  currency: 'VND';
+  /**
+   * Roughly how long the wash takes, in minutes. Whole numbers.
+   */
+  durationMinutes: number;
+  /**
+   * One line per thing the package covers. Drag to reorder — they are shown in this order.
+   */
+  includes?:
+    | {
+        item: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * A photo of this wash. Used at the top of the service page and as the share image. Not localized — one photo for both languages.
+   */
+  image: number | Media;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -291,6 +338,10 @@ export interface PayloadLockedDocument {
         value: number | Page;
       } | null)
     | ({
+        relationTo: 'services';
+        value: number | Service;
+      } | null)
+    | ({
         relationTo: 'media';
         value: number | Media;
       } | null)
@@ -358,6 +409,27 @@ export interface PagesSelect<T extends boolean = true> {
               blockName?: T;
             };
       };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "services_select".
+ */
+export interface ServicesSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  price?: T;
+  currency?: T;
+  durationMinutes?: T;
+  includes?:
+    | T
+    | {
+        item?: T;
+        id?: T;
+      };
+  image?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;

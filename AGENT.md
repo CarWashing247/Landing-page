@@ -130,6 +130,9 @@ src/
     secrets.ts              # loadSecrets() — the ONLY place a credential is read
     env.ts                  # requireEnv() — non-secret config only
     log.ts                  # logger() — the ONLY place a log line is written
+    slugify.ts              # title -> slug, Vietnamese-aware
+    slug-field.ts           # the localized, published-locked slug field,
+                            # shared by Pages and Services
   payload.config.ts
   payload-types.ts          # GENERATED
 ```
