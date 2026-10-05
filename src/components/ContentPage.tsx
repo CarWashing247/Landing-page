@@ -9,12 +9,7 @@ import { buildMetadata } from './seo/metadata'
 export const contentPageMetadata = async (slug: string, locale: Locale): Promise<Metadata> => {
   const found = await loadPage(slug, locale)
   if (!found) return {}
-  return buildMetadata({
-    doc: found.doc,
-    locale,
-    paths: found.paths,
-    settings: await loadSiteSettings(locale),
-  })
+  return buildMetadata({ doc: found.doc, locale, paths: found.paths, settings: await loadSiteSettings(locale) })
 }
 
 export const ContentPage = async ({ locale, slug }: { locale: Locale; slug: string }) => {
@@ -25,7 +20,7 @@ export const ContentPage = async ({ locale, slug }: { locale: Locale; slug: stri
 
   return (
     <main>
-      <BlockRenderer blocks={blocks} />
+      <BlockRenderer blocks={blocks} locale={locale} />
     </main>
   )
 }
