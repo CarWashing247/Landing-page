@@ -47,9 +47,15 @@ what a crawler sees. `curl` and `view-source:` are what count here.
 ## Scope discipline
 
 If you find a bug or a rule violation outside the current task, **report it,
-do not fix it**. Add it to your final message as a short list. An unrelated
-fix inside a focused PR makes review harder and hides the regression it
-eventually causes.
+do not fix it**. Add it to your final message as a short list, and record it
+in [`architecture/follow-ups.md`](./architecture/follow-ups.md) — a PR
+description is read once, and the next person to hit the same bug will not
+find it there. An unrelated fix inside a focused PR makes review harder and
+hides the regression it eventually causes.
+
+Where the finding belongs to a task that has not started, write it into that
+task file too. `follow-ups.md` is the index; the task file is where someone
+will actually be looking.
 
 If a task as written in `Design.md` turns out to be wrong or impossible,
 stop and explain. Do not silently redesign it.
