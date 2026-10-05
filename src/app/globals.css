@@ -1,10 +1,20 @@
 @import 'tailwindcss';
 
-/*
- * Base only. Design tokens, fonts and typography are T-15.
- * No @apply beyond this file (AGENT.md section 6).
- *
- * This file is imported by landing-page/layout.tsx only. The Payload admin
- * ships its own styles, so keeping Tailwind's preflight out of the
- * crm folder is deliberate — do not import this there.
- */
+@theme {
+  --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --color-brand-primary: #0f5cf2;
+  --color-brand-accent: #1ac7f2;
+  --color-surface-base: #ffffff;
+  --color-surface-subtle: #f6f9fb;
+  --color-surface-dark: #090e13;
+  --color-text-primary: #090e13;
+  --color-text-muted: #667385;
+  --color-border-default: #dbe3ed;
+}
+
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--color-surface-base); color: var(--color-text-primary); font-family: var(--font-sans); }
+* { box-sizing: border-box; }
