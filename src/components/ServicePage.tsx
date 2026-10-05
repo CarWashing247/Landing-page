@@ -1,8 +1,11 @@
 import type { Metadata } from 'next'
+import { draftMode } from 'next/headers'
 import { notFound } from 'next/navigation'
 
 import { loadService, loadSiteSettings } from '../lib/content'
 import type { Locale } from '../lib/locales'
+import { pathForService } from '../lib/locales'
+import { DraftBanner } from './DraftBanner'
 import { buildMetadata } from './seo/metadata'
 
 /**
@@ -15,7 +18,8 @@ import { buildMetadata } from './seo/metadata'
  */
 
 export const servicePageMetadata = async (slug: string, locale: Locale): Promise<Metadata> => {
-  const found = await loadService(slug, locale)
+  const { isEnabled: draft } = await draftMode()
+  const found = await loadService(slug, locale, draft)
 
   if (!found) {
     return {}
@@ -33,20 +37,24 @@ export const servicePageMetadata = async (slug: string, locale: Locale): Promise
 }
 
 export const ServicePage = async ({ locale, slug }: { locale: Locale; slug: string }) => {
-  const found = await loadService(slug, locale)
+  const { isEnabled: draft } = await draftMode()
+  const found = await loadService(slug, locale, draft)
 
   if (!found) {
     notFound()
   }
 
   return (
-    <main>
-      <h1>{found.doc.name}</h1>
-      <p>
-        {locale === 'vi'
-          ? 'TODO(copy): nội dung trang dịch vụ — bố cục đầy đủ là T-18.'
-          : 'TODO(copy): service page body — the full template is T-18.'}
-      </p>
-    </main>
+    <>
+      <DraftBanner locale={locale} path={pathForService(slug, locale)} />
+      <main>
+        <h1>{found.doc.name}</h1>
+        <p>
+          {locale === 'vi'
+            ? 'TODO(copy): nội dung trang dịch vụ — bố cục đầy đủ là T-18.'
+            : 'TODO(copy): service page body — the full template is T-18.'}
+        </p>
+      </main>
+    </>
   )
 }

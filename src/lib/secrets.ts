@@ -14,6 +14,7 @@
  * a crash names the problem on the first line of the log.
  */
 
+import { createHash, timingSafeEqual } from 'node:crypto'
 import { logger } from './log'
 
 /**
@@ -376,4 +377,36 @@ export const getSecret = async (key: SecretKey): Promise<string> => {
   }
 
   return value
+}
+
+/**
+ * Does a caller-supplied value match the secret this key holds?
+ *
+ * Lives here because this file is the only place a credential is read
+ * (AGENT.md 5.7), and a comparison is a read. Two endpoints need it —
+ * `/api/revalidate` and `/api/draft` — and a second hand-rolled copy is how one
+ * of them ends up with `===`.
+ *
+ * **Constant time, over digests rather than the raw strings.**
+ * `timingSafeEqual` throws when the two buffers differ in length, so comparing
+ * the secrets directly would leak their length through the exception — the one
+ * thing a timing-safe compare exists to prevent. Hashing first makes both sides
+ * 32 bytes whatever was sent.
+ *
+ * Returns `false` for a missing or empty value rather than throwing, so a
+ * caller can treat "no secret" and "wrong secret" as the same 401 without
+ * branching. A failure to *read* the expected secret still throws, because that
+ * is an outage and not a refusal.
+ */
+export const secretMatches = async (
+  key: SecretKey,
+  provided: null | string | undefined,
+): Promise<boolean> => {
+  if (!provided) {
+    return false
+  }
+
+  const digest = (value: string): Buffer => createHash('sha256').update(value).digest()
+
+  return timingSafeEqual(digest(provided), digest(await getSecret(key)))
 }
