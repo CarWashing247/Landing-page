@@ -63,7 +63,11 @@ recoverable.
    - **Exempt version restore** (`req.context.isRestoringVersion`). A denied
      field is *stripped*, so refusing the slug during a restore leaves it
      empty and `required` fails the whole operation — rolling back a published
-     page answers 400 naming a field the editor never touched.
+     page answers 400 naming a field the editor never touched. Log the
+     resulting slugs from a collection `afterChange` instead: during a restore
+     Payload runs field hooks for the **default locale only**, so a field hook
+     cannot see a second locale's slug being cleared, and the read needs
+     `locale: 'all'`.
 5. Use `admin.useAsTitle: 'title'` and a `defaultColumns` list that is
    useful to an editor (`title`, `slug`, `_status`, `updatedAt`).
 6. `npx payload generate:types`, migration, apply.
@@ -129,7 +133,18 @@ Expect the PATCH to fail (4xx), and only published slugs in the query.
   content field with nothing to put in it, so neither the layout nor T-23's
   seed data could be exercised before T-17 lands. Rich text survives whatever
   T-17 decides, so it is not throwaway.
-- Restoring a version created *before* a locale existed fails validation,
-  because `slug` is `required` and that version has no value for the new
-  locale. Correct — the old state is genuinely invalid now — but the message
-  only names the field. Affects T-07 identically.
+- **A version restore can retire a live URL, and that is left possible on
+  purpose.** Restoring a version from before a locale was translated clears
+  that locale's slug, because the version holds no value for it — so rolling
+  back a Vietnamese typo can remove an indexed `/en/pricing`. Refusing the
+  restore is the wrong trade: version history is what makes the slug lock
+  acceptable at all (AGENT.md 5.6), and removing rollback to protect a URL
+  takes away the safety net that justified the lock. It is logged per locale
+  instead (`pages:restore`), because a URL that quietly stops resolving is
+  otherwise found weeks later in Search Console.
+  **T-11 and T-13 must treat a slug that disappeared as a URL that changed.**
+  Applies to T-07 identically.
+- An earlier draft of this file claimed restoring a pre-translation version
+  *fails validation* on `required`. It does not — that failure was the field
+  access stripping the slug, which the restore exemption fixed. Retested after
+  the fix: restores of pre-translation versions succeed.
