@@ -2,7 +2,11 @@ import type { CollectionConfig } from 'payload'
 
 import { isAdmin, isAdminOrEditor, publishedOrStaff } from '../lib/access'
 import { forceNoindexWhenUntranslated } from '../fields/seo'
-import { revalidateAfterChange, revalidateAfterDelete } from '../lib/revalidate'
+import {
+  recordSlugsBeforeDelete,
+  revalidateAfterChange,
+  revalidateAfterDelete,
+} from '../lib/revalidate'
 import { recordSlugsAfterRestore, slugField } from '../lib/slug-field'
 
 /**
@@ -66,10 +70,12 @@ export const Pages: CollectionConfig = {
     beforeChange: [forceNoindexWhenUntranslated('pages')],
     afterChange: [recordSlugsAfterRestore('pages'), revalidateAfterChange('pages')],
     /**
-     * A deleted document must stop serving. Its slug tag is purged in every
-     * locale, because by the time this runs the row is gone and the per-locale
-     * slugs can no longer be read back.
+     * A deleted document must stop serving. The per-locale slugs are read in
+     * `beforeDelete`, while the row still exists — `afterDelete` only sees the
+     * slug resolved for one locale, and purging that under every locale's tag
+     * would leave the other locale's URL serving a deleted page.
      */
+    beforeDelete: [recordSlugsBeforeDelete('pages')],
     afterDelete: [revalidateAfterDelete('pages')],
   },
   versions: {

@@ -119,11 +119,46 @@ Expect `401, 400, 200`, and the new description without a deploy.
 - **A tag over 256 characters is silently ignored** by Next — never assigned to
   cached data, so revalidating it does nothing and reports nothing. The endpoint
   rejects one with 400 rather than returning a success that did not happen.
-- **`req.locale` is `'all'` in an `afterChange` hook**, even for a request that
-  named a single locale. Measured with a temporary probe, not assumed. The
-  consequence is that the old slug is purged in every locale rather than only
-  the edited one — safe, one extra tag, and on a path T-06 already makes rare
-  since a published slug cannot change at all.
+- **`createLocalReq` mutates the request object it is handed**, assigning
+  `req.locale` onto it (`createLocalReq.js:71`). So a hook that calls
+  `payload.findByID({ locale: 'all', req })` leaves `req.locale === 'all'` for
+  everything that runs afterwards on that request. Pass `req: { ...req }` — the
+  copy keeps `transactionID`, so the read still joins the transaction.
+
+  This is not a tidiness point. On a bulk write, every document after the first
+  would run T-06's `storedSlugForLocale` with `locale === 'all'`, which returns
+  `undefined`, and the published-slug lock would stop refusing renames.
+  Reproduced: a bulk PATCH over one draft and one published page, setting a new
+  slug. With the copy in place the draft is renamed and the published page is
+  refused with the lock's own message; without it, the published page's lock is
+  skipped because the draft's `afterChange` ran first.
+
+  It is also where an earlier version of this note went wrong. It claimed to
+  have *measured* `req.locale === 'all'` as Payload's hook contract. The
+  observation was real and the conclusion was not: the probe ran after the
+  `locale: 'all'` read and was reading its own side effect.
+- **The purge runs after the response, through `after()` from `next/server`,
+  not inside the hook.** Payload runs `afterChange` inside the write transaction
+  and commits afterwards, so purging from inside it races the COMMIT — and
+  `{ expire: 0 }` makes that race worse rather than better, because the next
+  request blocks and re-renders immediately. A visitor arriving in that window
+  re-reads the pre-publish rows, caches them, and nothing purges again: stale
+  until the one-hour floor, which is the exact failure `{ expire: 0 }` was
+  chosen to avoid. `after()` also takes the purge off the save path, so a slow
+  webhook cannot hold a write transaction open. Outside a request — a seed
+  script, a Local API test — `after()` throws and the purge runs inline.
+- **`afterDelete` cannot read the per-locale slugs**, because the row is gone.
+  It receives the document resolved for one locale, so purging that single slug
+  under every locale's tag looks thorough and is wrong: a page stored as
+  `vi: bang-gia` / `en: pricing` purges `page:en:bang-gia`, which nothing holds,
+  and leaves `/en/pricing` serving a deleted page. A `beforeDelete` hook reads
+  the slugs while the row still exists and stashes them on `req.context`, keyed
+  by collection and id so a bulk delete does not cross documents. Verified: both
+  URLs 404 immediately after one delete.
+- **`doc.slug` is not always a string.** Under a `locale=all` write it is a
+  per-locale object, which template-strings into a `page:vi:[object Object]`
+  tag that matches nothing and reports success. Every slug goes through a
+  `typeof` guard before it becomes a tag.
 - **The per-locale slug read deliberately omits `draft: true`**, which is the
   opposite of what `content.ts` needs. That read renders the document an editor
   is working on; this one chooses which *cache entry* to discard, and only the

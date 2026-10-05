@@ -1,6 +1,8 @@
+import { after } from 'next/server'
 import type {
   CollectionAfterChangeHook,
   CollectionAfterDeleteHook,
+  CollectionBeforeDeleteHook,
   CollectionSlug,
   GlobalAfterChangeHook,
   PayloadRequest,
@@ -29,8 +31,7 @@ import { getSecret } from './secrets'
  * **A failed purge must never fail the editor's save.** Every call is wrapped,
  * and the fallback is T-10's `revalidate: 3600` floor: the worst case is an
  * hour of staleness, not a save that bounces with an error the editor cannot
- * act on. That is also why nothing here is awaited for correctness — the hook
- * returns the document whatever the purge did.
+ * act on.
  */
 
 /** The header the endpoint reads. Spelled once, used by both sides. */
@@ -44,6 +45,15 @@ export const isRevalidatePayload = (value: unknown): value is RevalidatePayload 
   value !== null &&
   Array.isArray((value as { tags?: unknown }).tags) &&
   (value as { tags: unknown[] }).tags.every((tag) => typeof tag === 'string' && tag.length > 0)
+
+/**
+ * A self-request can hang, and without this one it would hang the save.
+ *
+ * Matches the Vault client's ceiling in `secrets.ts` for the same reason: a
+ * request with no timeout can be held open indefinitely by whatever is on the
+ * other end, and here the other end is this same process.
+ */
+const REQUEST_TIMEOUT_MS = 10_000
 
 /**
  * POST the tags, and swallow everything.
@@ -68,6 +78,7 @@ const purge = async (tags: string[], action: string): Promise<void> => {
         [SECRET_HEADER]: await getSecret('REVALIDATE_SECRET'),
       },
       method: 'POST',
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     })
 
     if (!response.ok) {
@@ -89,6 +100,33 @@ const purge = async (tags: string[], action: string): Promise<void> => {
   }
 }
 
+/**
+ * Purge **after the response, and therefore after the transaction commits.**
+ *
+ * Payload runs `afterChange` inside the write transaction and commits
+ * afterwards. Purging from inside it is a race that the endpoint's
+ * `{ expire: 0 }` makes worse rather than better: that setting makes the next
+ * request a *blocking* re-render, so a visitor arriving between the purge and
+ * the COMMIT re-reads the pre-publish rows, caches them, and nothing purges
+ * again. The page is then stale until the one-hour floor — the exact failure
+ * `{ expire: 0 }` was chosen to avoid.
+ *
+ * `after()` runs its callback once the response is finished, which is strictly
+ * later than the commit. It also takes the purge off the save path entirely, so
+ * a slow webhook can no longer hold a write transaction open.
+ *
+ * Outside a request — a seed script, a test using the Local API — there is no
+ * context for `after()` to attach to and it throws. The purge then runs inline,
+ * which is correct enough there: a script is not racing a visitor.
+ */
+const purgeAfterCommit = (tags: string[], action: string): void => {
+  try {
+    after(() => purge(tags, action))
+  } catch {
+    void purge(tags, action)
+  }
+}
+
 type TagFor = (locale: Locale, slug: string) => string
 
 const tagFor: Record<'pages' | 'services', TagFor> = {
@@ -97,27 +135,46 @@ const tagFor: Record<'pages' | 'services', TagFor> = {
 }
 
 /**
+ * A slug, or nothing.
+ *
+ * A write made with `locale=all` hands back a per-locale **object** where a
+ * single-locale write hands back a string. Without this guard that object is
+ * template-stringified into a `page:vi:[object Object]` tag — one that matches
+ * nothing, purges nothing, and reports success.
+ */
+const asSlug = (value: unknown): string | undefined =>
+  typeof value === 'string' && value.length > 0 ? value : undefined
+
+/**
  * Every locale's slug for one document, with the fallback off.
  *
- * `doc` in an `afterChange` hook is resolved for `req.locale` alone, and
- * Payload's field-level fallback means a locale with no translation hands back
- * the default locale's slug — so purging from `doc.slug` alone would purge the
- * Vietnamese tag twice and the English one never.
+ * `doc` in a hook is resolved for one locale, and Payload's field-level
+ * fallback means a locale with no translation hands back the default locale's
+ * slug — so purging from `doc.slug` alone would purge the Vietnamese tag twice
+ * and the English one never.
+ *
+ * **`req` is copied, not passed.** `createLocalReq` assigns `req.locale` onto
+ * the object it is given (`createLocalReq.js:71`), so handing it the live
+ * request leaves `req.locale === 'all'` for everything that runs afterwards.
+ * That is not hypothetical: it is where this file's earlier claim to have
+ * "measured `req.locale === 'all'`" came from — the probe ran after this call
+ * and was reading its own side effect. The real damage is on a bulk write,
+ * where every document after the first would then run T-06's
+ * `storedSlugForLocale` with `locale === 'all'`, which returns `undefined` and
+ * makes the published-slug lock stop refusing renames. The copy keeps
+ * `transactionID`, so the read still joins the surrounding transaction.
  *
  * `locale: 'all'` returns each localized field as a per-locale map, which the
  * generated types do not model (they type `slug` as the resolved string), hence
- * the cast through `unknown`. It is the runtime shape, and it is the reason
- * this read exists. Same technique as `recordSlugsAfterRestore` in
+ * the cast through `unknown`. Same technique as `recordSlugsAfterRestore` in
  * `slug-field.ts` and `unfallenBack` in `content.ts`.
  *
- * **No `draft: true` here, and that is the opposite of what T-09 needed.**
- * `content.ts` reads with `draft: true` because it is rendering the document an
- * editor is working on. This read is choosing which *cache entry* to throw
- * away, and the public site only ever cached the published slug — so the
- * published row is the right one to ask. Measured: while a draft rename is in
- * flight this returns the old, still-published slug, and only once the document
- * is published does it return the new one. That is the correct sequence, not a
- * lag: the new URL had nothing cached under it until it went live.
+ * **No `draft: true`, which is the opposite of what `content.ts` needs.** That
+ * read renders the document an editor is working on; this one chooses which
+ * *cache entry* to discard, and only the published slug was ever cached. During
+ * a draft rename it therefore returns the old, still-published slug, and
+ * returns the new one once the document is published — the correct sequence,
+ * because nothing was cached under the new URL until it went live.
  */
 const slugPerLocale = async (
   collection: CollectionSlug,
@@ -131,43 +188,28 @@ const slugPerLocale = async (
     fallbackLocale: false,
     locale: 'all',
     overrideAccess: true,
-    req,
-  })) as unknown as { slug?: Partial<Record<Locale, string>> }
+    req: { ...req } as PayloadRequest,
+  })) as unknown as { slug?: Partial<Record<Locale, unknown>> }
 
-  return everyLocale.slug ?? {}
+  const slugs: Partial<Record<Locale, string>> = {}
+
+  for (const locale of LOCALES) {
+    const slug = asSlug(everyLocale.slug?.[locale])
+
+    if (slug) {
+      slugs[locale] = slug
+    }
+  }
+
+  return slugs
 }
 
-/**
- * The tags one document's change invalidates.
- *
- * **Every locale, not only the one that changed**, and that is the one place
- * locale-scoped tags would otherwise under-purge. The tag is per locale so that
- * editing the English copy does not throw away the cached Vietnamese page —
- * correct, and the reason the locale is in the tag at all. But a *slug rename*
- * reaches further than the locale it happened in: the Vietnamese page's cached
- * render contains the English `hreflang` URL, so renaming the English slug
- * leaves the Vietnamese page advertising a URL that now 404s. Purging every
- * locale costs two tags instead of one and removes the whole class of problem.
- *
- * `previousDoc`'s slug is added for the locale that changed, so the old URL
- * stops serving the moved content. Its negative entry is then re-cached as a
- * miss on the next request, which is what makes the old URL 404 rather than
- * keep serving.
- */
-const tagsForDocument = async ({
-  collection,
-  id,
-  previousSlug,
-  req,
-}: {
-  collection: 'pages' | 'services'
-  id: number | string
-  previousSlug?: string | null
-  req: PayloadRequest
-}): Promise<string[]> => {
+/** The tags covering a document, by its slug in each locale. */
+const tagsForSlugs = (
+  collection: 'pages' | 'services',
+  slugs: Partial<Record<Locale, string>>,
+): string[] => {
   const build = tagFor[collection]
-  const slugs = await slugPerLocale(collection, id, req)
-
   const tags = new Set<string>([SITEMAP_TAG])
 
   for (const locale of LOCALES) {
@@ -178,35 +220,19 @@ const tagsForDocument = async ({
     }
   }
 
-  /**
-   * The old slug, purged in every locale.
-   *
-   * In principle it belongs only to the locale that was edited — a rename in
-   * `en` does not move the `vi` URL — and the narrow branch below is kept for
-   * the case where a single locale is identifiable. **In practice it never is:
-   * Payload hands this hook `req.locale === 'all'` even for a request that
-   * named one**, which was measured rather than assumed. So the fan-out is what
-   * runs, and the cost is one extra tag on a path that T-06 already makes rare:
-   * a published slug cannot change at all, so a rename only ever happens to a
-   * draft, under a URL the public site has never served.
-   */
-  if (previousSlug) {
-    const edited = req.locale
-    const locales =
-      edited && edited !== 'all' && (LOCALES as readonly string[]).includes(edited)
-        ? [edited as Locale]
-        : LOCALES
-
-    for (const locale of locales) {
-      tags.add(build(locale, previousSlug))
-    }
-  }
-
   return [...tags]
 }
 
 /**
  * Purge a document's tags after it changes.
+ *
+ * **Every locale, not only the one that changed**, and that is the one place
+ * locale-scoped tags would otherwise under-purge. The tag is per locale so that
+ * editing the English copy does not throw away the cached Vietnamese page —
+ * correct, and the reason the locale is in the tag at all. But a *slug rename*
+ * reaches further than the locale it happened in: the Vietnamese page's cached
+ * render contains the English `hreflang` URL, so renaming the English slug
+ * leaves the Vietnamese page advertising a URL that now 404s.
  *
  * Returns `doc` untouched and never throws: an `afterChange` hook that throws
  * fails the editor's save, and a cache purge is not worth losing an edit over.
@@ -214,20 +240,29 @@ const tagsForDocument = async ({
 export const revalidateAfterChange =
   (collection: 'pages' | 'services'): CollectionAfterChangeHook =>
   async ({ doc, previousDoc, req }) => {
-    const previousSlug = previousDoc?.slug as string | undefined
-    const currentSlug = doc?.slug as string | undefined
-
     try {
-      const tags = await tagsForDocument({
-        collection,
-        id: doc.id as number | string,
-        // Only when it actually moved. Sending it on every save would purge the
-        // same tag twice and make the log unreadable.
-        previousSlug: previousSlug && previousSlug !== currentSlug ? previousSlug : undefined,
-        req,
-      })
+      const slugs = await slugPerLocale(collection, doc.id as number | string, req)
+      const tags = new Set(tagsForSlugs(collection, slugs))
 
-      await purge(tags, `${collection}:afterChange`)
+      /**
+       * The slug it moved away from, purged in every locale.
+       *
+       * Which locale a rename belongs to is not reliably knowable here, so the
+       * old slug is purged in all of them: one extra tag, on a path T-06
+       * already makes rare, since a published slug cannot change at all and a
+       * rename only ever happens to a draft under a URL the public site has
+       * never served.
+       */
+      const previousSlug = asSlug(previousDoc?.slug)
+      const currentSlug = asSlug(doc?.slug)
+
+      if (previousSlug && previousSlug !== currentSlug) {
+        for (const locale of LOCALES) {
+          tags.add(tagFor[collection](locale, previousSlug))
+        }
+      }
+
+      purgeAfterCommit([...tags], `${collection}:afterChange`)
     } catch (error) {
       logger(`${collection}:afterChange`).error('could not build tags', {
         id: String(doc.id),
@@ -239,22 +274,63 @@ export const revalidateAfterChange =
   }
 
 /**
+ * `req.context` key holding the slugs read before a delete.
+ *
+ * Keyed by collection *and* id because a bulk delete runs these hooks once per
+ * document on one shared request; a single key would have the second document
+ * purging the first one's slugs.
+ */
+const deletedSlugsKey = (collection: string, id: number | string): string =>
+  `revalidate:${collection}:${id}`
+
+/**
+ * Read every locale's slug **before** the row disappears.
+ *
+ * `afterDelete` receives the document resolved for one locale, so its `slug` is
+ * a single string. Purging that one string under every locale's tag looks
+ * thorough and is wrong: a page stored as `vi: bang-gia` / `en: pricing` would
+ * purge `page:en:bang-gia`, which nothing holds, and leave `page:en:pricing`
+ * cached — so `/en/pricing` would serve a deleted page until the one-hour floor
+ * expired.
+ */
+export const recordSlugsBeforeDelete =
+  (collection: 'pages' | 'services'): CollectionBeforeDeleteHook =>
+  async ({ id, req }) => {
+    try {
+      req.context[deletedSlugsKey(collection, id)] = await slugPerLocale(collection, id, req)
+    } catch (error) {
+      logger(`${collection}:beforeDelete`).error('could not read slugs', {
+        id: String(id),
+        reason: error instanceof Error ? error.message : 'unknown',
+      })
+    }
+  }
+
+/**
  * Purge after a delete, so a removed page stops serving.
  *
- * The document is already gone by the time this runs, so the slugs cannot be
- * re-read per locale — `doc` here is the deleted document as it last was,
- * resolved for `req.locale`. Purging that slug in every locale is the
- * conservative choice: at worst it purges a tag that was already empty, which
- * costs one re-render.
+ * Uses the slugs `recordSlugsBeforeDelete` stashed, because by now the row is
+ * gone. If that read failed there is still the one resolved slug to go on,
+ * which covers the common single-locale document.
  */
 export const revalidateAfterDelete =
   (collection: 'pages' | 'services'): CollectionAfterDeleteHook =>
-  async ({ doc }) => {
-    const build = tagFor[collection]
-    const slug = doc?.slug as string | undefined
-    const tags = [SITEMAP_TAG, ...(slug ? LOCALES.map((locale) => build(locale, slug)) : [])]
+  async ({ doc, id, req }) => {
+    const key = deletedSlugsKey(collection, id)
+    const recorded = req.context[key] as Partial<Record<Locale, string>> | undefined
 
-    await purge(tags, `${collection}:afterDelete`)
+    const fallback: Partial<Record<Locale, string>> = {}
+    const resolved = asSlug(doc?.slug)
+
+    if (!recorded && resolved) {
+      for (const locale of LOCALES) {
+        fallback[locale] = resolved
+      }
+    }
+
+    delete req.context[key]
+
+    purgeAfterCommit(tagsForSlugs(collection, recorded ?? fallback), `${collection}:afterDelete`)
 
     return doc
   }
@@ -271,7 +347,7 @@ export const revalidateAfterDelete =
 export const revalidateGlobal =
   (name: string): GlobalAfterChangeHook =>
   async ({ doc }) => {
-    await purge([GLOBALS_TAG], `${name}:afterChange`)
+    purgeAfterCommit([GLOBALS_TAG], `${name}:afterChange`)
 
     return doc
   }
