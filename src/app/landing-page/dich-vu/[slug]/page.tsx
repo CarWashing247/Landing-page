@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 import { ServicePage, servicePageMetadata } from '../../../../components/ServicePage'
+import { publishedSlugs } from '../../../../lib/content'
 
 /**
  * Service pages for the `vi` locale. The path segment differs per locale —
@@ -18,3 +19,14 @@ export const generateMetadata = async ({ params }: Props): Promise<Metadata> =>
 const Page = async ({ params }: Props) => <ServicePage locale={LOCALE} slug={(await params).slug} />
 
 export default Page
+
+/**
+ * One prerendered route per published document in this locale.
+ *
+ * Keyed by locale as well as slug (Design.md section 4): the two locale folders
+ * each run this for their own locale, so the route count is locales x
+ * documents, and a document with no translation is prerendered only where it
+ * has a slug.
+ */
+export const generateStaticParams = async (): Promise<{ slug: string }[]> =>
+  (await publishedSlugs('services', LOCALE)).map((slug) => ({ slug }))

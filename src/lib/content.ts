@@ -1,6 +1,8 @@
+import { unstable_cache } from 'next/cache'
 import { cache } from 'react'
 
 import type { Page, Service, SiteSetting } from '../payload-types'
+import { GLOBALS_TAG, REVALIDATE_SECONDS, pageTag, serviceTag } from './cache-tags'
 import { logger } from './log'
 import type { Locale } from './locales'
 import { pathForPage, pathForService } from './locales'
@@ -20,10 +22,26 @@ import { getPayload } from './payload'
  *     pattern the Next 16 metadata guide prescribes
  *     (`01-getting-started/14-metadata-and-og-images.md`). Without it every
  *     page queries Postgres twice for the same row.
- *  3. **T-10 adds cache tags here and nowhere else.** Its own task file asks for
- *     "a thin query layer so each content fetch has one call site that already
- *     carries its tags"; this is that call site, so T-10 adds an option rather
- *     than restructuring routes.
+ *  3. **The cache tags live here and nowhere else.** Every content read is
+ *     wrapped once, at the one call site, so AGENT.md 5.3's "never inline a tag
+ *     literal" holds by construction rather than by review.
+ *
+ * **Two layers of caching, and they do different jobs.** React's `cache()` is
+ * per render: it is what stops `generateMetadata()` and the page body querying
+ * Postgres twice for the same row. `unstable_cache` is across requests and
+ * deployments: it is what holds the tag that T-11's `revalidateTag` purges, and
+ * the `revalidate` floor under it. Neither substitutes for the other, so the
+ * outer wrapper is `cache()` and the inner one is `unstable_cache`.
+ *
+ * **On `unstable_cache` being the superseded API.** Next 16 replaces it with
+ * the `use cache` directive, which needs the `cacheComponents` flag. That flag
+ * is repo-wide: it makes data fetching dynamic by default, turns on Partial
+ * Prerendering, and replaces the route segment configs — a staged migration
+ * that Next's own guide drives with a dedicated skill and per-route validation,
+ * and one that would have to account for Payload's admin routes under `/crm`.
+ * That is its own task, not a step inside this one. The same guide states that
+ * `unstable_cache` "keeps working as a separate layer", and every use of it in
+ * this repo is in this file, so the migration stays cheap.
  *
  * `overrideAccess: false` with no `user` is what keeps drafts off the public
  * site. It is not belt-and-braces: Payload's Local API defaults to
@@ -53,23 +71,33 @@ export type Localized<T> = {
  * page whose title is its own heading. Every consumer treats the fields as
  * optional for the same reason.
  */
-export const loadSiteSettings = cache(async (locale: Locale): Promise<SiteSetting | null> => {
-  const log = logger('content:site-settings')
-  const payload = await getPayload()
+const siteSettings = unstable_cache(
+  async (locale: Locale): Promise<SiteSetting | null> => {
+    const log = logger('content:site-settings')
+    const payload = await getPayload()
 
-  try {
-    return await payload.findGlobal({ slug: 'site-settings', depth: 1, locale })
-  } catch (error) {
-    // The message, never the error object: AGENT.md 5.7. A Payload error can
-    // carry the request, and the request can carry a session cookie.
-    log.error('site settings unavailable', {
-      locale,
-      reason: error instanceof Error ? error.message : 'unknown',
-    })
+    try {
+      return await payload.findGlobal({ slug: 'site-settings', depth: 1, locale })
+    } catch (error) {
+      // The message, never the error object: AGENT.md 5.7. A Payload error can
+      // carry the request, and the request can carry a session cookie.
+      log.error('site settings unavailable', {
+        locale,
+        reason: error instanceof Error ? error.message : 'unknown',
+      })
 
-    return null
-  }
-})
+      return null
+    }
+  },
+  // The locale is an argument, and `unstable_cache` folds the arguments into
+  // the key, so the two locales do not share an entry.
+  ['content', 'site-settings'],
+  { revalidate: REVALIDATE_SECONDS, tags: [GLOBALS_TAG] },
+)
+
+export const loadSiteSettings = cache(
+  async (locale: Locale): Promise<SiteSetting | null> => siteSettings(locale),
+)
 
 /**
  * The two localized values that must NOT be read through Payload's fallback.
@@ -158,10 +186,36 @@ const loadBySlug = async <T extends { id: number }>(
   }
 }
 
+/**
+ * Both document reads, under one tag.
+ *
+ * The tag depends on the slug, so the wrapper is built per call rather than
+ * once at module scope — the pattern Next's own `unstable_cache` reference
+ * uses for a per-id key. `loadBySlug` performs *two* Postgres reads (the
+ * rendered locale, and the `locale: 'all'` read for the slug and canonical that
+ * must not be fallback-resolved); both sit inside this one wrapper, so one
+ * purge covers both and they can never be cached out of step with each other.
+ *
+ * The key repeats what the tag says. They are not the same thing: the key
+ * decides which entry is read, the tag decides which entries a purge throws
+ * away, and `unstable_cache` explicitly does not use tags to identify an entry.
+ */
+const tagged = <T>(
+  tag: string,
+  key: readonly string[],
+  read: () => Promise<T>,
+): Promise<T> =>
+  unstable_cache(read, ['content', ...key], {
+    revalidate: REVALIDATE_SECONDS,
+    tags: [tag],
+  })()
+
 /** A CMS page by its slug in the rendered locale, or `null` if none is published. */
 export const loadPage = cache(
   async (slug: string, locale: Locale): Promise<Localized<Page> | null> => {
-    const found = await loadBySlug<Page>('pages', slug, locale)
+    const found = await tagged(pageTag(locale, slug), ['pages', locale, slug], () =>
+      loadBySlug<Page>('pages', slug, locale),
+    )
 
     return found && { ...found, paths: pathsFrom(found.paths, pathForPage) }
   },
@@ -170,11 +224,66 @@ export const loadPage = cache(
 /** A service by its slug in the rendered locale, or `null` if none is published. */
 export const loadService = cache(
   async (slug: string, locale: Locale): Promise<Localized<Service> | null> => {
-    const found = await loadBySlug<Service>('services', slug, locale)
+    const found = await tagged(serviceTag(locale, slug), ['services', locale, slug], () =>
+      loadBySlug<Service>('services', slug, locale),
+    )
 
     return found && { ...found, paths: pathsFrom(found.paths, pathForService) }
   },
 )
+
+/**
+ * Every published slug in one locale, for `generateStaticParams()`.
+ *
+ * Deliberately uncached: it runs at build and when a route revalidates, never
+ * per request, so a cache entry would only add a way for the prerendered set to
+ * go stale. `overrideAccess: false` with no user is what keeps drafts out —
+ * the acceptance criterion is explicit that a draft must not be prerendered,
+ * and the filter is `publishedOrStaff` from T-06 rather than a second copy of
+ * `_status: 'published'` written here.
+ *
+ * `limit: 0` means no limit in Payload, which is what we want: every published
+ * document, not the first ten.
+ */
+export const publishedSlugs = async (
+  collection: 'pages' | 'services',
+  locale: Locale,
+): Promise<string[]> => {
+  const log = logger(`content:${collection}`)
+  const payload = await getPayload()
+
+  const { docs } = await payload.find({
+    collection,
+    depth: 0,
+    limit: 0,
+    locale,
+    overrideAccess: false,
+    pagination: false,
+    select: { slug: true },
+  })
+
+  /**
+   * A locale with no translation still returns rows, because `slug` is
+   * fallback-resolved on a normal read — so the Vietnamese slug would be
+   * prerendered under `/en/` as well. Reading per locale with the fallback off
+   * is what `unfallenBack` exists for, but `find` has no such switch, so the
+   * guard is on the way out: a document is prerendered in a locale only if that
+   * locale has a slug of its own.
+   */
+  const slugs = (
+    await Promise.all(
+      docs.map(async (doc) => {
+        const perLocale = await unfallenBack(collection, doc.id as number)
+
+        return perLocale.slug?.[locale]
+      }),
+    )
+  ).filter((slug): slug is string => Boolean(slug))
+
+  log.debug('prerendering', { collection, count: slugs.length, locale })
+
+  return slugs
+}
 
 /**
  * Turn a slug-per-locale map into a path-per-locale map.

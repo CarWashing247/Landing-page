@@ -84,6 +84,10 @@ curl -s localhost:3000/sitemap.xml | grep -c '<noindexed-slug>'   # expect 0
 
 ## Notes
 
+- `SITEMAP_TAG` already exists in `src/lib/cache-tags.ts` (T-10) — import it,
+  do not spell `'sitemap'`. Nothing attaches it yet, because nothing cached is
+  the sitemap; this task is what puts it to use.
+
 - Draft filtering and `noindex` filtering are two separate conditions and
   both are easy to half-implement. Check both, with a real draft and a real
   `noindex` page.
