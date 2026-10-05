@@ -4,147 +4,115 @@ import { isAdmin, isAdminOrEditor, publishedOrStaff } from '../lib/access'
 import { forceNoindexWhenUntranslated } from '../fields/seo'
 import { recordSlugsAfterRestore, slugField } from '../lib/slug-field'
 
-/**
- * Editable pages, as a stack of blocks, with drafts and version history.
- *
- * **The slug lock is the point of this collection.** Changing the slug of a
- * published page breaks every indexed URL and every link anyone has shared, and
- * there is no undo that reaches Google's index or someone's Zalo message. So the
- * CMS makes it impossible rather than merely inadvisable.
- *
- * Version history is what makes that acceptable to an editor (AGENT.md 5.6):
- * they can undo a content mistake, so they never need to undo a URL mistake.
- *
- * `title`, `slug` and `layout` are **localized** (Design.md 2.1). Slugs
- * especially: `bang-gia` and `pricing` are separate documents' worth of keyword
- * value, not a translation of one another. Localization is a schema decision —
- * Payload stores localized values in their own table — which is why T-04A had
- * to land before this task.
- *
- * The SEO tab is deliberately absent. T-08 owns it, and a stubbed `meta` field
- * here would be a migration for T-08 to undo.
- */
+const textField = (name: string, label: { en: string; vi: string }, required = true) => ({
+  name,
+  type: 'text' as const,
+  required,
+  localized: true,
+  label,
+})
+
+const blocks = [
+  {
+    slug: 'hero',
+    labels: { singular: { en: 'Hero', vi: 'Hero' }, plural: { en: 'Hero', vi: 'Hero' } },
+    fields: [
+      textField('eyebrow', { en: 'Eyebrow', vi: 'Nhãn' }, false),
+      textField('heading', { en: 'Heading', vi: 'Tiêu đề' }),
+      { name: 'description', type: 'textarea' as const, localized: true, label: { en: 'Description', vi: 'Mô tả' } },
+      textField('primaryLabel', { en: 'Primary CTA label', vi: 'Nhãn CTA chính' }, false),
+      textField('primaryHref', { en: 'Primary CTA URL', vi: 'URL CTA chính' }, false),
+      textField('secondaryLabel', { en: 'Secondary CTA label', vi: 'Nhãn CTA phụ' }, false),
+      textField('secondaryHref', { en: 'Secondary CTA URL', vi: 'URL CTA phụ' }, false),
+    ],
+  },
+  {
+    slug: 'benefits',
+    labels: { singular: { en: 'Benefits', vi: 'Lợi ích' }, plural: { en: 'Benefits', vi: 'Lợi ích' } },
+    fields: [{
+      name: 'items',
+      type: 'array' as const,
+      localized: true,
+      fields: [textField('value', { en: 'Value', vi: 'Giá trị' }), textField('title', { en: 'Title', vi: 'Tiêu đề' }), textField('description', { en: 'Description', vi: 'Mô tả' })],
+    }],
+  },
+  {
+    slug: 'steps',
+    labels: { singular: { en: 'Steps', vi: 'Các bước' }, plural: { en: 'Steps', vi: 'Các bước' } },
+    fields: [{
+      name: 'items',
+      type: 'array' as const,
+      localized: true,
+      fields: [textField('number', { en: 'Number', vi: 'Số thứ tự' }), textField('title', { en: 'Title', vi: 'Tiêu đề' }), textField('description', { en: 'Description', vi: 'Mô tả' })],
+    }],
+  },
+  {
+    slug: 'pricing',
+    labels: { singular: { en: 'Pricing', vi: 'Bảng giá' }, plural: { en: 'Pricing', vi: 'Bảng giá' } },
+    fields: [{ name: 'heading', type: 'text' as const, localized: true, required: false, label: { en: 'Heading', vi: 'Tiêu đề' } }],
+  },
+  {
+    slug: 'technology',
+    labels: { singular: { en: 'Technology', vi: 'Công nghệ' }, plural: { en: 'Technology', vi: 'Công nghệ' } },
+    fields: [textField('heading', { en: 'Heading', vi: 'Tiêu đề' }), { name: 'description', type: 'textarea' as const, localized: true, label: { en: 'Description', vi: 'Mô tả' } }],
+  },
+  {
+    slug: 'faq',
+    labels: { singular: { en: 'FAQ', vi: 'FAQ' }, plural: { en: 'FAQ', vi: 'FAQ' } },
+    fields: [{
+      name: 'items',
+      type: 'array' as const,
+      localized: true,
+      fields: [textField('question', { en: 'Question', vi: 'Câu hỏi' }), { name: 'answer', type: 'textarea' as const, localized: true, required: true, label: { en: 'Answer', vi: 'Trả lời' } }],
+    }],
+  },
+  {
+    slug: 'cta',
+    labels: { singular: { en: 'CTA', vi: 'CTA' }, plural: { en: 'CTA', vi: 'CTA' } },
+    fields: [textField('heading', { en: 'Heading', vi: 'Tiêu đề' }), { name: 'description', type: 'textarea' as const, localized: true, label: { en: 'Description', vi: 'Mô tả' } }, textField('label', { en: 'Button label', vi: 'Nhãn nút' }), textField('href', { en: 'Button URL', vi: 'URL nút' })],
+  },
+  {
+    slug: 'content',
+    labels: { singular: { en: 'Text', vi: 'Văn bản' }, plural: { en: 'Text blocks', vi: 'Các khối văn bản' } },
+    fields: [{ name: 'richText', type: 'richText' as const, required: true, label: { en: 'Text', vi: 'Văn bản' } }],
+  },
+]
 
 export const Pages: CollectionConfig = {
   slug: 'pages',
-  labels: {
-    singular: { en: 'Page', vi: 'Trang' },
-    plural: { en: 'Pages', vi: 'Các trang' },
-  },
+  labels: { singular: { en: 'Page', vi: 'Trang' }, plural: { en: 'Pages', vi: 'Các trang' } },
   admin: {
     useAsTitle: 'title',
-    // What an editor needs to identify a row: what it is, where it lives,
-    // whether it is live, and whether someone changed it recently.
     defaultColumns: ['title', 'slug', '_status', 'updatedAt'],
-    description: {
-      en:
-        'Pages are built from blocks. Save as draft while you work — nothing is ' +
-        'public until you press Publish. The address cannot be changed once a ' +
-        'page is published.',
-      vi:
-        'Trang được tạo từ các khối nội dung. Hãy lưu bản nháp trong khi làm — ' +
-        'chưa có gì công khai cho đến khi bấm Xuất bản. Không thể đổi đường dẫn ' +
-        'sau khi trang đã xuất bản.',
-    },
   },
   access: {
-    // Published only for the public; drafts would otherwise be served to
-    // visitors and crawlers by a plain `anyone`.
     read: publishedOrStaff,
     create: isAdminOrEditor,
     update: isAdminOrEditor,
-    // Deleting a published page is a dead URL. Editors unpublish instead.
     delete: isAdmin,
   },
   hooks: {
-    /**
-     * Keeps an untranslated locale out of Google's index (Design.md 2.3). Scoped
-     * to non-default locales — see src/fields/seo.ts for why that scoping is not
-     * what Design.md literally says.
-     */
     beforeChange: [forceNoindexWhenUntranslated('pages')],
     afterChange: [recordSlugsAfterRestore('pages')],
   },
-  versions: {
-    drafts: true,
-    // Enough history to undo a bad afternoon without keeping every keystroke
-    // of a page's life in Postgres forever.
-    maxPerDoc: 50,
-  },
-  /**
-   * The content fields live in a tab of their own so the SEO tab is visually
-   * separate (AGENT.md 5.6). The plugin appends its SEO tab to this array —
-   * it only creates a `Content` tab itself when there is none, and that one
-   * would be labelled from `labels.singular` ("Trang") rather than "Nội dung".
-   *
-   * `slug` stays outside the tabs, at the top level, so it keeps its sidebar
-   * position; the plugin preserves everything after the tabs field.
-   */
+  versions: { drafts: true, maxPerDoc: 50 },
   fields: [
     {
       type: 'tabs',
-      tabs: [
-        {
-          label: { en: 'Content', vi: 'Nội dung' },
-          fields: [
-            {
-              name: 'title',
-              type: 'text',
-              required: true,
-              localized: true,
-              label: { en: 'Title', vi: 'Tiêu đề' },
-              admin: {
-                description: {
-                  en: 'Shown as the page heading, and used to suggest the address below.',
-                  vi: 'Hiển thị làm tiêu đề trang, và dùng để gợi ý đường dẫn bên dưới.',
-                },
-              },
-            },
-            {
-              name: 'layout',
-              type: 'blocks',
-              localized: true,
-              label: { en: 'Content', vi: 'Nội dung' },
-              labels: {
-                singular: { en: 'Block', vi: 'Khối' },
-                plural: { en: 'Blocks', vi: 'Các khối' },
-              },
-              admin: {
-                description: {
-                  en: 'Add and reorder blocks to build the page.',
-                  vi: 'Thêm và sắp xếp các khối để tạo nên trang.',
-                },
-              },
-              /**
-               * One block, deliberately.
-               *
-               * T-17 owns the real set (Hero, Pricing, Steps, Faq, Cta). An empty
-               * `blocks: []` would type-check and then hand an editor a content field
-               * with nothing to put in it, so the layout could not be exercised at all
-               * before T-17 lands — including by T-23's seed data. Rich text is the one
-               * block that survives whatever T-17 decides, so it is not throwaway.
-               */
-              blocks: [
-                {
-                  slug: 'content',
-                  labels: {
-                    singular: { en: 'Text', vi: 'Văn bản' },
-                    plural: { en: 'Text blocks', vi: 'Các khối văn bản' },
-                  },
-                  fields: [
-                    {
-                      name: 'richText',
-                      type: 'richText',
-                      required: true,
-                      label: { en: 'Text', vi: 'Văn bản' },
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      ],
+      tabs: [{
+        label: { en: 'Content', vi: 'Nội dung' },
+        fields: [
+          { name: 'title', type: 'text', required: true, localized: true, label: { en: 'Title', vi: 'Tiêu đề' } },
+          {
+            name: 'layout',
+            type: 'blocks',
+            localized: true,
+            label: { en: 'Content', vi: 'Nội dung' },
+            labels: { singular: { en: 'Block', vi: 'Khối' }, plural: { en: 'Blocks', vi: 'Các khối' } },
+            blocks,
+          },
+        ],
+      }],
     },
     slugField({ collection: 'pages', example: 'bang-gia', from: 'title' }),
   ],
