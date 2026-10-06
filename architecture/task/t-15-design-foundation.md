@@ -135,7 +135,7 @@ weight and say in the PR that you looked at it.
   | --- | --- | --- | --- |
   | AutoWash247 Website UI | `DAHXNsDnbjg` | 9 | T-16, T-17 |
   | AutoWash247 Desktop Pages | `DAHXNi05PeY` | 7 | T-16, T-18, T-19 |
-  | AutoWash247 Admin CMS UI | `DAHXNnCsHfc` | 8 | T-22, or out of scope |
+  | AutoWash247 Admin CMS UI | `DAHXNnCsHfc` | 8 | T-19A |
 
 - **The deck carries real Vietnamese copy**, written by the designer rather than
   machine-translated — headings, the 24/7 badge, FAQ questions, the four process
