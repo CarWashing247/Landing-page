@@ -37,6 +37,11 @@ export const vi = {
     home: 'Trang chủ',
     services: 'Dịch vụ',
     pricing: 'Bảng giá',
+    /**
+     * Design.md section 3 names this route in both locales; the Canva designs
+     * omit it. See `src/lib/routes.ts` for why the plan wins.
+     */
+    guide: 'Hướng dẫn',
     about: 'Về chúng tôi',
     news: 'Tin tức',
     contact: 'Liên hệ',
@@ -147,6 +152,31 @@ export const vi = {
     title: '404',
     message: 'Không tìm thấy trang này.',
     backHome: 'Về trang chủ',
+  },
+
+  /**
+   * Weekday names, for the footer's opening hours.
+   *
+   * The Vietnamese is taken from the `WEEKDAYS` constant in
+   * `src/globals/BusinessInfo.ts`, written in T-05 — already in the repo, so not
+   * translated here. Monday first, which is how Vietnamese business listings
+   * order the week.
+   */
+  weekdays: {
+    monday: 'Thứ Hai',
+    tuesday: 'Thứ Ba',
+    wednesday: 'Thứ Tư',
+    thursday: 'Thứ Năm',
+    friday: 'Thứ Sáu',
+    saturday: 'Thứ Bảy',
+    sunday: 'Chủ Nhật',
+    /** Shown instead of a time range for a day the business does not open. */
+    closed: 'Đóng cửa',
+  },
+
+  /** Strings that exist for assistive technology rather than for the eye. */
+  a11y: {
+    skipToContent: 'TODO(copy): skip to main content',
   },
 
   /**

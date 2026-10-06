@@ -36,34 +36,25 @@ export const DraftBanner = async ({ locale, path }: { locale: Locale; path?: str
 
   return (
     <aside
+      /*
+       * Tokens rather than the inline hex this shipped with in T-12 (follow-up
+       * A6). It is `highlight` on `ink` rather than the amber it used to be,
+       * because the palette has no amber and inventing one would be a seventh
+       * colour nobody designed — and this is the one surface that should look
+       * unlike the site, so the brightest token in the set is the right one.
+       *
+       * Static rather than fixed: fixed overlapped the header and hid it. In
+       * normal flow the banner pushes the page down, which is correct for a
+       * standing condition that applies to the whole document.
+       */
+      className="bg-highlight text-on-highlight text-label flex flex-wrap items-center gap-2 px-4 py-2"
       // `role="status"` rather than `alert`: it is a standing condition, not an
       // interruption, so a screen reader announces it without cutting off.
       role="status"
-      style={{
-        background: '#b45309',
-        color: '#ffffff',
-        fontFamily: 'system-ui, sans-serif',
-        fontSize: '14px',
-        inset: '0 0 auto 0',
-        padding: '8px 16px',
-        position: 'fixed',
-        zIndex: 9999,
-      }}
     >
-      <span>{copy.draft.message}</span>{' '}
-      <form action={`/api/draft/exit?${exit.toString()}`} method="post" style={{ display: 'inline' }}>
-        <button
-          style={{
-            background: 'none',
-            border: 0,
-            color: 'inherit',
-            cursor: 'pointer',
-            font: 'inherit',
-            padding: 0,
-            textDecoration: 'underline',
-          }}
-          type="submit"
-        >
+      <span>{copy.draft.message}</span>
+      <form action={`/api/draft/exit?${exit.toString()}`} method="post">
+        <button className="cursor-pointer underline" type="submit">
           {copy.draft.exit}
         </button>
       </form>
