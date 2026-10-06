@@ -15,6 +15,11 @@ Five blocks an editor can compose a page from in any order: `Hero`,
 matching Server Component. After this, a new landing page needs no
 developer.
 
+> **Design source: Canva `DAHXNsDnbjg` (AutoWash247 Website UI).**
+> Tokens (colour, type scale, radii) are already implemented from the UI
+> Foundation deck by T-15 — use them by name, do not re-read hex values out of
+> the deck. The UI Foundation deck's "Core Components" page (5) shows the Service card, Process Steps (01-04), the FAQ accordion, the 24/7 badge and button states (Default, Hover/Focus, Disabled) that these blocks render.
+
 ## Scope
 
 **In scope**

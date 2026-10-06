@@ -165,6 +165,32 @@ It is still not sufficient. It covers schema.org's vocabulary, not Google's
 rich-result eligibility, and only Google's test covers the latter. Run it on the
 first deployed URL.
 
+### A8 · Two components carry raw hex, and one of them is off-palette
+
+**Owner: T-16** (recorded here only)
+
+T-15's acceptance criterion is "no tokens bypassed — no raw hex in a component".
+Two pre-existing files still have some, and they are not the same case:
+
+| File | Values | Why it is there |
+| --- | --- | --- |
+| `src/components/seo/OpenGraphImage.tsx` (T-09) | `#0b1b2b`, `#ffffff` | Rendered by Satori via `ImageResponse`, which does not run Tailwind — inline styles are the only option |
+| `src/components/DraftBanner.tsx` (T-12) | `#b45309`, `#ffffff` | Inline styles chosen so the banner ships no CSS to published pages |
+
+**The OG image's background is off-palette**: `#0b1b2b` against the design's
+Primary `#0b1f33`. Close enough to look deliberate, different enough to be wrong
+in every share card the site produces.
+
+Not fixed here for two reasons. Changing it alters every rendered share image,
+which is T-09's surface rather than a token task's. And doing it *properly* needs
+a decision T-15 should not take alone: Satori cannot read the CSS tokens, so
+either the palette is duplicated into a TypeScript module — creating the second
+source of truth this project otherwise avoids — or the OG image imports from a
+generated file. T-16 touches both components anyway.
+
+The banner's hex is defensible as-is; now that tokens exist it could become
+classes, but only once T-16 decides whether the banner keeps shipping zero CSS.
+
 ## B. Documentation inconsistencies
 
 ### B1 · T-16 and T-17 omit T-15A from their dependencies
@@ -324,7 +350,17 @@ it properly:
 Note also that the task file tells T-15 to define tokens in
 `tailwind.config.ts`. **This project is on Tailwind v4**, which has no such
 file — tokens are declared in CSS with `@theme`. The closed PR already did it
-that way. The task file needs correcting when T-15 starts.
+that way. ~~The task file needs correcting when T-15 starts.~~ **Corrected in
+T-15**, which implements the tokens in `src/app/globals.css`.
+
+**Superseded as a design source.** T-15 found four Canva decks holding the real
+design — "AutoWash247 UI Foundation" (`DAHXI-Jb8Ig`) plus Website UI, Desktop
+Pages and Admin CMS UI — with a full palette, type scale, spacing and radii, and
+designer-written Vietnamese copy. That is the source of truth now, and the
+palette and type scale questions this entry raised about PR #15 are answered by
+it. What remains worth reading in PR #15 is only how it structured components,
+and the list of its mistakes above is still the checklist for not repeating
+them.
 
 ---
 

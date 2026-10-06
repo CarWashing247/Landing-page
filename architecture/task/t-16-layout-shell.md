@@ -15,6 +15,11 @@ Header and footer on every page, with every business detail read from
 likely to be quietly hardcoded, and where that mistake is hardest to spot
 later.
 
+> **Design source: Canva `DAHXNsDnbjg` (AutoWash247 Website UI) and `DAHXNi05PeY` (Desktop Pages).**
+> Tokens (colour, type scale, radii) are already implemented from the UI
+> Foundation deck by T-15 — use them by name, do not re-read hex values out of
+> the deck. Header, footer and the responsive container. Page 7 of the UI Foundation deck states the rules in words — max-width container with even gutters, header condensing to a mobile menu, single-column mobile cards, full-width primary actions — but gives **no pixel values**, so the container width and breakpoints are this task's to decide from the page designs. The UI Foundation deck also names Surface 0-3 (base, Raised, Elevated, Highest) without hex or shadow values; T-15 left them out rather than invent them.
+
 ## Scope
 
 **In scope**

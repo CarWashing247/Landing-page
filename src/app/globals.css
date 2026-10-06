@@ -1,10 +1,230 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 /*
- * Base only. Design tokens, fonts and typography are T-15.
- * No @apply beyond this file (AGENT.md section 6).
+ * The design tokens, and the only place they are defined.
  *
- * This file is imported by landing-page/layout.tsx only. The Payload admin
- * ships its own styles, so keeping Tailwind's preflight out of the
- * crm folder is deliberate — do not import this there.
+ * Source: the Canva deck "AutoWash247 UI Foundation" (design DAHXI-Jb8Ig),
+ * pages 2 (Color Tokens), 3 (Typography) and 4 (Spacing, Shape & Surface).
+ * Every value below is read from it rather than chosen here. Where the deck does
+ * not specify something, this file leaves it alone instead of inventing it —
+ * see the notes on elevation and breakpoints at the end.
+ *
+ * **There is no `tailwind.config.ts`.** This project is on Tailwind v4, which
+ * has no JavaScript config: tokens are CSS custom properties inside `@theme`,
+ * and each one generates the matching utilities. T-15's task file says to put
+ * them in `tailwind.config.ts`; that file would be silently ignored.
+ *
+ * This file is imported by the landing-page layout only. The Payload admin ships
+ * its own styles, so Tailwind's preflight is deliberately kept out of the crm
+ * folder — do not import it there.
+ *
+ * No `@apply` beyond this file (AGENT.md section 6).
+ */
+
+@theme {
+  /*
+   * The palette is cleared first, then rebuilt from the deck.
+   *
+   * `--color-*: initial` removes Tailwind's default ramps, so `bg-blue-500` and
+   * every other stock colour stops being a valid class. That is the point: the
+   * acceptance criterion is that tokens are semantic and used by name with no
+   * raw hex in a component, and a palette of 300 unused colours sitting
+   * alongside six real ones is the standing invitation to break it. A missing
+   * colour should be added here, deliberately, not reached for from the default
+   * set.
+   */
+  --color-*: initial;
+
+  /* Navigation, headings, primary surfaces. */
+  --color-primary: #0b1f33;
+  /* Actions, links, and interaction emphasis. */
+  --color-accent: #29c8b5;
+  /* Success cues and the small 24/7 highlights. */
+  --color-highlight: #c8f36a;
+  /* Body text, icons, strong dividers. */
+  --color-ink: #071522;
+  /* Page backgrounds, cards, and panels. */
+  --color-surface: #f3f6f8;
+  /* Elevated surfaces, and text on dark. */
+  --color-white: #ffffff;
+
+  /*
+   * The deck pairs every colour with the one to use *on* it, and those pairings
+   * are tokens in their own right rather than something to re-derive per
+   * component. Encoding them is what stops a contrast decision being made again,
+   * differently, in each place — `bg-primary text-on-primary` cannot be got
+   * wrong, while `bg-primary text-white` is a guess that happens to be right.
+   */
+  --color-on-primary: #ffffff;
+  --color-on-accent: #071522;
+  --color-on-highlight: #071522;
+  --color-on-ink: #ffffff;
+  --color-on-surface: #071522;
+  --color-on-white: #071522;
+
+  /* Needed by borders, rings and resets once the default palette is cleared. */
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /*
+   * Inter, through the variable `src/lib/fonts.ts` puts on <html>.
+   *
+   * The fallback list matters more than usual: `next/font` generates a metric-
+   * matched fallback face and names it first, but if the variable is ever
+   * missing these are what render, and they should at least cover Vietnamese.
+   */
+  --font-sans:
+    var(--font-inter), ui-sans-serif, system-ui, "Segoe UI", Arial, sans-serif;
+
+  /*
+   * The type scale, cleared and replaced for the same reason as the palette.
+   *
+   * Six roles, each with the size, line height and weight the deck gives it. The
+   * roles are named after their job, so `text-h2` carries 28px/130%/600 together
+   * — a component cannot take the size and forget the line height, which is the
+   * usual way a scale stops being a scale.
+   *
+   * Line heights climb as sizes fall (120% to 160%), which is the deck's answer
+   * to Vietnamese: stacked tone marks need vertical room, and 160% on body text
+   * is what keeps ế and ộ from touching the line above.
+   *
+   * A size that is genuinely missing gets added here. It does not get reached
+   * for as `text-[13px]` in a component.
+   */
+  --text-*: initial;
+
+  --text-display: 64px;
+  --text-display--line-height: 1.2;
+  --text-display--font-weight: 700;
+
+  --text-h1: 44px;
+  --text-h1--line-height: 1.2;
+  --text-h1--font-weight: 700;
+
+  --text-h2: 28px;
+  --text-h2--line-height: 1.3;
+  --text-h2--font-weight: 600;
+
+  --text-h3: 20px;
+  --text-h3--line-height: 1.4;
+  --text-h3--font-weight: 600;
+
+  --text-body: 16px;
+  --text-body--line-height: 1.6;
+  --text-body--font-weight: 400;
+
+  --text-label: 14px;
+  --text-label--line-height: 1.5;
+  --text-label--font-weight: 500;
+
+  /*
+   * Radii: the deck's five steps, replacing Tailwind's defaults.
+   *
+   * The default scale is close but not the same — its `md` is 6px, which is not
+   * a value in this design — and "close but not the same" is worse than
+   * different, because the wrong one looks almost right. `rounded-lg` (12px) is
+   * the unified radius the deck applies to every control and card: buttons,
+   * inputs, dropdowns and elevated cards.
+   */
+  --radius-*: initial;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+
+  /*
+   * Spacing is deliberately NOT redefined.
+   *
+   * The deck is built on a 4px base with steps 4, 8, 12, 16, 24, 32, 48 and 64.
+   * Tailwind v4's default spacing is a 4px multiplier, so those are exactly
+   * `1, 2, 3, 4, 6, 8, 12, 16` — the scale already matches, and restating it
+   * here would create a second copy to drift. Left as a note so the next person
+   * does not "add the spacing scale" and quietly change it.
+   */
+}
+
+@layer base {
+  /*
+   * Base element styles, so CMS rich text lands on the scale without a class.
+   *
+   * This is the half of the type scale that utilities cannot reach: T-17 renders
+   * editor-authored rich text, where there is no opportunity to put `text-h2` on
+   * a heading the editor typed. Tailwind's preflight strips heading sizes to
+   * inherit, so without these an editor's H2 renders at body size.
+   */
+  html {
+    font-family: var(--font-sans);
+    /* Vietnamese names are long; this stops ugly mid-syllable breaks. */
+    overflow-wrap: break-word;
+  }
+
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+    font-size: var(--text-body);
+    font-weight: var(--text-body--font-weight);
+    line-height: var(--text-body--line-height);
+  }
+
+  h1 {
+    color: var(--color-primary);
+    font-size: var(--text-h1);
+    font-weight: var(--text-h1--font-weight);
+    line-height: var(--text-h1--line-height);
+  }
+
+  h2 {
+    color: var(--color-primary);
+    font-size: var(--text-h2);
+    font-weight: var(--text-h2--font-weight);
+    line-height: var(--text-h2--line-height);
+  }
+
+  h3 {
+    color: var(--color-primary);
+    font-size: var(--text-h3);
+    font-weight: var(--text-h3--font-weight);
+    line-height: var(--text-h3--line-height);
+  }
+
+  /*
+   * Links take the accent colour, which the deck assigns to "actions, links, and
+   * interaction emphasis". The underline is offset rather than removed: Latin
+   * descenders and Vietnamese tone marks both collide with a default underline,
+   * and removing it instead would leave links in running text identifiable by
+   * colour alone.
+   */
+  a {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  /*
+   * Visible focus, on a token rather than the browser default.
+   *
+   * Not in the deck, and called out in the PR as such. It is here because
+   * clearing the palette and restyling links without it would leave keyboard
+   * users worse off than the browser default, which is a regression introduced
+   * by this task rather than a design decision taken for it.
+   */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+/*
+ * Deliberately absent, because the deck specifies them by name without values:
+ *
+ *  - **Surface elevations.** Page 4 names Surface 0–3 (base, Raised, Elevated,
+ *    Highest) and says they use "subtle borders and shadows", but gives no hex
+ *    and no shadow values. Inventing four shadows here would be inventing the
+ *    design, so they wait for whoever has the numbers (T-16).
+ *  - **Breakpoints and the container width.** Page 7 asks for a max-width
+ *    container with even gutters and a mobile single-column layout, but names no
+ *    pixel values. Tailwind's default breakpoints are therefore left untouched
+ *    rather than overridden with guesses, and the container belongs to the
+ *    layout shell (T-16) with real numbers.
  */

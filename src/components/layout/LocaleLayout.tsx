@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 
+import { inter } from '../../lib/fonts'
 import type { Locale } from '../../lib/locales'
 import '../../app/globals.css'
 
@@ -14,6 +15,12 @@ import '../../app/globals.css'
  * carry emitted nothing at all. `metadataBase` therefore lives in each locale's
  * own `layout.tsx`, which is a route module, and both get it from
  * `rootMetadata()` so they cannot disagree.
+ *
+ * **The font variable goes here, not in each locale's `layout.tsx`.** T-15's
+ * task file names `landing-page/layout.tsx`, but that file does not render
+ * `<html>` — this one does, and the variable has to be on the element the
+ * tokens in `globals.css` resolve against. Putting it here also means the two
+ * locale folders cannot drift into loading different fonts.
  */
 
 export const LocaleLayout = ({
@@ -23,7 +30,7 @@ export const LocaleLayout = ({
   children: ReactNode
   locale: Locale
 }) => (
-  <html lang={locale}>
+  <html className={inter.variable} lang={locale}>
     <body>{children}</body>
   </html>
 )

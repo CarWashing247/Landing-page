@@ -15,6 +15,11 @@ includes, and a clear next step. This is the route for a visitor who
 already knows what they want (Design.md section 3), so the page should
 answer "how much, how long, what do I get" above the fold.
 
+> **Design source: Canva `DAHXNi05PeY` (AutoWash247 Desktop Pages).**
+> Tokens (colour, type scale, radii) are already implemented from the UI
+> Foundation deck by T-15 — use them by name, do not re-read hex values out of
+> the deck. The UI Foundation deck's Service card (page 5) shows the package name, price, duration and the "Includes" list this template expands.
+
 ## Scope
 
 **In scope**
