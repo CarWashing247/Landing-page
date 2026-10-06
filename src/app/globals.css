@@ -1,11 +1,20 @@
 @import "tailwindcss";
+/*
+ * The raw brand values. They live in their own plain stylesheet because the
+ * Payload admin theme needs the same ones and cannot import this file —
+ * Tailwind's preflight fights Payload's styles. See `src/app/brand.css`.
+ */
+@import "./brand.css";
 
 /*
  * The design tokens, and the only place they are defined.
  *
  * Source: the Canva deck "AutoWash247 UI Foundation" (design DAHXI-Jb8Ig),
  * pages 2 (Color Tokens), 3 (Typography) and 4 (Spacing, Shape & Surface).
- * Every value below is read from it rather than chosen here. Where the deck does
+ * Every value below is read from it rather than chosen here. The colours
+ * themselves now live in `./brand.css` and are referenced here, because the
+ * Payload admin theme (T-19A) needs the same values and cannot import this
+ * file; the semantic names and the `@theme` mapping stay here. Where the deck does
  * not specify something, this file leaves it alone instead of inventing it —
  * see the notes on elevation and breakpoints at the end.
  *
@@ -36,17 +45,17 @@
   --color-*: initial;
 
   /* Navigation, headings, primary surfaces. */
-  --color-primary: #0b1f33;
+  --color-primary: var(--brand-primary);
   /* Actions, links, and interaction emphasis. */
-  --color-accent: #29c8b5;
+  --color-accent: var(--brand-accent);
   /* Success cues and the small 24/7 highlights. */
-  --color-highlight: #c8f36a;
+  --color-highlight: var(--brand-highlight);
   /* Body text, icons, strong dividers. */
-  --color-ink: #071522;
+  --color-ink: var(--brand-ink);
   /* Page backgrounds, cards, and panels. */
-  --color-surface: #f3f6f8;
+  --color-surface: var(--brand-surface);
   /* Elevated surfaces, and text on dark. */
-  --color-white: #ffffff;
+  --color-white: var(--brand-white);
 
   /*
    * The deck pairs every colour with the one to use *on* it, and those pairings
@@ -55,12 +64,12 @@
    * differently, in each place — `bg-primary text-on-primary` cannot be got
    * wrong, while `bg-primary text-white` is a guess that happens to be right.
    */
-  --color-on-primary: #ffffff;
-  --color-on-accent: #071522;
-  --color-on-highlight: #071522;
-  --color-on-ink: #ffffff;
-  --color-on-surface: #071522;
-  --color-on-white: #071522;
+  --color-on-primary: var(--brand-on-primary);
+  --color-on-accent: var(--brand-on-accent);
+  --color-on-highlight: var(--brand-on-highlight);
+  --color-on-ink: var(--brand-on-ink);
+  --color-on-surface: var(--brand-on-surface);
+  --color-on-white: var(--brand-on-white);
 
   /*
    * The one colour that is NOT from the deck, added deliberately rather than
@@ -80,8 +89,8 @@
    * is the same 6.54:1. It wants a designer's eye before it spreads beyond form
    * validation; that is recorded in `architecture/follow-ups.md`.
    */
-  --color-danger: #b3261e;
-  --color-on-danger: #ffffff;
+  --color-danger: var(--brand-danger);
+  --color-on-danger: var(--brand-on-danger);
 
   /* Needed by borders, rings and resets once the default palette is cleared. */
   --color-transparent: transparent;
@@ -188,22 +197,46 @@
     line-height: var(--text-body--line-height);
   }
 
+  /*
+   * Headings inherit their colour from the band they sit in; they do not set it.
+   *
+   * These three rules used to say `color: var(--color-primary)`, which made
+   * **every heading on a dark band invisible** — `Band tone="primary"` and the
+   * hero both paint `bg-primary text-on-primary`, and a heading that re-declares
+   * the primary colour paints itself in the background colour. A hero `<h1>` and
+   * the CTA's `<h2>` were dark navy on dark navy on every page that had one.
+   *
+   * It survived because it is invisible in both senses: the text is in the HTML,
+   * so the markup, the metadata and the heading outline were all correct, and no
+   * page had content until T-19A seeded some. Found by screenshotting `/bang-gia`
+   * and confirmed with `getComputedStyle` — `rgb(11, 31, 51)` text on an
+   * `rgb(11, 31, 51)` section.
+   *
+   * `inherit` is what the rest of the system already expects: every band states
+   * its own pairing (`text-ink` on surface, `text-on-primary` on primary), which
+   * is the whole point of the `on-*` tokens. On a light band this changes the
+   * rendered colour from `--color-primary` to `--color-ink`, two near-black
+   * navies one step apart on the deck's palette.
+   *
+   * The sizes stay, because they are the half of the scale utilities cannot
+   * reach: an editor's rich-text heading has no class to put `text-h2` on.
+   */
   h1 {
-    color: var(--color-primary);
+    color: inherit;
     font-size: var(--text-h1);
     font-weight: var(--text-h1--font-weight);
     line-height: var(--text-h1--line-height);
   }
 
   h2 {
-    color: var(--color-primary);
+    color: inherit;
     font-size: var(--text-h2);
     font-weight: var(--text-h2--font-weight);
     line-height: var(--text-h2--line-height);
   }
 
   h3 {
-    color: var(--color-primary);
+    color: inherit;
     font-size: var(--text-h3);
     font-weight: var(--text-h3--font-weight);
     line-height: var(--text-h3--line-height);

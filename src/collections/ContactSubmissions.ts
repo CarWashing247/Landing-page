@@ -47,6 +47,7 @@ export const ContactSubmissions: CollectionConfig = {
     plural: { en: 'Contact submissions', vi: 'Các yêu cầu liên hệ' },
   },
   admin: {
+    group: { en: 'Collections', vi: 'Collections' },
     useAsTitle: 'name',
     defaultColumns: ['name', 'phone', 'service', 'locale', 'createdAt'],
     description: {

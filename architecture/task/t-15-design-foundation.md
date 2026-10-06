@@ -135,7 +135,12 @@ weight and say in the PR that you looked at it.
   | --- | --- | --- | --- |
   | AutoWash247 Website UI | `DAHXNsDnbjg` | 9 | T-16, T-17 |
   | AutoWash247 Desktop Pages | `DAHXNi05PeY` | 7 | T-16, T-18, T-19 |
-  | AutoWash247 Admin CMS UI | `DAHXNnCsHfc` | 8 | T-19A |
+  | AutoWash247 CMS Admin UI | `DAHXOjaoczk` | 10 | T-19A |
+
+  An earlier admin deck, "AutoWash247 Admin CMS UI" (`DAHXNnCsHfc`, 8 pages,
+  light), was T-19A's source until 2026-10-06. It is **superseded**, not a
+  revision of the one above: different screens, a dark theme, and three fewer
+  product decisions. `task/t-19a-admin-interface.md` records the difference.
 
 - **The deck carries real Vietnamese copy**, written by the designer rather than
   machine-translated — headings, the 24/7 badge, FAQ questions, the four process
