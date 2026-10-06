@@ -2,7 +2,7 @@ import { t } from '../../i18n/t'
 import { loadBusinessInfo, loadSiteSettings } from '../../lib/content'
 import type { Locale } from '../../lib/locales'
 import { otherLocales, pathForHome } from '../../lib/locales'
-import { NAV } from '../../lib/routes'
+import { NAV, callHref } from '../../lib/routes'
 import { publishable } from '../../lib/schema/shared'
 import { MobileMenu } from './MobileMenu'
 
@@ -23,9 +23,9 @@ import { MobileMenu } from './MobileMenu'
  * The call button is dropped when the number is still a `TODO(data):`
  * placeholder, rather than rendering a `tel:` link that dials nothing. Same
  * guard the JSON-LD uses (T-14), so the two cannot disagree about whether the
- * business has a usable phone number.
+ * business has a usable phone number. `callHref` itself lives in
+ * `src/lib/routes.ts`, shared with the footer and the service page.
  */
-const callHref = (phone: string): string => `tel:${phone.replace(/[^\d+]/g, '')}`
 
 export const Header = async ({ locale }: { locale: Locale }) => {
   const [settings, business] = await Promise.all([loadSiteSettings(locale), loadBusinessInfo()])

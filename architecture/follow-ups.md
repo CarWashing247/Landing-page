@@ -194,6 +194,79 @@ generated file. T-16 touches both components anyway.
 The banner's hex is defensible as-is; now that tokens exist it could become
 classes, but only once T-16 decides whether the banner keeps shipping zero CSS.
 
+### A9 · A service's photo is promised as the share image and is not used as one
+
+**Owner: `src/components/seo/metadata.ts` (T-09's chain) and
+`src/collections/Services.ts` (T-07's field)** (recorded in
+`task/t-18-service-detail-template.md`)
+
+`Services.image` tells the editor, in both languages, that the photo is "used at
+the top of the service page and as the share image". The first half is true as of
+T-18. The second is not: `buildMetadata()` resolves `og:image` from `meta.image`,
+then `SiteSettings.ogFallback`, then the generated `opengraph-image` route, and
+never looks at `service.image`.
+
+Measured on the built server with a service whose photo was uploaded and whose
+SEO tab was left blank, which is the state the description describes:
+
+```
+<meta property="og:image" content="http://localhost:3000/opengraph-image"/>
+```
+
+So every service shares the generic brand card instead of the wash it is selling,
+and the editor has no way to tell — the field they filled in says it is handled.
+
+Two fixes, and the choice is a decision rather than a typo. Either
+`buildMetadata()` gains a per-collection image fallback — the chain is
+collection-agnostic today, and `Pages` has no equivalent field, so this adds a
+branch to the one function T-09 built to have none — or the field description
+stops promising it and points at the SEO tab. The first is what the editor
+expects; the second is one string.
+
+Not T-18's to take: the template renders the hero the task asked for, and the
+share-image chain is the metadata builder's contract.
+
+### A10 · `/dich-vu` 404s, and no task creates the document behind it
+
+**Owner: T-23, with a planning hole behind it** (recorded in
+`task/t-23-content-seed.md`)
+
+The header links "Dịch vụ" to `/dich-vu` (`src/lib/routes.ts`, T-16), and that
+file states the contract: "the services index is the segment itself — `/dich-vu`
+against `/en/services` — which is a `Pages` document at that slug rather than a
+route of its own". Nothing creates that document. Design.md section 3 lists five
+routes and the index is not one of them; T-23 step 1 copies that list — `/`,
+`bang-gia`, `huong-dan`, `lien-he`, plus `dich-vu/<slug>` per package — so the
+seed will not create it either.
+
+The result is a header link that 404s on every page of the site, which is how
+this was found: reported from a running deployment, not from reading the code.
+
+**The routing is fine, and that is worth recording** because it looks like the
+suspect. A static `dich-vu/` folder (the service detail route) sits beside
+`[slug]` in the same segment, and Next still falls back to `[slug]` for
+`/landing-page/dich-vu` because that folder has no page of its own. Measured
+against the built server: 404 before a published page existed at the slug, 200
+after, in both locales — and the next build prerendered
+`● /landing-page/dich-vu` next to `● /landing-page/dich-vu/rua-xe-nhanh`, and
+`● /landing-page-en/services` next to `● /landing-page-en/services/quick-wash`,
+with no route collision.
+
+So the fix is content, and it is two decisions rather than one `create`:
+
+- **Both locales need their own slug** — `dich-vu` for `vi` and `services` for
+  `en`. An `en` page with no slug of its own inherits the Vietnamese one through
+  Payload's fallback, and `publishedSlugs()` then drops it, so the English index
+  silently stays a 404 while the Vietnamese one works. That was the second half
+  of the measurement above.
+- **The slug cannot be corrected later** (T-06 locks it on publish), so it has to
+  be right the first time.
+
+Not fixed here: creating it means writing real Vietnamese copy for a page the
+decks do cover, which is T-23's job and not something to machine-translate
+(CLAUDE.md). What this entry asks for is that T-23's list gains the sixth
+document, and that whoever seeds it knows about the per-locale slug.
+
 ## B. Documentation inconsistencies
 
 ### B1 · T-16 and T-17 omit T-15A from their dependencies
@@ -434,10 +507,19 @@ npm error Missing: yaml@2.9.1 from lock file
 simply behind — it was last committed in T-08, and `cosmiconfig` now wants a
 `yaml` the tree does not carry.
 
-This is not local-only inconvenience: `npm ci` is what a CI job and Vercel's
-default install step run, and both fail the same way. The fix is one `npm install`
-and committing the lockfile it produces, on its own, so the diff is reviewable as
-a dependency change rather than riding a feature branch.
+**Correction, from T-18.** This entry first said Vercel's install step fails the
+same way, and named it as a candidate cause of the deployment failures standing
+at the time. It is not: the lockfile is unchanged since T-08 and the deployments
+for T-17 (#27) and T-18 (#28) both completed, so whatever install command the
+project runs tolerates it. The deployment failures had the other cause this
+register listed — the build reads Vault, so it needs `VAULT_ADDR`,
+`VAULT_ROLE_ID`, `VAULT_SECRET_ID` and `DATABASE_URI` in the Vercel project —
+and they are green now.
+
+What is left is real but narrower: a clean `npm ci` fails, so a contributor
+following the README and any CI job that uses `npm ci` both stop. The fix is one
+`npm install` and committing the lockfile it produces, on its own, so the diff is
+reviewable as a dependency change rather than riding a feature branch.
 
 ---
 

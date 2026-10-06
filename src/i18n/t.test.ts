@@ -82,7 +82,6 @@ describe('t', () => {
       'notFound.title',
       'placeholder.homeBody',
       'placeholder.pageBody',
-      'placeholder.serviceBody',
     ])
   })
 

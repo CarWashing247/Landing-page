@@ -195,7 +195,6 @@ export const vi = {
   placeholder: {
     homeBody: 'TODO(copy): home page content — see T-17 (blocks) and T-23 (seed).',
     pageBody: 'TODO(copy): page body — blocks are T-17, real content is T-23.',
-    serviceBody: 'TODO(copy): service page body — the full template is T-18.',
   },
 
   /**

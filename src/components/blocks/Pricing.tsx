@@ -1,3 +1,4 @@
+import { formatPrice } from '../../lib/format-currency'
 import type { Locale } from '../../lib/locales'
 import { pathForService } from '../../lib/locales'
 import type { Page, Service } from '../../payload-types'
@@ -19,18 +20,10 @@ type PricingBlock = Extract<NonNullable<Page['layout']>[number], { blockType: 'p
  */
 
 /**
- * `150000` as `150.000 ₫`.
- *
- * `Intl` rather than a hand-rolled thousands separator: Vietnamese groups with
- * dots where English groups with commas, and the symbol sits on the opposite
- * side. Both fall out of the locale, which is already known here.
+ * The price formatter lives in `src/lib/format-currency.ts`, because the service
+ * page shows the same number for the same service (T-18) and two
+ * implementations would eventually disagree about where the symbol goes.
  */
-const formatPrice = (amount: number, currency: string, locale: Locale): string =>
-  new Intl.NumberFormat(locale === 'vi' ? 'vi-VN' : 'en-US', {
-    currency,
-    maximumFractionDigits: 0,
-    style: 'currency',
-  }).format(amount)
 
 const asService = (value: number | Service): Service | undefined =>
   typeof value === 'object' && value !== null ? value : undefined
