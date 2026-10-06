@@ -1,0 +1,197 @@
+/**
+ * Vietnamese, and the source of truth for the key set.
+ *
+ * `en.ts` is typed against this object, so a key added here that is not added
+ * there fails `npm run typecheck`. Vietnamese is the source rather than English
+ * because it is the default locale and the language the site is actually for —
+ * making English the source would mean every Vietnamese string started life as a
+ * translation of something.
+ *
+ * **Most of the Vietnamese below is taken verbatim from the Canva designs**
+ * ("AutoWash247 Website UI", design `DAHXNsDnbjg`), which carry copy written by
+ * the designer. CLAUDE.md forbids machine-translating Vietnamese and asks for
+ * `TODO(copy)` instead; that rule assumes nobody has written the copy. Where the
+ * designs have written it, taking it verbatim is better than a placeholder, and
+ * a `TODO(copy)` marker would be wrong twice over because it would hide copy
+ * that already exists.
+ *
+ * Strings that appear in **no** deck are marked `TODO(copy)` and listed in the
+ * PR. They are not invented and not translated.
+ *
+ * Two things deliberately do not live here:
+ *
+ *  - **Business data.** The phone number, address, email and opening hours come
+ *    from the `BusinessInfo` global, never from a catalog. The designs show
+ *    sample values for them — see the note on `contact` below.
+ *  - **The brand name.** It comes from `SiteSettings.brandName`, so `footer.
+ *    rights` is only the part that follows it.
+ *
+ * Casing is natural, not display casing. The designs set several buttons in
+ * capitals (GỬI TIN NHẮN, TÌM TRẠM GẦN BẠN); that is `text-transform`, applied
+ * by the component. Storing shouted strings would make them unreadable anywhere
+ * the design does not shout, and would break the moment a screen reader got one.
+ */
+export const vi = {
+  /** The header's primary navigation. Verbatim from the designs. */
+  nav: {
+    home: 'Trang chủ',
+    services: 'Dịch vụ',
+    pricing: 'Bảng giá',
+    about: 'Về chúng tôi',
+    news: 'Tin tức',
+    contact: 'Liên hệ',
+    /** Accessible names for the landmark and the mobile menu toggle. */
+    primaryLabel: 'TODO(copy): accessible label for the primary navigation landmark',
+    openMenu: 'TODO(copy): accessible label for the button that opens the mobile menu',
+    closeMenu: 'TODO(copy): accessible label for the button that closes the mobile menu',
+  },
+
+  /**
+   * The language switch, shown as "VI | EN" in the designs.
+   *
+   * The two labels are the languages' own endonyms, so they read the same in
+   * either locale — which is why they are not translated in `en.ts` either.
+   */
+  language: {
+    vietnamese: 'VI',
+    english: 'EN',
+    switchLabel: 'TODO(copy): accessible label for the language switch',
+  },
+
+  /** Buttons and calls to action. Verbatim from the designs. */
+  actions: {
+    findStation: 'Tìm trạm gần bạn',
+    tryToday: 'Trải nghiệm dịch vụ ngay hôm nay',
+    tryTodayLead: 'Nhanh chóng, tiện lợi, luôn sẵn sàng phục vụ bạn.',
+    callNow: 'Gọi ngay',
+    directions: 'Chỉ đường',
+    viewOnMap: 'Xem trên bản đồ',
+    sendMessage: 'Gửi tin nhắn',
+  },
+
+  /** Section headings used across the pages. Verbatim from the designs. */
+  sections: {
+    featuredPackages: 'Gói dịch vụ nổi bật',
+    faq: 'Câu hỏi thường gặp',
+    priceList: 'Bảng giá dịch vụ',
+    fourSteps: 'Quy trình 4 bước',
+    serviceDetails: 'Chi tiết dịch vụ',
+    includes: 'Bao gồm',
+    servicePackage: 'Gói dịch vụ',
+    estimatedDuration: 'Thời gian dự kiến',
+  },
+
+  /** The three-step explainer on the home page. Verbatim from the designs. */
+  steps: {
+    scanQr: 'Quét QR',
+    chooseService: 'Chọn dịch vụ',
+    wash: 'Rửa xe',
+  },
+
+  /**
+   * Footer column headings and the legal line.
+   *
+   * `rights` is only what follows the brand: the component composes it with
+   * `SiteSettings.brandName` so the name lives in one place (AGENT.md 5.1).
+   */
+  footer: {
+    servicesHeading: 'Dịch vụ',
+    aboutHeading: 'Về chúng tôi',
+    contactHeading: 'Liên hệ',
+    hotline: 'Hotline',
+    email: 'Email',
+    support: 'Hỗ trợ',
+    rights: 'Tất cả quyền được bảo lưu.',
+  },
+
+  /**
+   * The contact page (T-19). Labels and placeholders are verbatim from the
+   * designs; the validation messages are not in any deck.
+   *
+   * **The designs show sample business data next to this form** — a hotline of
+   * `1900 0000`, `info@autowash247.vn`, an address on Đường Lê Duẩn and hours of
+   * `Thứ 2 - Thứ 7: 08:00 - 18:00`. Those are design placeholders, not the
+   * business's details, and none of them is here: they belong in `BusinessInfo`
+   * and are still `TODO(data):` there. Copying them out of the deck would put an
+   * invented address into JSON-LD and into Google Business Profile, which is the
+   * specific outcome CLAUDE.md warns about.
+   */
+  contact: {
+    heading: 'Kết nối với chúng tôi',
+    nameLabel: 'Họ tên',
+    namePlaceholder: 'Nhập họ tên',
+    emailLabel: 'Email',
+    emailPlaceholder: 'Nhập email',
+    subjectLabel: 'Chủ đề',
+    subjectPlaceholder: 'Chọn chủ đề',
+    messageLabel: 'Nội dung',
+    messagePlaceholder: 'Nhập nội dung tin nhắn...',
+    addressHeading: 'Địa chỉ',
+    hoursHeading: 'Giờ làm việc',
+    /** None of these appear in any deck. */
+    required: 'TODO(copy): this field is required',
+    invalidEmail: 'TODO(copy): that does not look like an email address',
+    sent: 'TODO(copy): thank you, your message has been sent',
+    sendFailed: 'TODO(copy): the message could not be sent, please try again',
+  },
+
+  /**
+   * The 404 page.
+   *
+   * Not in any deck. The wording below is the phrase this task's own
+   * verification greps for (`không tìm thấy`), so it is the task file's
+   * expectation rather than a translation invented here — and `Trang chủ` is
+   * already the designs' own word for the home page.
+   */
+  notFound: {
+    title: '404',
+    message: 'Không tìm thấy trang này.',
+    backHome: 'Về trang chủ',
+  },
+
+  /**
+   * Placeholder body copy, which exists only until the real content lands.
+   *
+   * **This whole section is meant to be deleted.** T-17 renders the blocks that
+   * replace the page and home bodies, T-18 the service template, T-23 the real
+   * content. It is here rather than left inline because the criterion is that no
+   * component holds a user-facing literal, and a placeholder is still a literal —
+   * it renders to a visitor exactly like finished copy does.
+   *
+   * The designs do have real home and service copy. Putting it in is T-17's and
+   * T-23's job, not this task's, which converts what exists rather than writing
+   * what does not.
+   */
+  placeholder: {
+    homeBody: 'TODO(copy): home page content — see T-17 (blocks) and T-23 (seed).',
+    pageBody: 'TODO(copy): page body — blocks are T-17, real content is T-23.',
+    serviceBody: 'TODO(copy): service page body — the full template is T-18.',
+  },
+
+  /**
+   * The draft preview banner (T-12), which has carried `TODO(copy)` since that
+   * task. Still unwritten: no deck shows an editor-facing preview state.
+   */
+  draft: {
+    message: 'TODO(copy): you are viewing a draft — this content is not published',
+    exit: 'TODO(copy): exit preview',
+  },
+} as const
+
+/**
+ * The shape every locale must have, with the values widened to `string`.
+ *
+ * `vi` is `as const`, so its own type is the literal strings. Typing `en`
+ * against that directly would demand the *Vietnamese words*, which is obviously
+ * not what is wanted — hence the mapped type: same keys, two levels deep, any
+ * string as the value.
+ *
+ * Deriving the shape from `vi` rather than declaring it separately is what makes
+ * the key set single-sourced. A hand-written interface would be a third place to
+ * update and the first to fall behind.
+ */
+export type Messages = {
+  [Section in keyof typeof vi]: {
+    [Key in keyof (typeof vi)[Section]]: string
+  }
+}
