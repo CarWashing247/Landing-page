@@ -7,7 +7,6 @@ import { t } from '../i18n/t'
 import type { Locale } from '../lib/locales'
 import { pathForPage } from '../lib/locales'
 import { faqSchema } from '../lib/schema/faq'
-import { DraftBanner } from './DraftBanner'
 import { JsonLd } from './seo/JsonLd'
 import { buildMetadata } from './seo/metadata'
 
@@ -67,11 +66,10 @@ export const ContentPage = async ({ locale, slug }: { locale: Locale; slug: stri
           path: pathForPage(slug, locale),
         })}
       />
-      <DraftBanner locale={locale} path={pathForPage(slug, locale)} />
-      <main>
+      <div>
         <h1>{found.doc.title}</h1>
         <p>{t(locale).placeholder.pageBody}</p>
-      </main>
+      </div>
     </>
   )
 }

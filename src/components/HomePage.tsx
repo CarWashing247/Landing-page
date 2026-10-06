@@ -35,10 +35,10 @@ export const HomePage = async ({ locale }: { locale: Locale }) => (
         settings: await loadSiteSettings(locale),
       })}
     />
-    <main>
+    <div>
       <h1>AutoWash247</h1>
       <p>{t(locale).placeholder.homeBody}</p>
-    </main>
+    </div>
   </>
 )
 

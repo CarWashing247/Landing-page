@@ -30,19 +30,38 @@ Measured: HTTP 404 with `<meta name="robots" content="noindex">`, so the status
 and the indexing are right, but `<html id="__next_error__">` with no `lang` and
 no visible body.
 
-Not a quick fix, and not for want of trying. Adding `not-found.tsx` under each
-locale does nothing while `experimental.globalNotFound` is enabled — Next never
-builds the file. Turning that flag off makes the component render into the RSC
-payload while the SSR shell stays `__next_error__` with the same empty body; the
-flag exists precisely because this app has two root layouts. It is a 404
-architecture decision, so it belongs with the shell.
+Not a quick fix, and not for want of trying. **Four combinations have now been
+measured, and all four produce the same empty SSR body:**
+
+| `globalNotFound` | boundary | result |
+| --- | --- | --- |
+| on | `not-found.tsx` per locale | never built (T-09) |
+| off | `not-found.tsx` per locale | renders into the RSC payload only (T-09) |
+| on | `not-found.tsx` at `app/landing-page/` | built (`/_not-found` appears), renders into the RSC payload only (T-16) |
+| off | `not-found.tsx` at `app/landing-page/` | renders into the RSC payload only (T-16) |
+
+In every case the response is a correct 404 with `<html id="__next_error__">`, an
+empty `<body>` and the component's markup present only inside
+`self.__next_f.push(...)` — so it would paint after hydration and never for a
+crawler.
+
+**The suspected cause is the catch-all rewrite, not the boundary.** T-09 rewrites
+`/:path*` onto `/landing-page/:path*`, so no public URL is ever unmatched and
+every 404 comes from `notFound()` inside `[slug]` on a rewritten request. That
+makes `global-not-found.tsx` dead code for public paths and is the one variable
+none of the four tests changed. The next attempt should start by serving a 404
+on a path that bypasses the rewrite and comparing.
+
+T-16 built the shell the 404 should render inside, so the page is the only piece
+still missing. It stays a 404 architecture decision.
 
 ~~The 404 copy is still `TODO(copy)`~~ **The 404 copy now exists** (T-15A moved it
 into the message catalog: "Không tìm thấy trang này." / "We could not find that
 page."), which makes this entry more visible rather than less — there is now
 finished wording that nobody can see. Re-measured during T-15A: `/khong-ton-tai`
 returns 404 with an empty body and `<html id="__next_error__">`, so none of the
-catalog strings render.
+catalog strings render. T-16 has now built the header and footer it should sit
+inside, so everything but the page itself is ready.
 
 ### A2 · `titleSuffix`'s placeholder produces `Liên hệ| AutoWash247`
 
@@ -103,27 +122,6 @@ changed: HTTP 500, empty body, and the only record is an unhandled stack trace
 in the server output. `grep ' [ERROR] '` finds nothing, which is the silence
 AGENT.md 5.8 exists to prevent.
 
-### A5 · The draft banner renders on two templates, not on the site
-
-**Owner: T-12's components; T-16 for where it belongs** (recorded in
-`task/t-12-draft-preview.md` and `task/t-16-layout-shell.md`)
-
-`<DraftBanner>` is rendered inside `ContentPage` and `ServicePage`. The draft
-cookie is site-wide and lasts until someone exits, so an editor who previews a
-draft and then goes to `/` is still in draft mode — with nothing saying so and no
-way out. Next's own draft-mode guide says to render the indicator from the root
-layout for this reason.
-
-Measured with a draft cookie: `/` and an unknown slug (the 404) contain no
-`role="status"` at all.
-
-Moving it into `LocaleLayout` was tried, and the build output is unchanged —
-every content route still `●`, both home pages still `○` — so T-10's static
-generation is not what stands in the way. It needs the per-page `<DraftBanner>`
-removed in the same change, or two banners render; the exit link then returns to
-the locale home instead of the previewed path, which also stops an editor
-exiting a never-published draft onto the empty 404 of A1.
-
 ### A6 · Two smaller rule slips in T-12's files
 
 **Owner: T-12's files** (recorded in `task/t-12-draft-preview.md`)
@@ -131,10 +129,11 @@ exiting a never-published draft onto the empty 404 of A1.
 Neither is user-visible today; both are the kind of thing that is cheapest to
 fix before another file copies it.
 
-- **`DraftBanner.tsx` styles itself with inline `style={{…}}` objects.** AGENT.md
-  section 6 is "Tailwind utility classes only". The repo's only other `style`
-  prop is in `OpenGraphImage.tsx`, where `next/og` leaves no choice. The banner
-  has that choice, and as written T-15 cannot theme it.
+- ~~**`DraftBanner.tsx` styles itself with inline `style={{…}}` objects.**~~
+  **Fixed in T-16**, which owned replacing them with tokens. It is now
+  `bg-highlight text-on-highlight` in normal flow rather than fixed-positioned
+  amber — the palette has no amber, and fixed positioning overlapped the new
+  header.
 - **The exit side of the preview contract hardcodes its parameter names.**
   `preview.ts` declares `PARAM` as the one place those names live, "shared by the
   builder and the parser", precisely so a rename cannot half-land — and then

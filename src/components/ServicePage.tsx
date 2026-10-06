@@ -5,9 +5,7 @@ import { notFound } from 'next/navigation'
 import { loadBusinessInfo, loadService, loadSiteSettings } from '../lib/content'
 import { t } from '../i18n/t'
 import type { Locale } from '../lib/locales'
-import { pathForService } from '../lib/locales'
 import { serviceSchema } from '../lib/schema/service'
-import { DraftBanner } from './DraftBanner'
 import { JsonLd } from './seo/JsonLd'
 import { buildMetadata } from './seo/metadata'
 
@@ -62,11 +60,10 @@ export const ServicePage = async ({ locale, slug }: { locale: Locale; slug: stri
           service: found.doc,
         })}
       />
-      <DraftBanner locale={locale} path={pathForService(slug, locale)} />
-      <main>
+      <div>
         <h1>{found.doc.name}</h1>
         <p>{t(locale).placeholder.serviceBody}</p>
-      </main>
+      </div>
     </>
   )
 }

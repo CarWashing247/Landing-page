@@ -124,4 +124,65 @@ curl -s localhost:3000/ | grep -A3 -i 'gio mo\|giờ mở'
 
 - Navigation label copy is user-facing Vietnamese. Use the route names from
   Design.md section 3 where they are self-evident (`Bảng giá`, `Dịch vụ`,
-  `Hướng dẫn`, `Liên hệ`); anything else gets `TODO(copy)`.
+  `Hướng dẫn`, `Liên hệ`); anything else gets `TODO(copy)`. Done — the labels
+  come from the T-15A catalog, and `nav.guide` was added to it here.
+
+- **The designs' navigation and Design.md section 3 disagree, and the plan
+  won.** The Canva header shows six items: Trang chủ, Dịch vụ, Bảng giá, **Về
+  chúng tôi**, **Tin tức**, Liên hệ. "Về chúng tôi" and "Tin tức" correspond to
+  no route, no keyword cluster and no task anywhere in the plan, so linking them
+  would ship a header whose items 404; the designs also omit `/huong-dan`, which
+  section 3 lists as a keyword-cluster page in both locales. `src/lib/routes.ts`
+  therefore builds the nav from section 3 — five items — and
+  `src/lib/routes.test.ts` pins the divergence so it cannot be undone by
+  accident. **This is a decision someone should confirm**: either the two pages
+  get routes, content and tasks, or the designs drop them.
+
+- **The language switch goes to the other locale's home page, not to this page's
+  translation.** Switching in place needs the current document's slug in the
+  target locale — per-page data that `loadPage`/`loadService` already return as
+  `paths` for the `hreflang` set, and that a layout does not have. Reading the
+  path from `headers()` instead would turn every route dynamic and undo T-10.
+  Per-page switching belongs where the page knows its own translations.
+
+- **The 404 is still not fixed, and it was not for want of trying.** Two more
+  combinations were measured here, on top of T-09's two; all four produce a
+  correct 404 status with an empty `<body>`, the markup present only in the RSC
+  payload. The suspected cause is the catch-all rewrite rather than the
+  not-found boundary, which is the one variable none of the four tests changed.
+  See follow-up A1, which now carries the table. The shell the 404 should render
+  inside is built, so the page is the only piece still missing.
+
+- **There is no client component in the shell at all**, where the task file
+  asked for one. T-20's criterion is that no client component sits above the
+  fold, and a header is the most above-the-fold thing on the page, so the mobile
+  menu is a native `<details>`. Verified in Chrome with JavaScript disabled: the
+  menu opens and all five links are reachable — which the React toggle this task
+  specified could not have done, since its links would be present but inert.
+
+  Note that the task's own verification line, `grep -rln "'use client'"
+  src/components/layout`, now matches only prose if a comment quotes the
+  directive. The comments were reworded so the check stays truthful.
+
+- **`<details>` cannot be forced open with CSS**, which cost one wrong
+  implementation. The first version put a single list inside the disclosure and
+  revealed it at desktop width with `md:block` on the panel; measured in Chrome,
+  the desktop links were invisible, because a closed `<details>` hides its
+  content through the user agent stylesheet and a `display` rule on the child
+  does not override it. The navigation is now rendered at each width from the
+  same `NAV` array — five extra anchors, and no way for the two to drift.
+
+- **The footer omits placeholder business data rather than printing it.**
+  `BusinessInfo` still holds `TODO(data):` for the name, address and phone, and
+  `publishable()` — the guard T-14 already uses — drops them, so the contact
+  block is empty until T-23. Verified: zero occurrences of `TODO(data)` in the
+  rendered page.
+
+- **The footer tagline renders `SiteSettings.defaultDescription`**, which is
+  currently the seeded `TODO(copy)` placeholder and so appears on the page. That
+  is CMS content rather than a code defect — the same value already feeds every
+  meta description — but it will look like a bug until someone writes it.
+
+- Opening-hours grouping is presentation only, as the Notes require: T-14 reads
+  the same array independently and still emits one entry per weekday. A test
+  asserts the source array is neither mutated nor reordered.

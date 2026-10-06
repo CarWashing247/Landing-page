@@ -25,6 +25,7 @@ export const en: Messages = {
     home: 'Home',
     services: 'Services',
     pricing: 'Pricing',
+    guide: 'How it works',
     about: 'About us',
     news: 'News',
     contact: 'Contact',
@@ -99,6 +100,21 @@ export const en: Messages = {
     title: '404',
     message: 'We could not find that page.',
     backHome: 'Back to the home page',
+  },
+
+  weekdays: {
+    monday: 'Monday',
+    tuesday: 'Tuesday',
+    wednesday: 'Wednesday',
+    thursday: 'Thursday',
+    friday: 'Friday',
+    saturday: 'Saturday',
+    sunday: 'Sunday',
+    closed: 'Closed',
+  },
+
+  a11y: {
+    skipToContent: 'Skip to main content',
   },
 
   placeholder: {
