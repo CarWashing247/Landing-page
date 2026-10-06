@@ -128,5 +128,37 @@ curl -s localhost:3000/<faq-slug> | grep -c '<details'
 ## Flags
 
 - All five blocks carry user-facing Vietnamese copy in their defaults and
-  placeholders. Write `TODO(copy): <english gist>` rather than
-  machine-translating; T-23 fills real copy.
+  placeholders. ~~Write `TODO(copy)`~~ — **no default renders to a visitor.**
+  The blocks define no `defaultValue` for any user-facing field, so nothing ships
+  copy of its own; the Vietnamese that does appear is in `admin.placeholder` and
+  `admin.description`, which only an editor sees, and it is taken from the Canva
+  designs rather than translated. T-23 still writes the real page copy.
+
+- **`Pricing` has no tier label.** The designs show CƠ BẢN / PHỔ BIẾN / CAO CẤP
+  above each card, and `Services` has no field for it. Adding one is a schema
+  change to T-07's collection plus a migration, which is more than a block
+  needs — and it is a merchandising decision (which package is "popular") rather
+  than a layout one. Not built; the cards render name, price, duration and
+  inclusions, all from the service.
+
+- **`Steps` has no `icon` field**, which the task table marks optional with a
+  `?`. The designs number the steps rather than illustrating them, and the
+  numbers come from the array index so they cannot go stale when an editor
+  reorders. Adding icons later is additive.
+
+- **Blocks are on `Pages` only.** `Services` has no `layout` field, so there was
+  nothing to add them to; the service page is a fixed template and belongs to
+  T-18. If T-18 wants composable service pages it is a schema change, not a
+  wiring change.
+
+- **The one-hero rule is enforced in the collection**, not documented. Payload
+  has no per-block `maxRows`, so `Pages.layout` carries a `validate` that counts
+  `hero` blocks and refuses a second through `adminMessage` — the editor reads a
+  sentence in their own language rather than a key. `ContentPage` renders the
+  document title as `<h1>` only when no hero is present, which is the other half
+  of "exactly one `<h1>` per page".
+
+- The `content` rich-text block from T-06 is kept alongside the five. Removing it
+  would be a migration that destroys whatever is already stored in it, and it is
+  the one block that survives any design change. It renders through Payload's own
+  `RichText` converter rather than a hand-written Lexical walker.

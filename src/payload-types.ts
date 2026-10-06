@@ -143,26 +143,107 @@ export interface Page {
    * Add and reorder blocks to build the page.
    */
   layout?:
-    | {
-        richText: {
-          root: {
-            type: string;
-            children: {
-              type: any;
-              version: number;
+    | (
+        | {
+            /**
+             * The page’s main heading. It becomes the only <h1> on the page, so make it the one thing the page is about.
+             */
+            heading: string;
+            /**
+             * One or two sentences under the heading.
+             */
+            subheading?: string | null;
+            /**
+             * Shown beside the heading. This is the largest image on the page, so it is loaded first — pick a sharp one.
+             */
+            image: number | Media;
+            ctaLabel?: string | null;
+            /**
+             * A path on this site, starting with /. Leave both boxes empty for no button.
+             */
+            ctaHref?: string | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'hero';
+          }
+        | {
+            heading?: string | null;
+            /**
+             * Shown in this order and numbered automatically. Drag to reorder.
+             */
+            steps?:
+              | {
+                  title: string;
+                  body?: string | null;
+                  id?: string | null;
+                }[]
+              | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'steps';
+          }
+        | {
+            heading?: string | null;
+            /**
+             * Pick the packages to show, in the order you want them. Prices and durations come from the service itself, so they are never out of date here. Only published services can be chosen.
+             */
+            services: (number | Service)[];
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'pricing';
+          }
+        | {
+            /**
+             * Shown above the questions. It is page copy — Google’s FAQ data has no place for it.
+             */
+            heading?: string | null;
+            /**
+             * These are sent to Google as structured data, so write a real question and a real answer. A row with either half empty is skipped.
+             */
+            items?:
+              | {
+                  question: string;
+                  /**
+                   * Plain text. Formatting is deliberately not available here, because Google reads this answer as text.
+                   */
+                  answer: string;
+                  id?: string | null;
+                }[]
+              | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'faq';
+          }
+        | {
+            heading: string;
+            body?: string | null;
+            ctaLabel?: string | null;
+            ctaHref?: string | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'cta';
+          }
+        | {
+            richText: {
+              root: {
+                type: string;
+                children: {
+                  type: any;
+                  version: number;
+                  [k: string]: unknown;
+                }[];
+                direction: ('ltr' | 'rtl') | null;
+                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                indent: number;
+                version: number;
+              };
               [k: string]: unknown;
-            }[];
-            direction: ('ltr' | 'rtl') | null;
-            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-            indent: number;
-            version: number;
-          };
-          [k: string]: unknown;
-        };
-        id?: string | null;
-        blockName?: string | null;
-        blockType: 'content';
-      }[]
+            };
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'content';
+          }
+      )[]
     | null;
   meta?: {
     title?: string | null;
@@ -442,6 +523,63 @@ export interface PagesSelect<T extends boolean = true> {
   layout?:
     | T
     | {
+        hero?:
+          | T
+          | {
+              heading?: T;
+              subheading?: T;
+              image?: T;
+              ctaLabel?: T;
+              ctaHref?: T;
+              id?: T;
+              blockName?: T;
+            };
+        steps?:
+          | T
+          | {
+              heading?: T;
+              steps?:
+                | T
+                | {
+                    title?: T;
+                    body?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        pricing?:
+          | T
+          | {
+              heading?: T;
+              services?: T;
+              id?: T;
+              blockName?: T;
+            };
+        faq?:
+          | T
+          | {
+              heading?: T;
+              items?:
+                | T
+                | {
+                    question?: T;
+                    answer?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        cta?:
+          | T
+          | {
+              heading?: T;
+              body?: T;
+              ctaLabel?: T;
+              ctaHref?: T;
+              id?: T;
+              blockName?: T;
+            };
         content?:
           | T
           | {

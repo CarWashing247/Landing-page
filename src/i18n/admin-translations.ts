@@ -35,6 +35,8 @@ export const adminTranslations = {
         'The Google title cannot be longer than 70 characters. Aim for 50 to 60 — Google cuts it off around there.',
       metaDescriptionTooLong:
         'The description cannot be longer than 180 characters. Aim for 140 to 160 — Google cuts it off around there.',
+      onlyOneHero:
+        'A page can have only one Hero block, because it is the page’s main heading. Remove the extra one, or change it to another block.',
     },
   },
   vi: {
@@ -53,6 +55,8 @@ export const adminTranslations = {
         'Tiêu đề trên Google không được dài hơn 70 ký tự. Nên viết 50 đến 60 ký tự — Google cắt bớt quanh mức đó.',
       metaDescriptionTooLong:
         'Mô tả không được dài hơn 180 ký tự. Nên viết 140 đến 160 ký tự — Google cắt bớt quanh mức đó.',
+      onlyOneHero:
+        'Mỗi trang chỉ được có một khối mở đầu, vì đó là tiêu đề chính của trang. Hãy xoá bớt một khối hoặc đổi sang loại khác.',
     },
   },
 } as const
