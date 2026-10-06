@@ -47,8 +47,16 @@ export const Logo = () => (
  *
  * Drawn inline rather than loaded from `Media`: the navigation renders on every
  * admin screen, an uploaded file would be one more request before the panel is
- * usable, and the mark is two shapes. Both colours are the shared brand tokens
- * from `src/app/brand.css`, so the mark cannot drift from the theme around it.
+ * usable, and the mark is two shapes.
+ *
+ * **The two colours are literals, which is correct here and nowhere else.** The
+ * admin follows Payload's own design now (T-19B), so it does not participate in
+ * the public site's token system — there is no `@theme` in this document to read
+ * from, and `src/app/brand.css` was deleted with the bespoke theme it existed to
+ * feed. These are the same values as `src/app/icon.svg`, from
+ * `design-system/autowash247/MASTER.md`: primary green, and the card white it is
+ * paired with. A logo is also the one thing that should *not* follow the
+ * surrounding theme — it is the same mark whether the panel is light or dark.
  */
 export const Icon = () => (
   /*
@@ -68,11 +76,11 @@ export const Icon = () => (
     width="100%"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <rect fill="var(--brand-accent)" height="32" rx="8" width="32" />
+    <rect fill="#059669" height="32" rx="8" width="32" />
     {/* A water droplet, in the colour the accent is paired with. */}
     <path
       d="M16 7c3.6 4.2 6 7.4 6 10.2a6 6 0 0 1-12 0C10 14.4 12.4 11.2 16 7Z"
-      fill="var(--brand-on-accent)"
+      fill="#ffffff"
     />
   </svg>
 )

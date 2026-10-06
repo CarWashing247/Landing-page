@@ -1,10 +1,4 @@
 @import "tailwindcss";
-/*
- * The raw brand values. They live in their own plain stylesheet because the
- * Payload admin theme needs the same ones and cannot import this file —
- * Tailwind's preflight fights Payload's styles. See `src/app/brand.css`.
- */
-@import "./brand.css";
 
 /*
  * The design tokens, and the only place they are defined.
@@ -100,8 +94,12 @@
    * is 5.6:1 where white would be 3.8:1 and fail.
    */
 
-  --color-danger: var(--brand-danger);
-  --color-on-danger: var(--brand-on-danger);
+  /*
+   * `danger` is kept as an alias of the generated system's `destructive`,
+   * because T-19's contact form already styles its error state with it.
+   */
+  --color-danger: #dc2626;
+  --color-on-danger: #ffffff;
 
   /* Needed by borders, rings and resets once the default palette is cleared. */
   --color-transparent: transparent;

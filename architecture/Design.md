@@ -607,6 +607,16 @@ Done when: the map iframe is `loading="lazy"` and does not affect LCP;
 validation messages come from the catalog in the visitor's locale;
 call and directions clicks appear in GA4 DebugView.
 
+**T-19B · The admin follows Payload**
+Remove the bespoke admin theme T-19A added and let the Payload panel be
+Payload's: its own stylesheet, its own light/dark choice, its own
+components. The project contributes the logo, the navigation mark and the
+browser-tab title, which are Payload configuration rather than design.
+Depends on: T-19A, T-15B.
+Done when: `/admin` renders in Payload's own design with the project's mark
+and title, no project stylesheet themes it, and the light/dark choice is
+back in the account menu.
+
 **T-19A · Admin interface**
 The Payload admin configured and themed to the Canva "AutoWash247 CMS
 Admin UI" deck (`DAHXOjaoczk`): the dark brand theme and logo, navigation
