@@ -7,6 +7,7 @@ import { t } from '../i18n/t'
 import type { Locale } from '../lib/locales'
 import { pathForPage } from '../lib/locales'
 import { faqSchema } from '../lib/schema/faq'
+import { RenderBlocks, hasHero } from './blocks/RenderBlocks'
 import { JsonLd } from './seo/JsonLd'
 import { buildMetadata } from './seo/metadata'
 
@@ -55,9 +56,9 @@ export const ContentPage = async ({ locale, slug }: { locale: Locale; slug: stri
   return (
     <>
       {/*
-        `FAQPage`, and only when the page actually carries an FAQ block. Nothing
-        emits one today because the block itself is T-17 — `faqSchema` returns
-        `null` for a layout without one, which is also the acceptance criterion.
+        `FAQPage`, and only when the page actually carries an FAQ block.
+        `faqSchema` reads the stored blocks, not the rendered markup, so the
+        schema and the page cannot disagree — neither derives from the other.
       */}
       <JsonLd
         schema={faqSchema({
@@ -66,10 +67,32 @@ export const ContentPage = async ({ locale, slug }: { locale: Locale; slug: stri
           path: pathForPage(slug, locale),
         })}
       />
-      <div>
-        <h1>{found.doc.title}</h1>
-        <p>{t(locale).placeholder.pageBody}</p>
-      </div>
+
+      {/*
+        **The fallback `<h1>` renders only when no `Hero` block does.** `Hero`
+        emits the page heading and `Pages` refuses a second hero, so together
+        these give exactly one `<h1>` per page whatever the editor composed. A
+        page with no hero still needs one, and the document title is the honest
+        choice — it is what the editor named the page.
+      */}
+      {hasHero(found.doc.layout) ? null : (
+        <div className="mx-auto max-w-6xl px-4 py-12">
+          <h1 className="text-h1">{found.doc.title}</h1>
+        </div>
+      )}
+
+      <RenderBlocks layout={found.doc.layout} locale={locale} />
+
+      {/*
+        The placeholder survives only for a page with no blocks at all, which is
+        every page until T-23 seeds content. It disappears on its own as soon as
+        an editor adds a block.
+      */}
+      {(found.doc.layout ?? []).length === 0 ? (
+        <div className="mx-auto max-w-6xl px-4 pb-12">
+          <p className="text-body">{t(locale).placeholder.pageBody}</p>
+        </div>
+      ) : null}
     </>
   )
 }

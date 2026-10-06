@@ -1,5 +1,11 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, PayloadRequest } from 'payload'
 
+import { Cta } from '../blocks/Cta'
+import { Faq } from '../blocks/Faq'
+import { Hero } from '../blocks/Hero'
+import { Pricing } from '../blocks/Pricing'
+import { Steps } from '../blocks/Steps'
+import { adminMessage } from '../i18n/admin-translations'
 import { isAdmin, isAdminOrEditor, publishedOrStaff } from '../lib/access'
 import { previewUrl } from '../lib/preview'
 import { getSecret } from '../lib/secrets'
@@ -153,15 +159,37 @@ export const Pages: CollectionConfig = {
                 },
               },
               /**
-               * One block, deliberately.
+               * The five blocks from T-17, plus the rich-text block T-06 added.
                *
-               * T-17 owns the real set (Hero, Pricing, Steps, Faq, Cta). An empty
-               * `blocks: []` would type-check and then hand an editor a content field
-               * with nothing to put in it, so the layout could not be exercised at all
-               * before T-17 lands — including by T-23's seed data. Rich text is the one
-               * block that survives whatever T-17 decides, so it is not throwaway.
+               * `content` stays: it is the one block that survives any design
+               * change, and removing it would be a migration that destroys
+               * whatever is already stored in it.
+               *
+               * **At most one `hero`**, enforced below rather than written in a
+               * handover note (AGENT.md 5.6 prefers a guardrail in the config).
+               * `Hero` emits the page's `<h1>`, and two of those is the kind of
+               * thing that passes review and fails an audit months later.
+               * Payload has no per-block `maxRows`, so it is a `validate` on the
+               * array.
                */
+              validate: (value: unknown, options: { req: PayloadRequest }): string | true => {
+                const heroes = Array.isArray(value)
+                  ? value.filter(
+                      (block) => (block as { blockType?: string })?.blockType === 'hero',
+                    ).length
+                  : 0
+
+                // Resolved through the registered translations, so the editor
+                // reads a sentence in their own language rather than a key
+                // (AGENT.md 5.6).
+                return heroes > 1 ? adminMessage(options.req, 'onlyOneHero') : true
+              },
               blocks: [
+                Hero,
+                Steps,
+                Pricing,
+                Faq,
+                Cta,
                 {
                   slug: 'content',
                   labels: {
