@@ -3,10 +3,10 @@
 /*
  * The design tokens, and the only place they are defined.
  *
- * **Source: `architecture/phase3-uiux-promax.md`**, the Phase 3 interface
- * direction, with its standalone prototypes in `design/phase3/`. That document
- * is the current visual source; `design-system/autowash247/MASTER.md` and the
- * retired Canva decks are both superseded for visual decisions (T-15C).
+ * **Source: the prototypes in `design/phase3/`** — `landing.html`, `admin.html`,
+ * `dashboard.html` and `tokens.css` — described by
+ * `architecture/phase3-uiux-promax.md`. They are the only UI design source; the
+ * generated `design-system/` folder and the Canva decks are both gone (T-15D).
  *
  * **There is no `tailwind.config.ts`.** Tailwind v4 has no JavaScript config —
  * tokens are CSS custom properties inside `@theme`, and each generates the
@@ -86,6 +86,15 @@
    */
   --color-notice: #fff4da;
   --color-on-notice: #5b4200;
+
+  /*
+   * Two tints the prototypes use that the direction document's table does not
+   * name, both derived from the action colour: a soft red that stays legible on
+   * the dark closing panel (the eyebrow there), and the pale wash behind a
+   * service card's icon.
+   */
+  --color-action-soft: #ffb1a9;
+  --color-action-tint: #fceaea;
 
   /*
    * The colour to use *on* each dark surface. The direction document specifies
@@ -175,6 +184,14 @@
   /* The one shadow the prototypes use, on lifted cards and the hero panel. */
   --shadow-*: initial;
   --shadow-card: 0 20px 50px rgb(15 23 42 / 7%);
+
+  /*
+   * The prototype collapses the navigation at 900px, which is not a Tailwind
+   * default — between `md` (768) and `lg` (1024). Rounding to either would
+   * either crowd the nav or hide it while there is still room, so it is a real
+   * breakpoint and the `nav:` variant comes from it.
+   */
+  --breakpoint-nav: 900px;
 
   /*
    * The marketing content width. The direction document fixes it at 1120px;

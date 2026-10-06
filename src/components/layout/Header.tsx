@@ -36,7 +36,7 @@ export const Header = async ({ locale }: { locale: Locale }) => {
   const links = NAV.map((item) => (
     <li key={item.key}>
       <a
-        className="text-ink hover:text-action block py-2 no-underline md:py-0"
+        className="text-ink hover:text-action block py-2 no-underline transition-colors nav:py-0"
         href={item.href(locale)}
       >
         {copy.nav[item.key]}
@@ -46,17 +46,17 @@ export const Header = async ({ locale }: { locale: Locale }) => {
 
   return (
     <header className="bg-surface border-border border-b">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
+      <div className="mx-auto flex min-h-[68px] w-[min(1120px,calc(100%-40px))] items-center justify-between gap-4 nav:min-h-20">
         {/*
           The logo is the mark plus the brand name as live text, not a single
           baked asset — the name belongs to `SiteSettings` (AGENT.md), so
           renaming the business stays a CMS edit rather than a redraw.
         */}
         <a
-          className="text-ink font-display flex items-center gap-2 text-h3 no-underline"
+          className="text-ink font-display flex items-center gap-[0.7rem] text-[1.2rem] font-extrabold tracking-[-0.04em] whitespace-nowrap no-underline"
           href={pathForHome(locale)}
         >
-          <Mark className="h-7 w-7 shrink-0" />
+          <Mark />
           {settings?.brandName ?? 'AutoWash247'}
         </a>
 
@@ -72,7 +72,7 @@ export const Header = async ({ locale }: { locale: Locale }) => {
             live inside the mobile disclosure — see `MobileMenu` for the
             measurement behind that.
           */}
-          <ul className="text-body hidden md:flex md:items-center md:gap-6">{links}</ul>
+          <ul className="text-label hidden font-semibold nav:flex nav:items-center nav:gap-7">{links}</ul>
 
           <MobileMenu label={copy.nav.openMenu}>
             <ul className="text-body flex flex-col gap-2">{links}</ul>
@@ -82,7 +82,7 @@ export const Header = async ({ locale }: { locale: Locale }) => {
 
           {phone ? (
             <a
-              className="bg-action hover:bg-action-hover text-on-action text-label rounded-control inline-flex min-h-11 items-center px-5 font-bold no-underline transition-colors"
+              className="bg-action hover:bg-action-hover text-on-action text-label rounded-control hidden min-h-12 items-center px-5 font-bold no-underline transition-colors nav:inline-flex"
               // T-21 attaches the GA4 event here; the element is left in place
               // for it rather than wired up now.
               href={callHref(phone)}

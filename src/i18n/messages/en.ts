@@ -49,6 +49,7 @@ export const en: Messages = {
     directions: 'Directions',
     viewOnMap: 'View on map',
     sendMessage: 'Send message',
+    viewPackage: 'View package',
   },
 
   sections: {

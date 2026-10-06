@@ -14,6 +14,29 @@ export const Steps: Block = {
   labels: { singular: { en: 'Steps', vi: 'Khối các bước' }, plural: { en: 'Step blocks', vi: 'Các khối các bước' } },
   fields: [
     {
+      name: 'eyebrow',
+      type: 'text',
+      label: { en: 'Small label above the heading', vi: 'Nhãn nhỏ phía trên tiêu đề' },
+      admin: {
+        placeholder: 'Dịch vụ',
+        description: {
+          en: 'Two or three words in small capitals above the heading. Leave empty to show none.',
+          vi: 'Hai đến ba chữ in hoa nhỏ phía trên tiêu đề. Bỏ trống nếu không cần.',
+        },
+      },
+    },
+    {
+      name: 'note',
+      type: 'textarea',
+      label: { en: 'Note beside the heading', vi: 'Ghi chú bên cạnh tiêu đề' },
+      admin: {
+        description: {
+          en: 'A short paragraph shown to the right of the heading on wide screens, and under it on a phone.',
+          vi: 'Đoạn ngắn hiển thị bên phải tiêu đề trên màn hình rộng, và bên dưới trên điện thoại.',
+        },
+      },
+    },
+    {
       name: 'heading',
       type: 'text',
       label: { en: 'Heading', vi: 'Tiêu đề' },

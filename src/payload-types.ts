@@ -148,6 +148,10 @@ export interface Page {
     | (
         | {
             /**
+             * Two or three words in small capitals above the heading. Leave empty to show none.
+             */
+            eyebrow?: string | null;
+            /**
              * The page’s main heading. It becomes the only <h1> on the page, so make it the one thing the page is about.
              */
             heading: string;
@@ -159,6 +163,20 @@ export interface Page {
              * Shown beside the heading. This is the largest image on the page, so it is loaded first — pick a sharp one.
              */
             image: number | Media;
+            /**
+             * Two or three words each — the reassurances a visitor scans before clicking. Leave empty to show none.
+             */
+            highlights?:
+              | {
+                  text: string;
+                  id?: string | null;
+                }[]
+              | null;
+            secondaryCtaLabel?: string | null;
+            /**
+             * The quieter action beside the main one. Leave both empty for a single button.
+             */
+            secondaryCtaHref?: string | null;
             ctaLabel?: string | null;
             /**
              * A path on this site, starting with /. Leave both boxes empty for no button.
@@ -169,6 +187,14 @@ export interface Page {
             blockType: 'hero';
           }
         | {
+            /**
+             * Two or three words in small capitals above the heading. Leave empty to show none.
+             */
+            eyebrow?: string | null;
+            /**
+             * A short paragraph shown to the right of the heading on wide screens, and under it on a phone.
+             */
+            note?: string | null;
             heading?: string | null;
             /**
              * Shown in this order and numbered automatically. Drag to reorder.
@@ -185,6 +211,14 @@ export interface Page {
             blockType: 'steps';
           }
         | {
+            /**
+             * Two or three words in small capitals above the heading. Leave empty to show none.
+             */
+            eyebrow?: string | null;
+            /**
+             * A short paragraph shown to the right of the heading on wide screens, and under it on a phone.
+             */
+            note?: string | null;
             heading?: string | null;
             /**
              * Pick the packages to show, in the order you want them. Prices and durations come from the service itself, so they are never out of date here. Only published services can be chosen.
@@ -195,6 +229,14 @@ export interface Page {
             blockType: 'pricing';
           }
         | {
+            /**
+             * Two or three words in small capitals above the heading. Leave empty to show none.
+             */
+            eyebrow?: string | null;
+            /**
+             * A short paragraph shown to the right of the heading on wide screens, and under it on a phone.
+             */
+            note?: string | null;
             /**
              * Shown above the questions. It is page copy — Google’s FAQ data has no place for it.
              */
@@ -217,6 +259,10 @@ export interface Page {
             blockType: 'faq';
           }
         | {
+            /**
+             * Two or three words in small capitals above the heading. Leave empty to show none.
+             */
+            eyebrow?: string | null;
             heading: string;
             body?: string | null;
             ctaLabel?: string | null;
@@ -571,9 +617,18 @@ export interface PagesSelect<T extends boolean = true> {
         hero?:
           | T
           | {
+              eyebrow?: T;
               heading?: T;
               subheading?: T;
               image?: T;
+              highlights?:
+                | T
+                | {
+                    text?: T;
+                    id?: T;
+                  };
+              secondaryCtaLabel?: T;
+              secondaryCtaHref?: T;
               ctaLabel?: T;
               ctaHref?: T;
               id?: T;
@@ -582,6 +637,8 @@ export interface PagesSelect<T extends boolean = true> {
         steps?:
           | T
           | {
+              eyebrow?: T;
+              note?: T;
               heading?: T;
               steps?:
                 | T
@@ -596,6 +653,8 @@ export interface PagesSelect<T extends boolean = true> {
         pricing?:
           | T
           | {
+              eyebrow?: T;
+              note?: T;
               heading?: T;
               services?: T;
               id?: T;
@@ -604,6 +663,8 @@ export interface PagesSelect<T extends boolean = true> {
         faq?:
           | T
           | {
+              eyebrow?: T;
+              note?: T;
               heading?: T;
               items?:
                 | T
@@ -618,6 +679,7 @@ export interface PagesSelect<T extends boolean = true> {
         cta?:
           | T
           | {
+              eyebrow?: T;
               heading?: T;
               body?: T;
               ctaLabel?: T;

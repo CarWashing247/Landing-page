@@ -85,7 +85,7 @@ export const ServicePage = async ({ locale, slug }: { locale: Locale; slug: stri
       */}
       <JsonLd schema={serviceSchema({ business, locale, service })} />
 
-      <Band tone="ink">
+      <Band tone="white">
         <div className="grid items-center gap-8 md:grid-cols-2">
           <div>
             <p className="text-label opacity-70">{copy.sections.servicePackage}</p>

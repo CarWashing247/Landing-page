@@ -25,11 +25,11 @@ import type { ReactNode } from 'react'
  * no way for the two to drift, because neither is a copy of the other.
  */
 export const MobileMenu = ({ children, label }: { children: ReactNode; label: string }) => (
-  <details className="relative md:hidden">
+  <details className="relative nav:hidden">
     <summary
       // `list-none` plus the webkit rule removes the default disclosure
       // triangle; the glyph below is the control's visible affordance.
-      className="text-ink rounded-control flex min-h-11 cursor-pointer list-none items-center p-3 marker:content-none [&::-webkit-details-marker]:hidden"
+      className="border-border text-ink grid min-h-11 min-w-11 cursor-pointer list-none place-items-center rounded-[10px] border marker:content-none [&::-webkit-details-marker]:hidden"
     >
       <span className="sr-only">{label}</span>
       <span aria-hidden="true" className="text-h3 leading-none">
