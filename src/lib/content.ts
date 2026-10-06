@@ -379,6 +379,73 @@ const pathsFrom = (
 }
 
 /**
+ * The published services' names in one locale, for the contact form's
+ * "Dịch vụ quan tâm" picker (T-19).
+ *
+ * **Names, not ids**, and the shape is the reason: the form stores what the
+ * visitor chose as free text (`src/lib/validation/contact.ts`), so a submission
+ * still reads correctly after a package is renamed or unpublished. A
+ * relationship would turn an old enquiry into a dangling id.
+ *
+ * **Tagged `SITEMAP_TAG`, which needs justifying because the name says
+ * sitemap.** What this read actually depends on is "the set of published
+ * documents changed", and that is exactly what the tag covers — `revalidate.ts`
+ * sends it on every page and service `afterChange` and `afterDelete`, which is
+ * precisely when this list goes stale. The alternative is a new tag, which
+ * means editing T-11's hooks to send it; the tag's name being narrower than its
+ * job is recorded in `architecture/follow-ups.md` rather than worked around
+ * with a second purge path that could fall out of step.
+ *
+ * Localized, unlike `loadBusinessInfo`: a service's `name` is a localized field
+ * (Design.md 2.1), and an English visitor should be offered English packages.
+ * The fallback is left on, so an untranslated service appears under its
+ * Vietnamese name rather than vanishing from the picker — a visitor choosing
+ * from a short list is better served by a name they can still point at than by
+ * a gap.
+ */
+const serviceNames = unstable_cache(
+  async (locale: Locale): Promise<string[]> => {
+    const log = logger('content:services')
+
+    try {
+      const { docs } = await (
+        await getPayload()
+      ).find({
+        collection: 'services',
+        depth: 0,
+        limit: 0,
+        locale,
+        // Published only, through the real access control — the same
+        // `publishedOrStaff` the public read path uses, not a second copy.
+        overrideAccess: false,
+        pagination: false,
+        select: { name: true },
+      })
+
+      return docs
+        .map((doc) => (doc as { name?: unknown }).name)
+        .filter((name): name is string => typeof name === 'string' && name.trim().length > 0)
+    } catch (error) {
+      // The message, never the error object: AGENT.md 5.7.
+      log.error('service names unavailable', {
+        locale,
+        reason: error instanceof Error ? error.message : 'unknown',
+      })
+
+      // An empty list, not a throw: the contact form renders without the picker
+      // rather than taking the page down with it.
+      return []
+    }
+  },
+  ['content', 'service-names'],
+  { revalidate: REVALIDATE_SECONDS, tags: [SITEMAP_TAG] },
+)
+
+export const loadServiceNames = cache(
+  async (locale: Locale): Promise<string[]> => serviceNames(locale),
+)
+
+/**
  * One document's presence in the sitemap, per locale.
  *
  * **Two timestamps, because they answer different questions.**

@@ -1,6 +1,7 @@
 import { t } from '../../i18n/t'
 import type { Locale } from '../../lib/locales'
 import type { Page } from '../../payload-types'
+import { Contact } from './Contact'
 import { Content } from './Content'
 import { Cta } from './Cta'
 import { Faq } from './Faq'
@@ -30,6 +31,8 @@ const renderBlock = (block: Block, locale: Locale): React.ReactNode => {
   const copy = t(locale)
 
   switch (block.blockType) {
+    case 'contact':
+      return <Contact block={block} locale={locale} />
     case 'content':
       return <Content block={block} />
     case 'cta':

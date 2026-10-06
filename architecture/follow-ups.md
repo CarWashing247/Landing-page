@@ -359,6 +359,46 @@ something like "every emitted schema that schema.org defines `inLanguage` on
 carries it". One line in `src/lib/schema/` reverts the behaviour if literal
 compliance is preferred instead.
 
+### B5 · The contact map is bypassed for now, by decision
+
+**Owner: a later enhancement task** (recorded in `task/t-19-contact-page.md`)
+
+**Decided 2026-10-06: the map is deliberately bypassed in the UI for this
+release and will be done as an enhancement later.** What follows is why the
+question arose and what the bypass costs, so the enhancement starts from it
+rather than rediscovering it.
+
+Design.md section 4's T-19 entry and the task file both make a lazily loaded
+Google Maps embed the headline deliverable — it is named in the scope list, in
+step 4, and in two acceptance criteria. Both decks say the opposite:
+
+- The Desktop Pages deck (`DAHXNi05PeY`, page 6, "Liên hệ / lien-he") shows a
+  heading, a lead paragraph, a form and three detail cards. **No map.**
+- The UI Foundation deck's layout rules state "Map and contact integrations are
+  out of scope for this release".
+
+T-19's own file flags the contradiction and says to resolve it before building.
+It was resolved **in favour of the decks**, because the standing rule for Phase
+3 is that the UI is what the decks show. `src/components/MapEmbed.tsx` is built,
+documented and ready; nothing imports it.
+
+Two consequences worth knowing before someone reads the task as done:
+
+- The two map acceptance criteria ("the map iframe is `loading="lazy"`", "the
+  map reserves its space — CLS contribution 0") are **vacuous as shipped**, not
+  met. There is no iframe to measure.
+- T-20's Gate 3 measurement on the contact page is therefore taken against a
+  page with no map in it. Turning the map on later is one import, but it is also
+  the single heaviest thing that can be added to this page, so it needs its own
+  LCP measurement rather than inheriting T-20's.
+
+**What the enhancement has to do**, beyond adding the import: run T-19's
+Verification block against the page with the map in it, because none of the
+numbers recorded there were measured with one. If the keyless
+`/maps?q=…&output=embed` URL is swapped for Google's documented Embed API
+(`/maps/embed/v1/place`), that needs an API key in `.env.example` in the same
+commit.
+
 ## C. Deferred migrations
 
 ### C1 · `unstable_cache` is superseded by `use cache`
@@ -469,6 +509,52 @@ build them:
 All three are cheap to decide and expensive to retrofit, which is why they are
 here rather than assumed either way.
 
+### D4 · The form's error colour is not in the design system
+
+**Owner: T-15 / design** (recorded in `task/t-19-contact-page.md`)
+
+The UI Foundation deck defines six colours and no error state, because none of
+the screens it covers contains a form. T-19's contact form needs one: a
+validation message is the one piece of interface that fails at its job if it
+reads like a hint, and `--color-highlight` is explicitly the success cue while
+`--color-ink` is body text. Clearing Tailwind's default ramps (T-15) also means
+`text-red-700` is not a class at all and would have rendered unstyled.
+
+So `src/app/globals.css` now carries `--color-danger: #b3261e` and
+`--color-on-danger: #ffffff`, chosen rather than borrowed: 6.54:1 on white,
+6.02:1 on `--color-surface`, and 6.54:1 for white on it, so it passes AA at the
+`text-label` size the messages use.
+
+**It is the only colour in the file that is not from the deck.** It wants a
+designer's eye before it spreads beyond form validation — an error red is a
+brand decision, and the next person who needs one will reach for this token
+rather than ask.
+
+### D5 · The two decks word the same contact fields differently
+
+**Owner: needs a decision, recorded in `task/t-19-contact-page.md`**
+
+T-15A built the `contact` catalog section from the Website UI deck
+(`DAHXNsDnbjg`, page 8). T-19's named design source is the Desktop Pages deck
+(`DAHXNi05PeY`, page 6). They disagree on three strings:
+
+| Key | T-15A, from Website UI | Desktop Pages |
+| --- | --- | --- |
+| `nameLabel` | Họ tên | Họ và tên |
+| `hoursHeading` | Giờ làm việc | Giờ mở cửa |
+| `subjectLabel` | Chủ đề (free text) | Dịch vụ quan tâm (a picker) |
+
+T-19 **changed none of them.** `hoursHeading` is already rendered by the footer
+(T-16), so re-wording it here would silently change a component T-19 has no
+business touching, and the other two are a coin toss between two signed-off
+decks. The service picker is a genuinely different field rather than a
+re-wording, so it got its own keys (`serviceLabel`, `servicePlaceholder`) and
+`subjectLabel`/`subjectPlaceholder` are now **unused** — dead catalog keys, left
+in place because deleting a string one deck still shows is also a decision.
+
+Nothing is broken; the site is internally consistent. What is open is which deck
+is canonical when they differ, which matters again at T-23.
+
 ## E. Repository hygiene
 
 ### E1 · `AGENTS.md` duplicates `CLAUDE.md`
@@ -520,6 +606,26 @@ What is left is real but narrower: a clean `npm ci` fails, so a contributor
 following the README and any CI job that uses `npm ci` both stop. The fix is one
 `npm install` and committing the lockfile it produces, on its own, so the diff is
 reviewable as a dependency change rather than riding a feature branch.
+
+### E4 · `SITEMAP_TAG`'s name is narrower than its job
+
+**Owner: T-11 / T-13** (recorded in `task/t-19-contact-page.md`)
+
+What the tag actually means is "the set of published documents changed":
+`src/lib/revalidate.ts` sends it on every page and service `afterChange` and
+`afterDelete`. The sitemap is its first consumer, not its only possible one.
+
+T-19's `loadServiceNames` — the published service names for the contact form's
+picker — depends on exactly that condition and so is tagged with it. Correct,
+and it reads like a mistake at the call site, which is the problem: the next
+person needing the same purge either adds a redundant second tag and edits
+T-11's hooks to send it, or decides the tag is sitemap-only and goes without a
+purge path at all.
+
+Renaming it to something like `PUBLISHED_SET_TAG` is a mechanical change across
+`src/lib/cache-tags.ts`, `revalidate.ts`, `content.ts` and their tests. Left
+alone because the rename touches T-11's hooks, which T-19 has no reason to
+open, and a wrong tag string is a silently stale page rather than a build error.
 
 ---
 

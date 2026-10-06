@@ -70,6 +70,7 @@ export interface Config {
     pages: Page;
     services: Service;
     media: Media;
+    'contact-submissions': ContactSubmission;
     users: User;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -81,6 +82,7 @@ export interface Config {
     pages: PagesSelect<false> | PagesSelect<true>;
     services: ServicesSelect<false> | ServicesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    'contact-submissions': ContactSubmissionsSelect<false> | ContactSubmissionsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -222,6 +224,19 @@ export interface Page {
             id?: string | null;
             blockName?: string | null;
             blockType: 'cta';
+          }
+        | {
+            /**
+             * The section heading. It renders as a second-level heading, so it does not compete with the page’s own title.
+             */
+            heading: string;
+            /**
+             * One short paragraph under the heading. The phone number, address and opening hours are not written here — they are taken from Business information, so they stay identical to your Google Business Profile.
+             */
+            body?: string | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'contact';
           }
         | {
             richText: {
@@ -403,6 +418,32 @@ export interface Service {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Messages sent through the contact form, newest first. They are read-only: this is a record of what someone sent, so nothing here can be edited.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact-submissions".
+ */
+export interface ContactSubmission {
+  id: number;
+  name: string;
+  /**
+   * As the visitor typed it. Call back on this number.
+   */
+  phone: string;
+  email?: string | null;
+  /**
+   * What the visitor said they were after, in their own words — not a link to a service, so it still makes sense after a package is renamed.
+   */
+  service?: string | null;
+  message: string;
+  /**
+   * Which version of the site this was sent from. Reply in that language.
+   */
+  locale: 'vi' | 'en';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
@@ -467,6 +508,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'contact-submissions';
+        value: number | ContactSubmission;
       } | null)
     | ({
         relationTo: 'users';
@@ -577,6 +622,14 @@ export interface PagesSelect<T extends boolean = true> {
               body?: T;
               ctaLabel?: T;
               ctaHref?: T;
+              id?: T;
+              blockName?: T;
+            };
+        contact?:
+          | T
+          | {
+              heading?: T;
+              body?: T;
               id?: T;
               blockName?: T;
             };
@@ -698,6 +751,20 @@ export interface MediaSelect<T extends boolean = true> {
               filename?: T;
             };
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact-submissions_select".
+ */
+export interface ContactSubmissionsSelect<T extends boolean = true> {
+  name?: T;
+  phone?: T;
+  email?: T;
+  service?: T;
+  message?: T;
+  locale?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

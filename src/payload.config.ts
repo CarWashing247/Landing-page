@@ -8,6 +8,7 @@ import { s3Storage } from '@payloadcms/storage-s3'
 import { buildConfig } from 'payload'
 import sharp from 'sharp'
 
+import { ContactSubmissions } from './collections/ContactSubmissions'
 import { Media } from './collections/Media'
 import { Pages } from './collections/Pages'
 import { Services } from './collections/Services'
@@ -76,7 +77,14 @@ const buildConfigFromVault = async () => {
         importMapFile: path.resolve(dirname, 'app/crm/admin/importMap.js'),
       },
     },
-    collections: [Pages, Services, Media, Users],
+    /**
+     * `ContactSubmissions` is the contact form's destination (T-19), and it is
+     * the one collection nothing public may write: its `create` is denied to
+     * everyone so the `/api/:path*` rewrite cannot be used to post rows
+     * straight at Payload, and `/api/contact` writes through the Local API
+     * after validating. See the collection's own note.
+     */
+    collections: [Pages, Services, Media, ContactSubmissions, Users],
     /**
      * Single source for every business detail and site-wide default (T-05).
      * A phone number or a title suffix written into a component is a bug.
