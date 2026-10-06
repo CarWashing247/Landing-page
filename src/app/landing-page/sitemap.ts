@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 
 import { loadSiteSettings, loadSitemap } from '../../lib/content'
-import { requireEnv } from '../../lib/env'
+import { siteOrigin } from '../../lib/env'
 import { LOCALES, X_DEFAULT_LOCALE, pathForHome, pathForPage, pathForService } from '../../lib/locales'
 import { sitemapEntries } from '../../lib/sitemap'
 
@@ -33,11 +33,9 @@ import { sitemapEntries } from '../../lib/sitemap'
  * `SiteSettings.updatedAt`, bounded as described below.
  */
 
-/** Absolute URLs, because a sitemap entry cannot be relative. */
-const origin = (): string => requireEnv('NEXT_PUBLIC_SITE_URL').replace(/\/$/, '')
-
 const sitemap = async (): Promise<MetadataRoute.Sitemap> => {
-  const base = origin()
+  // Absolute URLs, because a sitemap entry cannot be relative.
+  const base = siteOrigin()
   const { pages, services } = await loadSitemap()
 
   /**

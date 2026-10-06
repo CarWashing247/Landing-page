@@ -24,7 +24,7 @@ developer.
 | `Hero` | `heading`, `subheading`, `image` (required), `ctaLabel`, `ctaHref` | `<h1>`; image gets `priority` |
 | `Steps` | `heading`, `steps[]` (`title`, `body`, `icon`?) | the QR-scan-to-wash sequence; ordered list |
 | `Pricing` | `heading`, `services[]` (relationship → Services) or `rows[]` | price from the CMS, never hardcoded |
-| `Faq` | `heading`, `items[]` (`question`, `answer`) | feeds T-14's `FAQPage` |
+| `Faq` | `heading`, `items[]` (`question`, `answer`) | feeds T-14's `FAQPage` — **`answer` must be plain text, see Notes** |
 | `Cta` | `heading`, `body`, `ctaLabel`, `ctaHref` | |
 
 - Block definitions in `src/blocks/` (config) and components in
@@ -100,6 +100,20 @@ curl -s localhost:3000/<faq-slug> | grep -c '<details'
 
 ## Notes
 
+- **T-14 already consumes this block, so the field names are fixed.**
+  `src/lib/schema/faq.ts` reads `blockType: 'faq'` and `items[]` of `question`
+  and `answer`, exactly as the table above specifies, and
+  `src/lib/schema/faq.test.ts` pins them. Renaming either field silently stops
+  `FAQPage` being emitted — silently, because a page with no FAQ schema looks
+  identical to one with it. The tests are what fail instead.
+- **`answer` must be a plain `textarea`, not `richText`.** Google's
+  `Answer.text` takes plain text or simple HTML; a Lexical rich-text value is
+  neither, and serialising one reaches Google as `[object Object]`. If rich
+  answers are wanted, this task also owns converting them to HTML with the
+  Lexical HTML converter and deciding which nodes survive — until then the
+  schema stays honest by the field being plain.
+- `heading` is page copy. `FAQPage` has no property for it, so it is rendered by
+  the component and does not appear in the schema.
 - `next/image` emits an `<img>` in the final HTML. The grep above is for
   bare `<img>` in **source**, which is what the rule forbids.
 - Coordinate field names with T-14 before merging. Renaming
