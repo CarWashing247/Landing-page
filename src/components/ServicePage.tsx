@@ -85,7 +85,7 @@ export const ServicePage = async ({ locale, slug }: { locale: Locale; slug: stri
       */}
       <JsonLd schema={serviceSchema({ business, locale, service })} />
 
-      <Band tone="primary">
+      <Band tone="ink">
         <div className="grid items-center gap-8 md:grid-cols-2">
           <div>
             <p className="text-label opacity-70">{copy.sections.servicePackage}</p>
@@ -98,7 +98,7 @@ export const ServicePage = async ({ locale, slug }: { locale: Locale; slug: stri
               and not a word in the catalog — the label beside it is the
               translated part, and `Pricing` writes the duration the same way.
             */}
-            <p className="text-h2 text-accent mt-6">
+            <p className="text-h2 text-action mt-6">
               {formatPrice(service.price, service.currency, locale)}
             </p>
             <p className="text-label mt-1 opacity-80">

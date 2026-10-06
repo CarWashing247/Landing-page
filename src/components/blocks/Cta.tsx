@@ -5,7 +5,7 @@ type CtaBlock = Extract<NonNullable<Page['layout']>[number], { blockType: 'cta' 
 
 /** The closing band. `<h2>`, never `<h1>` — only `Hero` owns that. */
 export const Cta = ({ block }: { block: CtaBlock }) => (
-  <Band tone="primary">
+  <Band tone="ink">
     <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
       <div>
         <h2 className="text-h2">{block.heading}</h2>

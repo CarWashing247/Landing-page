@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
 import { t } from '../../i18n/t'
-import { inter } from '../../lib/fonts'
+import { inter, interTight } from '../../lib/fonts'
 import type { Locale } from '../../lib/locales'
 import { DraftBanner } from '../DraftBanner'
 import { Footer } from './Footer'
@@ -50,7 +50,7 @@ export const LocaleLayout = async ({
   const copy = t(locale)
 
   return (
-    <html className={inter.variable} lang={locale}>
+    <html className={`${inter.variable} ${interTight.variable}`} lang={locale}>
       <body className="flex min-h-screen flex-col">
         {/*
           The skip link is the first focusable thing on the page and is visible
@@ -58,7 +58,7 @@ export const LocaleLayout = async ({
           tabbing through the whole navigation on every page.
         */}
         <a
-          className="bg-accent text-on-accent sr-only rounded-lg px-4 py-2 focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50"
+          className="bg-action text-on-action sr-only rounded-control px-4 py-2 focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50"
           href="#main"
         >
           {copy.a11y.skipToContent}

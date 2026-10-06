@@ -74,7 +74,7 @@ const messageFor = (copy: ContactFormCopy, code: string | undefined): string =>
 type Status = 'idle' | 'sending' | 'sent' | 'failed'
 
 const FIELD_CLASS =
-  'text-body border-foreground/20 bg-card text-foreground placeholder:text-foreground/40 w-full rounded-xl border px-4 py-3'
+  'text-body border-ink/20 bg-surface text-ink placeholder:text-ink/40 w-full rounded-card border px-4 py-3'
 
 export const ContactForm = ({
   copy,
@@ -227,7 +227,7 @@ export const ContactForm = ({
 
       <div className="flex flex-wrap items-center gap-4">
         <button
-          className="bg-accent text-on-accent text-label rounded-lg px-6 py-3 disabled:opacity-60"
+          className="bg-action text-on-action text-label rounded-control px-6 py-3 disabled:opacity-60"
           disabled={status === 'sending'}
           type="submit"
         >

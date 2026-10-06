@@ -29,7 +29,7 @@ export const MobileMenu = ({ children, label }: { children: ReactNode; label: st
     <summary
       // `list-none` plus the webkit rule removes the default disclosure
       // triangle; the glyph below is the control's visible affordance.
-      className="text-on-primary flex cursor-pointer list-none items-center rounded-lg p-3 marker:content-none [&::-webkit-details-marker]:hidden"
+      className="text-ink rounded-control flex min-h-11 cursor-pointer list-none items-center p-3 marker:content-none [&::-webkit-details-marker]:hidden"
     >
       <span className="sr-only">{label}</span>
       <span aria-hidden="true" className="text-h3 leading-none">
@@ -37,7 +37,7 @@ export const MobileMenu = ({ children, label }: { children: ReactNode; label: st
       </span>
     </summary>
 
-    <div className="bg-primary absolute inset-x-0 top-full z-50 border-t border-card/10 p-4">
+    <div className="bg-surface border-border absolute inset-x-0 top-full z-50 border-t p-4 shadow-card">
       {children}
     </div>
   </details>

@@ -21,13 +21,32 @@ import type { Media } from '../../payload-types'
  */
 export const Band = ({
   children,
-  tone = 'surface',
+  tone = 'paper',
 }: {
   children: React.ReactNode
-  tone?: 'primary' | 'surface'
+  /**
+   * `paper` and `surface` alternate down the page so adjacent sections separate
+   * without a rule between them; `ink` is the dark closing band.
+   */
+  tone?: 'ink' | 'paper' | 'surface'
 }) => (
-  <section className={tone === 'primary' ? 'bg-primary text-on-primary' : 'bg-background text-foreground'}>
-    <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">{children}</div>
+  <section
+    className={
+      tone === 'ink'
+        ? 'bg-ink text-on-ink'
+        : tone === 'surface'
+          ? 'bg-surface text-ink'
+          : 'bg-paper text-ink'
+    }
+  >
+    {/*
+      1120px of content with 20px gutters that open to 32px from tablet width,
+      as the interface direction specifies. One place, so no section invents its
+      own width.
+    */}
+    <div className="mx-auto max-w-(--container-content) px-5 py-16 md:px-8 md:py-24">
+      {children}
+    </div>
   </section>
 )
 
@@ -60,7 +79,7 @@ export const BlockImage = ({
   image.url ? (
     <NextImage
       alt={image.alt ?? ''}
-      className="h-auto w-full rounded-xl"
+      className="rounded-card h-auto w-full"
       height={image.height ?? 630}
       priority={priority}
       sizes={sizes}
@@ -78,18 +97,18 @@ export const BlockImage = ({
 export const Action = ({
   href,
   label,
-  tone = 'accent',
+  tone = 'action',
 }: {
   href?: null | string
   label?: null | string
-  tone?: 'accent' | 'outline'
+  tone?: 'action' | 'outline'
 }) =>
   label && href ? (
     <a
       className={
-        tone === 'accent'
-          ? 'bg-accent text-on-accent text-label inline-block rounded-lg px-6 py-3 no-underline'
-          : 'text-on-primary text-label inline-block rounded-lg border border-current px-6 py-3 no-underline'
+        tone === 'action'
+          ? 'bg-action hover:bg-action-hover text-on-action text-label rounded-control inline-flex min-h-12 items-center px-5 font-bold no-underline transition-colors'
+          : 'bg-surface border-border text-ink hover:border-slate text-label rounded-control inline-flex min-h-12 items-center border px-5 font-bold no-underline transition-colors'
       }
       href={href}
     >

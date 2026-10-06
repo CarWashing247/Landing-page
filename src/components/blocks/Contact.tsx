@@ -87,7 +87,7 @@ export const Contact = async ({
         <div className="grid gap-6 lg:grid-cols-3">
           {phone ? (
             <Card heading={copy.contact.callHeading} note={copy.contact.callNote}>
-              <a className="text-h3 text-accent no-underline" data-ga-event="call" href={callHref(phone)}>
+              <a className="text-h3 text-action no-underline" data-ga-event="call" href={callHref(phone)}>
                 {phone}
               </a>
             </Card>
@@ -107,7 +107,7 @@ export const Contact = async ({
 
               {directionsHref ? (
                 <a
-                  className="text-label text-accent mt-2 inline-block"
+                  className="text-label text-action mt-2 inline-block"
                   data-ga-event="directions"
                   href={directionsHref}
                   // A map in a new tab, so a visitor reading the page does not
@@ -141,7 +141,7 @@ export const Contact = async ({
           ) : null}
         </div>
 
-        <div className="bg-card text-card-foreground rounded-xl p-6 md:p-8">
+        <div className="bg-surface text-ink rounded-card p-6 md:p-8">
           <h3 className="text-h3 mb-6">{copy.contact.heading}</h3>
 
           <ContactForm
@@ -187,7 +187,7 @@ const Card = ({
   heading: string
   note: string
 }) => (
-  <section className="bg-card text-card-foreground border-foreground/10 flex flex-col rounded-xl border p-6">
+  <section className="bg-surface text-ink border-ink/10 flex flex-col rounded-card border p-6">
     <h3 className="text-label mb-2 opacity-70">{heading}</h3>
     {children}
     <p className="text-label mt-3 opacity-70">{note}</p>
