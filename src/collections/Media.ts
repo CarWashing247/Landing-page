@@ -22,6 +22,7 @@ export const Media: CollectionConfig = {
     plural: { en: 'Images', vi: 'Hình ảnh' },
   },
   admin: {
+    group: { en: 'Collections', vi: 'Collections' },
     useAsTitle: 'alt',
     defaultColumns: ['filename', 'alt', 'updatedAt'],
     description: {

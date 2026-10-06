@@ -65,6 +65,7 @@ export const Services: CollectionConfig = {
     plural: { en: 'Services', vi: 'Các dịch vụ' },
   },
   admin: {
+    group: { en: 'Collections', vi: 'Collections' },
     /**
      * The Preview button. Returns a relative URL so an editor working against
      * a preview deployment is never sent to production, and `null` when this

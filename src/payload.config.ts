@@ -19,8 +19,9 @@ import { SiteSettings } from './globals/SiteSettings'
 import { adminTranslations } from './i18n/admin-translations'
 import { requireEnv } from './lib/env'
 import { logger } from './lib/log'
-import { DEFAULT_LOCALE, LOCALES } from './lib/locales'
+import { DEFAULT_LOCALE, isLocale, LOCALES } from './lib/locales'
 import { resolveR2Config } from './lib/r2'
+import { pathForPreview, PREVIEWABLE, isPreviewable } from './lib/preview'
 import { loadSecrets } from './lib/secrets'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -75,6 +76,65 @@ const buildConfigFromVault = async () => {
         // resolveImportMapFilePath.js). The admin lives in the plain `crm`
         // folder here, so without this `generate:importmap` cannot find it.
         importMapFile: path.resolve(dirname, 'app/crm/admin/importMap.js'),
+      },
+      /**
+       * Dark, because every one of the ten pages in the design deck
+       * (`DAHXOjaoczk`) is. `'all'` would leave Payload's light theme reachable
+       * from the account menu and a half-themed light admin is worse than
+       * either — the brand ramp in `app/crm/admin.css` is mixed for dark
+       * surfaces (T-19A).
+       */
+      theme: 'dark',
+      /**
+       * The browser tab. Without this it says "Payload", which tells an editor
+       * which software they are in rather than whose site they are editing.
+       */
+      meta: {
+        description: 'AutoWash247 content management',
+        icons: [{ rel: 'icon', type: 'image/svg+xml', url: '/favicon.svg' }],
+        titleSuffix: '· AutoWash247',
+      },
+      components: {
+        graphics: {
+          Icon: '/components/admin/Logo.tsx#Icon',
+          Logo: '/components/admin/Logo.tsx#Logo',
+        },
+      },
+      /**
+       * The page rendering beside the editor, updating as fields change
+       * (deck page 10). This is **not** T-12's `admin.preview`, which opens a
+       * new tab and is configured per collection — the deck shows both, and
+       * they are different features.
+       *
+       * The URL is the admin's own origin plus the document's path, built by
+       * `pathForPreview` in `src/lib/preview.ts` so there is one place that
+       * knows how a slug becomes a URL. It carries no preview secret: a live
+       * preview iframe is rendered inside the authenticated admin and Payload
+       * posts the draft document into it with `postMessage`, so it is not the
+       * unauthenticated `/api/draft` round trip the Preview button makes.
+       */
+      livePreview: {
+        breakpoints: [
+          { height: 844, label: 'Mobile', name: 'mobile', width: 390 },
+          { height: 1024, label: 'Tablet', name: 'tablet', width: 768 },
+          { height: 900, label: 'Desktop', name: 'desktop', width: 1440 },
+        ],
+        collections: [...PREVIEWABLE],
+        url: ({ collectionConfig, data, locale }) => {
+          const collection = collectionConfig?.slug
+          const slug = typeof data?.slug === 'string' ? data.slug : undefined
+
+          // No slug in this locale yet means there is no URL to render. Returning
+          // null makes Payload hide the panel rather than frame a 404.
+          if (!slug || !isPreviewable(collection)) {
+            return null
+          }
+
+          // Relative, for the same reason the Preview button is (T-12): an
+          // absolute URL built from NEXT_PUBLIC_SITE_URL would frame production
+          // inside an editor working against a preview deployment.
+          return pathForPreview(collection, slug, isLocale(locale?.code) ? locale.code : DEFAULT_LOCALE)
+        },
       },
     },
     /**

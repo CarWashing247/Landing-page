@@ -1,0 +1,15 @@
+<!--
+  The admin's browser-tab icon, referenced by `admin.meta.icons` in
+  payload.config.ts. It is the same mark as `src/components/admin/Logo.tsx`.
+
+  The two colour values are literal because a standalone SVG served as a static
+  file cannot read the CSS custom properties in `src/app/brand.css` — nothing
+  loads that stylesheet into this document. They are `--brand-accent` and
+  `--brand-on-accent`; if the brand colours change, this file is the one place
+  that has to be changed by hand. The public site's favicon is a separate
+  concern: it comes from the `favicon` upload on SiteSettings (T-05).
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <rect width="32" height="32" rx="8" fill="#29c8b5" />
+  <path d="M16 7c3.6 4.2 6 7.4 6 10.2a6 6 0 0 1-12 0C10 14.4 12.4 11.2 16 7Z" fill="#071522" />
+</svg>

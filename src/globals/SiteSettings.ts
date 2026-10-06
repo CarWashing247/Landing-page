@@ -22,6 +22,19 @@ export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   label: { en: 'Site settings', vi: 'Cài đặt trang web' },
   admin: {
+    group: { en: 'Globals', vi: 'Globals' },
+    /**
+     * Hidden from anyone who is not an admin — cosmetic only, exactly as on
+     * `Users`. `update: isAdmin` below is the control, and `read` stays open
+     * because every value here is printed in the footer of every public page.
+     *
+     * Without this an editor sees both globals in the sidebar and can open
+     * them read-only, which is deck page 10's reading (`Globals · Editor ·
+     * View only`). Page 2's editor sidebar has no Globals group at all and
+     * page 9 says `Chỉ Admin mới có quyền truy cập và chỉnh sửa`; two screens
+     * against one, and the two agree with AGENT.md 5.6. See the task file.
+     */
+    hidden: ({ user }) => user?.role !== 'admin',
     description: {
       en: 'Brand, default SEO values and social links used across the whole site.',
       vi:
