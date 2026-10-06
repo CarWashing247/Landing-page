@@ -90,8 +90,28 @@ export const en: Messages = {
     messagePlaceholder: 'Type your message...',
     addressHeading: 'Address',
     hoursHeading: 'Opening hours',
+
+    /**
+     * T-19's additions. The field labels are interface terms and so are written
+     * out, per this file's rule; the three card lines are marketing and the one
+     * English page in the decks does not carry them, so they stay `TODO(copy)`.
+     */
+    phoneLabel: 'Phone number',
+    phonePlaceholder: 'Enter your phone number',
+    serviceLabel: 'Service of interest',
+    servicePlaceholder: 'Choose a service',
+
+    callHeading: 'Call us',
+    callNote: 'TODO(copy): card line under the phone number — "fast support, any time of day"',
+    addressNote: 'TODO(copy): card line under the address — "find your way to the nearest wash"',
+    hoursNote: 'TODO(copy): card line under the opening hours — "flexible service, every day"',
+
     required: 'This field is required',
+    invalid: 'That value is not valid',
     invalidEmail: 'That does not look like an email address',
+    invalidPhone: 'That does not look like a phone number',
+    tooLong: 'That is longer than this field accepts',
+    sending: 'Sending…',
     sent: 'Thank you, your message has been sent',
     sendFailed: 'The message could not be sent. Please try again.',
   },

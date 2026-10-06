@@ -133,9 +133,58 @@ export const vi = {
     messagePlaceholder: 'Nhập nội dung tin nhắn...',
     addressHeading: 'Địa chỉ',
     hoursHeading: 'Giờ làm việc',
+
+    /**
+     * Added by T-19, from the **Desktop Pages** deck (`DAHXNi05PeY`, page 6
+     * "Liên hệ / lien-he — Desktop"), which is T-19's named design source. The
+     * keys above came from the Website UI deck (`DAHXNsDnbjg`, page 8) in
+     * T-15A, and the two decks word three of them differently — "Họ và tên"
+     * against `nameLabel`'s "Họ tên", "Giờ mở cửa" against `hoursHeading`'s
+     * "Giờ làm việc", and a service picker where page 8 has a free "Chủ đề".
+     * The existing values are left exactly as T-15A set them: `hoursHeading`
+     * is already rendered by the footer (T-16), so re-wording it here would
+     * change a component this task has no business touching. The divergence is
+     * recorded in `architecture/follow-ups.md` instead.
+     *
+     * The service picker is a genuinely different field rather than a
+     * re-wording, so it gets its own keys and `subjectLabel`/
+     * `subjectPlaceholder` are left unused.
+     */
+    phoneLabel: 'Số điện thoại',
+    phonePlaceholder: 'Nhập số điện thoại',
+    serviceLabel: 'Dịch vụ quan tâm',
+    servicePlaceholder: 'Chọn dịch vụ',
+
+    /**
+     * The three cards beside the form. Headings reuse `addressHeading` and
+     * `hoursHeading` above; these are the supporting lines under each.
+     *
+     * `addressNote` is `TODO(copy)` and the others are not, which needs saying:
+     * the deck's own text for it extracts as "Tìm dường đến của rửa gần bạn".
+     * Two of those are plainly OCR damage for "đường" and "cửa" — Canva's
+     * extraction is diacritic-lossy throughout these decks, which T-19A's file
+     * also records — but the noun that follows is not recoverable with any
+     * confidence, and guessing at it would be writing Vietnamese copy rather
+     * than taking it. The other two lines extract cleanly and are verbatim.
+     */
+    callHeading: 'Gọi chúng tôi',
+    callNote: 'Hỗ trợ nhanh chóng mọi thời điểm',
+    addressNote: 'TODO(copy): card line under the address — the deck reads "Tìm đường đến <OCR-damaged noun> gần bạn"',
+    hoursNote: 'Phục vụ linh hoạt mỗi ngày',
+
     /** None of these appear in any deck. */
     required: 'TODO(copy): this field is required',
+    /**
+     * The code a field fails with when it is not text at all. Only a
+     * handcrafted POST can reach it — the form's own inputs can only ever
+     * produce strings — so it exists to keep the schema's contract true rather
+     * than because a visitor is expected to see it.
+     */
+    invalid: 'TODO(copy): that value is not valid',
     invalidEmail: 'TODO(copy): that does not look like an email address',
+    invalidPhone: 'TODO(copy): that does not look like a phone number',
+    tooLong: 'TODO(copy): that is longer than this field accepts',
+    sending: 'TODO(copy): sending…',
     sent: 'TODO(copy): thank you, your message has been sent',
     sendFailed: 'TODO(copy): the message could not be sent, please try again',
   },

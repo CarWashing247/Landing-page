@@ -1,5 +1,6 @@
 import type { CollectionConfig, PayloadRequest } from 'payload'
 
+import { Contact } from '../blocks/Contact'
 import { Cta } from '../blocks/Cta'
 import { Faq } from '../blocks/Faq'
 import { Hero } from '../blocks/Hero'
@@ -159,7 +160,8 @@ export const Pages: CollectionConfig = {
                 },
               },
               /**
-               * The five blocks from T-17, plus the rich-text block T-06 added.
+               * The five blocks from T-17, the contact block T-19 added, and
+               * the rich-text block T-06 added.
                *
                * `content` stays: it is the one block that survives any design
                * change, and removing it would be a migration that destroys
@@ -190,6 +192,7 @@ export const Pages: CollectionConfig = {
                 Pricing,
                 Faq,
                 Cta,
+                Contact,
                 {
                   slug: 'content',
                   labels: {
