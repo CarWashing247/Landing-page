@@ -77,14 +77,14 @@ const buildConfigFromVault = async () => {
         // folder here, so without this `generate:importmap` cannot find it.
         importMapFile: path.resolve(dirname, 'app/crm/admin/importMap.js'),
       },
-      /**
-       * Dark, because every one of the ten pages in the design deck
-       * (`DAHXOjaoczk`) is. `'all'` would leave Payload's light theme reachable
-       * from the account menu and a half-themed light admin is worse than
-       * either — the brand ramp in `app/crm/admin.css` is mixed for dark
-       * surfaces (T-19A).
+      /*
+       * **No `theme` override, deliberately.** T-19A forced `'dark'` because
+       * every page of the Canva admin deck was dark. That deck is retired
+       * (T-15B), and the direction now is that the admin follows Payload's own
+       * design — which includes letting Payload pick the theme and leaving the
+       * light/dark choice in the account menu where it belongs. Forcing one
+       * also took that choice away from editors working in a bright workshop.
        */
-      theme: 'dark',
       /**
        * The browser tab. Without this it says "Payload", which tells an editor
        * which software they are in rather than whose site they are editing.

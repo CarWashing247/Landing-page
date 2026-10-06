@@ -6,10 +6,6 @@
  * styles, and Tailwind's preflight would fight them. That separation is the
  * reason the landing-page and crm folders each own a layout.
  *
- * The one addition to Payload's own shape is `./admin.css`, the brand theme
- * (T-19A). Payload 3 has no `admin.css` config key — the installed types offer
- * `admin.meta`, `admin.components`, `admin.theme` and `admin.livePreview` and
- * nothing for a stylesheet — so a layout import is the only place it can go.
  * That file imports the shared brand tokens, not globals.css, so no Tailwind
  * reaches the admin.
  */
@@ -29,15 +25,11 @@ import { RootLayout, handleServerFunctions } from '@payloadcms/next/layouts'
  * panel works, it just looks like a 1996 form. Found by screenshotting
  * `/admin/login` while theming it in T-19A, and confirmed by screenshotting it
  * again with this task's own stylesheet removed.
- *
- * It must come before `./admin.css`, which overrides values this file defines.
+
  */
 import '@payloadcms/next/css'
 
 import { importMap } from './admin/importMap.js'
-
-/** The brand theme (T-19A). See the note in the file itself. */
-import './admin.css'
 
 type Args = {
   children: ReactNode
