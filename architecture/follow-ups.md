@@ -149,13 +149,21 @@ Test with zero errors". The test takes a public URL and this site is not
 deployed; its code-paste mode needs a browser session and sends the page to an
 external service, which was not done unasked.
 
-Verified instead: every block parses as JSON, carries the required properties for
-its type, and was read out of the HTML with `curl` on all three route types in
-both locales. That is necessary and not sufficient — JSON-LD that parses is not
-JSON-LD that validates, which AGENT.md 5.4 says in as many words.
+There is also no browser tool in this environment: `WebFetch` cannot reach
+`localhost` and cannot drive a JavaScript application, so the code-paste mode is
+not reachable either.
 
-Run it on the first deployed URL. It is cheap, and it is the only check that
-covers Google's own requirements rather than schema.org's vocabulary.
+Verified instead, and it is worth more than it sounds: every emitted node is
+checked against schema.org's own published vocabulary in
+`src/lib/schema/schema-org.test.ts` — every `@type` must be a real class, every
+property must be defined on that type or an ancestor — along with the properties
+Google documents as required per type, and every block was read out of the HTML
+with `curl` on all three route types in both locales. That check found a real
+error T-14 had shipped (`inLanguage` on `AutoWash` and `Service`; see B4).
+
+It is still not sufficient. It covers schema.org's vocabulary, not Google's
+rich-result eligibility, and only Google's test covers the latter. Run it on the
+first deployed URL.
 
 ## B. Documentation inconsistencies
 
@@ -219,6 +227,35 @@ Both were followed to the point of writing the code before being checked against
 Design.md. CLAUDE.md's rule — the task file is what is wrong when they disagree —
 is what caught them, and it is worth applying before implementing rather than
 after.
+
+### B4 · AGENT.md 5.4 requires `inLanguage` on schemas that cannot carry it
+
+**Owner: `AGENT.md` — needs a decision, recorded in `task/t-14-json-ld.md`**
+
+AGENT.md 5.4 says "Every emitted schema carries `inLanguage` for the rendered
+locale". Checked against schema.org's published vocabulary, `inLanguage` is
+defined on `CreativeWork`, `Event`, `BroadcastService`, `CommunicateAction`,
+`LinkRole`, `PronounceableText` and `WriteAction` only:
+
+| Node | `inLanguage` valid? | Why |
+| --- | --- | --- |
+| `FAQPage` | yes | `FAQPage` < `WebPage` < `CreativeWork` |
+| `AutoWash` | **no** | `AutoWash` < `AutomotiveBusiness` < `LocalBusiness` < `Organization`/`Place` |
+| `Service` | **no** | `Service` < `Thing`, and no language property is defined on it |
+
+T-14 emits it on `FAQPage` alone and `src/lib/schema/schema-org.test.ts` pins
+that. The only language property valid on `AutoWash` is `knowsLanguage`, which
+states which languages the business can serve customers in — a claim about the
+business that nothing in the CMS supports.
+
+Nothing is lost by the omission: `<html lang>`, the reciprocal `hreflang` set and
+`og:locale` all carry the page's language already (T-09).
+
+**Left as a note rather than an edit** because AGENT.md is the binding document
+and narrowing one of its rules is not a typo fix. The sentence wants to become
+something like "every emitted schema that schema.org defines `inLanguage` on
+carries it". One line in `src/lib/schema/` reverts the behaviour if literal
+compliance is preferred instead.
 
 ## C. Deferred migrations
 

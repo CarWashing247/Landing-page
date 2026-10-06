@@ -50,7 +50,28 @@ export const absoluteUrl = (path: string): string =>
 export const nodeId = (path: string, fragment: string): string =>
   `${absoluteUrl(path)}#${fragment}`
 
-/** BCP-47 for the rendered locale, matching what `hreflang` already declares. */
+/**
+ * BCP-47 for the rendered locale, matching what `hreflang` already declares.
+ *
+ * **Only valid on `FAQPage`, and that is a correction to AGENT.md 5.4.** The rule
+ * says every emitted schema carries `inLanguage`; schema.org's own vocabulary says
+ * `inLanguage` has domain `CreativeWork`, `Event`, `BroadcastService`,
+ * `CommunicateAction`, `LinkRole`, `PronounceableText` and `WriteAction`.
+ * `FAQPage` is a `WebPage`, hence a `CreativeWork`, so it qualifies. `AutoWash` is
+ * a `Place`/`Organization` and `Service` is a `Thing` — on those the property does
+ * not exist, which is a validation error rather than a harmless extra.
+ *
+ * Checked against the published vocabulary rather than reasoned about: the only
+ * language property valid on `AutoWash` is `knowsLanguage`, and on `Service`
+ * there is none at all. `knowsLanguage` is deliberately *not* used, because it
+ * asserts which languages the business can serve customers in — a fact about the
+ * business that nothing in the CMS states, and one that does not follow from an
+ * English page existing.
+ *
+ * Nothing is lost by the omission: the page's language is already declared by
+ * `<html lang>`, by the reciprocal `hreflang` set and by `og:locale`, all from
+ * T-09.
+ */
 export const inLanguage = (locale: Locale): Locale => locale
 
 /**

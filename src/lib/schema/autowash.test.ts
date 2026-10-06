@@ -83,7 +83,7 @@ describe('autoWashSchema', () => {
     )
   })
 
-  it('carries the identity, the address and inLanguage for the rendered locale', () => {
+  it('carries the identity and the address, and the locale decides only the url', () => {
     const schema = autoWashSchema({ business: business(), locale: 'en', settings: settings() })
 
     expect(schema).toMatchObject({
@@ -94,11 +94,21 @@ describe('autoWashSchema', () => {
         addressLocality: 'Example District, Example City',
         streetAddress: '1 Example Street',
       },
-      inLanguage: 'en',
       name: 'Example Wash Co',
       telephone: '000 0000 0000',
       url: `${ORIGIN}/en`,
     })
+  })
+
+  it('does not carry inLanguage, which does not exist on a Place or Organization', () => {
+    // A correction to AGENT.md 5.4: checked against schema.org's published
+    // vocabulary, `inLanguage` has domain CreativeWork/Event/… and the only
+    // language property valid here is `knowsLanguage`, which would assert a fact
+    // about the business that nothing in the CMS states.
+    const schema = autoWashSchema({ business: business(), locale: 'en', settings: settings() })
+
+    expect(schema).not.toHaveProperty('inLanguage')
+    expect(schema).not.toHaveProperty('knowsLanguage')
   })
 
   it('gives the Vietnamese home page the canonical URL, with no trailing slash', () => {

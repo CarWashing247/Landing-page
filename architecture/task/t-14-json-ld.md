@@ -134,6 +134,21 @@ result in the PR.
     (`"Mo-Fr 07:30-21:00"`). `openingHoursSpecification`, which Design.md names,
     takes schema.org `Day` values — `"Monday"`. Emitting `Mo` there produces a
     property Google drops without an error anywhere visible.
+- **`inLanguage` is emitted on `FAQPage` only, which is a correction to
+  AGENT.md 5.4.** The rule says every emitted schema carries it. Checked against
+  schema.org's published vocabulary, `inLanguage` is defined on `CreativeWork`,
+  `Event`, `BroadcastService`, `CommunicateAction`, `LinkRole`,
+  `PronounceableText` and `WriteAction`. `FAQPage` is a `WebPage`, hence a
+  `CreativeWork`, so it qualifies; `AutoWash` is a `Place`/`Organization` and
+  `Service` is a bare `Thing`, and on those the property does not exist. The only
+  language property valid on `AutoWash` is `knowsLanguage`, which is deliberately
+  not used because it asserts which languages the business can serve customers in
+  — a fact about the business that nothing in the CMS states and that does not
+  follow from an English page existing. On `Service` there is no language property
+  at all. Nothing is lost: the page's language is already carried by `<html lang>`,
+  the reciprocal `hreflang` set and `og:locale`, all from T-09.
+  `src/lib/schema/schema-org.test.ts` pins this against a vendored extract of the
+  vocabulary. **AGENT.md 5.4 should be amended to say so** — see follow-up B4.
 - **The business is one node, referenced rather than copied.** `AutoWash` is
   emitted on the home page with `@id` = `<origin>/#business`, and a service page
   says `provider: { '@id': … }` instead of restating the name and address. A
@@ -177,14 +192,23 @@ result in the PR.
   withholds what it cannot yet state correctly and releases it by itself. Verified
   in both directions against the running server — synthetic values in, schema
   appears; placeholders restored, schema gone, no deploy either way.
-- **The Rich Results Test has not been run.** It takes a public URL, and this
-  site is not deployed; its code-paste mode needs a browser session and sends the
-  page to an external service, which is not something to do unasked. So the
-  acceptance criterion "zero errors in the Rich Results Test" is **not met yet**,
-  and nothing here should be read as claiming it. What was verified instead: every
-  emitted block parses as JSON, carries the required properties for its type, and
-  was read out of the HTML with `curl` on all three route types in both locales.
-  Run it at deploy, and before T-21 submits anything to Search Console.
+- **The Rich Results Test has not been run.** It takes a public URL and this site
+  is not deployed; its code-paste mode needs a browser, and this environment has
+  no browser tool — `WebFetch` cannot reach `localhost` and cannot drive a
+  JavaScript application. So the acceptance criterion "zero errors in the Rich
+  Results Test" is **not met**, and nothing here should be read as claiming it.
+  Run it on the first deployed URL, before T-21 submits anything to Search
+  Console. Tracked as follow-up A7.
+
+  What was done instead, and what it is worth: every emitted node is validated
+  against schema.org's own published vocabulary in
+  `src/lib/schema/schema-org.test.ts` — every `@type` must be a real class and
+  every property must be defined on that type or one of its ancestors — plus the
+  properties Google documents as required per type. That check found a real
+  error this task had shipped (`inLanguage` on two types that do not define it),
+  which is the argument for it existing. It is **not** a substitute: it checks
+  schema.org's vocabulary, not Google's rich-result eligibility, and only Google's
+  test covers the latter.
 - **No `FAQPage` can be emitted yet**, because the `Faq` block is T-17 and
   `Pages.layout` accepts only `content` today. The builder, its tests and the
   block's field contract are in place, and the contract is recorded in

@@ -6,7 +6,6 @@ import {
   SCHEMA_CONTEXT,
   absoluteUrl,
   businessId,
-  inLanguage,
   nodeId,
   prune,
   publishable,
@@ -26,6 +25,12 @@ import {
  * same test `autoWashSchema` uses. Pointing at an `@id` that no page defines
  * would be a dangling reference, which is worse than no `provider`: it asserts a
  * relationship to an entity Google cannot resolve.
+ *
+ * **No `inLanguage`, against AGENT.md 5.4.** schema.org defines no language
+ * property on `Service` at all — see the note on `inLanguage` in `shared.ts`. The
+ * locale still decides the URL, the name and the description, so the two locales'
+ * service nodes remain distinct; it is only the redundant language tag that is
+ * gone.
  *
  * **`includes` is deliberately not in the `Offer`.** It is a list of what the
  * package covers — page copy, as T-07's own comment on the field says — and
@@ -67,7 +72,6 @@ export const serviceSchema = ({
     '@id': nodeId(path, 'service'),
     '@type': 'Service',
     description: publishable(service.meta?.description),
-    inLanguage: inLanguage(locale),
     name,
     /**
      * `price` as a string, which is what Google's Offer documentation asks for,

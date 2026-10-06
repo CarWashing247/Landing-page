@@ -66,9 +66,16 @@ describe('serviceSchema', () => {
 
     expect(en).toMatchObject({
       '@id': `${ORIGIN}/en/services/quick-wash#service`,
-      inLanguage: 'en',
       url: `${ORIGIN}/en/services/quick-wash`,
     })
+  })
+
+  it('does not carry inLanguage, which schema.org does not define on Service', () => {
+    // A correction to AGENT.md 5.4 — see the note in shared.ts. The locale still
+    // decides the URL, the name and the description.
+    const schema = serviceSchema({ business: business(), locale: 'en', service: service() })
+
+    expect(schema).not.toHaveProperty('inLanguage')
   })
 
   it('references the business by @id instead of copying its name and address', () => {

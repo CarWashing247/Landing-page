@@ -86,6 +86,18 @@ describe('faqSchema', () => {
     })
   })
 
+  it('does carry inLanguage, because FAQPage is a CreativeWork', () => {
+    // The one of the three types where AGENT.md 5.4's rule is valid per
+    // schema.org: FAQPage < WebPage < CreativeWork, which is in inLanguage's domain.
+    const schema = faqSchema({
+      layout: [faqBlock([{ answer: 'A', question: 'Q' }])],
+      locale: 'en',
+      path: '/guide',
+    })
+
+    expect(schema).toMatchObject({ inLanguage: 'en' })
+  })
+
   it('returns null for a page without an FAQ block', () => {
     // The acceptance criterion: a page without the block emits nothing at all,
     // rather than an FAQPage with an empty mainEntity, which is invalid.

@@ -1,7 +1,7 @@
 import type { BusinessInfo, SiteSetting } from '../../payload-types'
 import type { Locale } from '../locales'
 import { pathForHome } from '../locales'
-import { SCHEMA_CONTEXT, absoluteUrl, businessId, inLanguage, prune, publishable } from './shared'
+import { SCHEMA_CONTEXT, absoluteUrl, businessId, prune, publishable } from './shared'
 
 /**
  * `AutoWash` for the home page, built from `BusinessInfo` and nothing else.
@@ -12,6 +12,12 @@ import { SCHEMA_CONTEXT, absoluteUrl, businessId, inLanguage, prune, publishable
  * local business while telling it what kind of business this is. A validator may
  * suggest `LocalBusiness` because it is the type its examples use; that is a
  * suggestion, not an error, and substituting it loses information.
+ *
+ * **No `inLanguage`, against AGENT.md 5.4.** `inLanguage` does not exist on a
+ * `Place` or an `Organization` — see the note on `inLanguage` in `shared.ts` for
+ * the vocabulary check and for why `knowsLanguage` is not a substitute. The
+ * business is also the one node that is deliberately locale-independent, so a
+ * language on it would be the odd claim even if the property were valid.
  */
 
 /**
@@ -32,7 +38,22 @@ const SCHEMA_DAY: Record<NonNullable<BusinessInfo['openingHours']>[number]['day'
 }
 
 /** Google's documented way to say "closed all day": both times at `00:00`. */
-const CLOSED = { closes: '00:00', opens: '00:00' } as const
+const CLOSED_TIME = '00:00'
+
+/**
+ * One entry, with its keys always in the same order.
+ *
+ * Built through a single helper so an open day and a closed day cannot serialise
+ * with their keys in different orders, which they did when the closed case
+ * spread a constant after `dayOfWeek`. Harmless to a parser, and exactly the kind
+ * of inconsistency that makes a diff of two crawls unreadable.
+ */
+const specification = (dayOfWeek: string, opens: string, closes: string): Record<string, string> => ({
+  '@type': 'OpeningHoursSpecification',
+  closes,
+  dayOfWeek,
+  opens,
+})
 
 /**
  * One `OpeningHoursSpecification` per weekday.
@@ -64,7 +85,7 @@ export const openingHoursSpecification = (
     }
 
     if (row.closed === true) {
-      return [{ '@type': 'OpeningHoursSpecification', dayOfWeek, ...CLOSED }]
+      return [specification(dayOfWeek, CLOSED_TIME, CLOSED_TIME)]
     }
 
     const opens = publishable(row.opens)
@@ -74,7 +95,7 @@ export const openingHoursSpecification = (
       return []
     }
 
-    return [{ '@type': 'OpeningHoursSpecification', closes, dayOfWeek, opens }]
+    return [specification(dayOfWeek, opens, closes)]
   })
 
 /**
@@ -137,7 +158,6 @@ export const autoWashSchema = ({
       typeof lat === 'number' && typeof lng === 'number'
         ? { '@type': 'GeoCoordinates', latitude: lat, longitude: lng }
         : undefined,
-    inLanguage: inLanguage(locale),
     name,
     openingHoursSpecification: openingHoursSpecification(business.openingHours),
     priceRange: publishable(business.priceRange),
