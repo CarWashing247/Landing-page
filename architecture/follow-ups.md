@@ -194,6 +194,38 @@ generated file. T-16 touches both components anyway.
 The banner's hex is defensible as-is; now that tokens exist it could become
 classes, but only once T-16 decides whether the banner keeps shipping zero CSS.
 
+### A9 · A service's photo is promised as the share image and is not used as one
+
+**Owner: `src/components/seo/metadata.ts` (T-09's chain) and
+`src/collections/Services.ts` (T-07's field)** (recorded in
+`task/t-18-service-detail-template.md`)
+
+`Services.image` tells the editor, in both languages, that the photo is "used at
+the top of the service page and as the share image". The first half is true as of
+T-18. The second is not: `buildMetadata()` resolves `og:image` from `meta.image`,
+then `SiteSettings.ogFallback`, then the generated `opengraph-image` route, and
+never looks at `service.image`.
+
+Measured on the built server with a service whose photo was uploaded and whose
+SEO tab was left blank, which is the state the description describes:
+
+```
+<meta property="og:image" content="http://localhost:3000/opengraph-image"/>
+```
+
+So every service shares the generic brand card instead of the wash it is selling,
+and the editor has no way to tell — the field they filled in says it is handled.
+
+Two fixes, and the choice is a decision rather than a typo. Either
+`buildMetadata()` gains a per-collection image fallback — the chain is
+collection-agnostic today, and `Pages` has no equivalent field, so this adds a
+branch to the one function T-09 built to have none — or the field description
+stops promising it and points at the SEO tab. The first is what the editor
+expects; the second is one string.
+
+Not T-18's to take: the template renders the hero the task asked for, and the
+share-image chain is the metadata builder's contract.
+
 ## B. Documentation inconsistencies
 
 ### B1 · T-16 and T-17 omit T-15A from their dependencies

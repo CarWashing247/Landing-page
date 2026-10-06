@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { LOCALES } from './locales'
-import { NAV } from './routes'
+import { NAV, callHref } from './routes'
 
 describe('NAV', () => {
   it('links to the five routes Design.md section 3 names, in both locales', () => {
@@ -49,5 +49,16 @@ describe('NAV', () => {
         expect(item.href('en'), item.key).not.toBe(item.href('vi'))
       }
     }
+  })
+})
+
+describe('callHref', () => {
+  it('strips what a dialler cannot use', () => {
+    expect(callHref('024 1234 5678')).toBe('tel:02412345678')
+    expect(callHref('(024) 1234-5678')).toBe('tel:02412345678')
+  })
+
+  it('keeps a leading + so an international number still dials', () => {
+    expect(callHref('+84 24 1234 5678')).toBe('tel:+842412345678')
   })
 })

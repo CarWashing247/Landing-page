@@ -27,6 +27,21 @@ import { SERVICE_SEGMENT, pathForHome, pathForPage, urlFor } from './locales'
  * because it is what `huong-dan` means.
  */
 
+/**
+ * `tel:` from a stored phone number.
+ *
+ * Three places need it — the header's call button, the footer's hotline and the
+ * service page's closing call to action (T-18) — so it is one function rather
+ * than three copies of the same character class. Digits and a leading `+`
+ * survive: `024 1234 5678` dials as `tel:02412345678`, and a number stored in
+ * international form keeps its `+`.
+ *
+ * Whether to render a link at all is not decided here. That is `publishable()`'s
+ * job (`src/lib/schema/shared.ts`), so a `TODO(data):` placeholder never becomes
+ * a button that dials nothing.
+ */
+export const callHref = (phone: string): string => `tel:${phone.replace(/[^\d+]/g, '')}`
+
 /** A navigation item: which catalog key names it, and where it points. */
 export type NavItem = {
   /** The key under `nav` in the message catalog. */

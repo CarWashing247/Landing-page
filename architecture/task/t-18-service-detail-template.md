@@ -97,8 +97,52 @@ curl -s -o /dev/null -w '%{http_code}\n' localhost:3000/dich-vu/khong-ton-tai   
 - The `Offer` price and the price shown on the page must come from the same
   field read once. Reading it twice is how they end up disagreeing after a
   future refactor.
+- **The closing band *is* T-17's `Cta`**, handed a block built from the message
+  catalog. `Services` has no `layout` field, so there is no block for an editor
+  to compose — and "do not write a second `Cta`" is a scope rule, so the
+  component is reused with catalog strings rather than copied with different
+  ones. A later change to the button or the band lands on this page for free.
+- **`formatPrice` moved out of the `Pricing` block into
+  `src/lib/format-currency.ts`.** Two call sites now show the same service's
+  price; two implementations would eventually disagree about which side the ₫
+  sits on. Vietnamese groups with dots (`150.000 ₫`), English with commas and
+  the symbol in front (`₫150,000`) — both fall out of `Intl` and the locale.
+- **`callHref` moved into `src/lib/routes.ts`.** The header had it and the footer
+  had a second copy inline; this page would have been the third. It is three
+  lines, which is exactly why it was about to be written again.
+- The hero is `Band tone="primary"` with an inner grid rather than new container
+  markup, so the page's max width and gutters stay in the one place T-15 put
+  them.
+- `sections.serviceDetails` is still unused. It reads like a heading for a
+  price-and-duration table, and this template puts both numbers under the `<h1>`
+  where the visitor is looking instead. Left in the catalog for the services
+  index or T-19A rather than deleted.
 
 ## Flags
 
 - Package names, prices and durations are real business data — placeholders
   until T-23.
+- **`actions.tryToday` and `actions.tryTodayLead` are `TODO(copy)` in English.**
+  T-15A wrote the Vietnamese from the deck and left the English unwritten, and
+  this page is their first consumer — so `/en/services/<slug>` renders the
+  marker. Not machine-translated here (CLAUDE.md); it is T-15A's string to
+  write, and the same is already true of the skip link and the menu labels.
+- **`includes` falls back to Vietnamese on an English page.** The field is
+  localized (T-07) and `localization.fallback` is on, so an untranslated list
+  renders the Vietnamese items under the English heading. That is the documented
+  fallback working, and T-23 writes both; it becomes a defect only if T-23 fills
+  one locale.
+- **The CTA is a phone call, because no field holds a booking link.** The scope
+  says the CTA "links out to the separate backend" and nothing in `BusinessInfo`
+  or `SiteSettings` holds that URL, so inventing one would be inventing business
+  data. `BusinessInfo.phone` is real CMS data and the header already uses it the
+  same way. A `bookingUrl` global field is a schema change and a product
+  decision — see `follow-ups.md` D3, which is where the other Admin-design
+  product decisions are parked.
+- A service's photo is promised to the editor as the share image and is not used
+  as one — `follow-ups.md` A9, found here and not fixed here.
+- Google's Rich Results Test still has not been run on the `Service` + `Offer`
+  schema, for the reason A7 records: it needs a public URL or a browser session,
+  and this environment has neither. The schema is checked against schema.org's
+  vocabulary by `src/lib/schema/schema-org.test.ts` and was read out of the
+  built HTML in both locales.

@@ -2,6 +2,7 @@ import { t } from '../../i18n/t'
 import { loadBusinessInfo, loadSiteSettings } from '../../lib/content'
 import type { Locale } from '../../lib/locales'
 import { groupOpeningHours } from '../../lib/opening-hours'
+import { callHref } from '../../lib/routes'
 import { publishable } from '../../lib/schema/shared'
 
 /**
@@ -63,7 +64,7 @@ export const Footer = async ({ locale }: { locale: Locale }) => {
             {phone ? (
               <p className="mt-3">
                 <span className="opacity-70">{copy.footer.hotline}: </span>
-                <a className="text-on-primary" href={`tel:${phone.replace(/[^\d+]/g, '')}`}>
+                <a className="text-on-primary" href={callHref(phone)}>
                   {phone}
                 </a>
               </p>
