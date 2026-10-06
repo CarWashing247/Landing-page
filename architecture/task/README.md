@@ -81,6 +81,7 @@ Branch names are the file names without the `.md`:
 | [T-17](t-17-content-blocks.md) | Content blocks | T-06, T-15 |
 | [T-18](t-18-service-detail-template.md) | Service detail template | T-07, T-17 |
 | [T-19](t-19-contact-page.md) | Contact page | T-05, T-17 |
+| [T-19A](t-19a-admin-interface.md) | Admin interface | T-03, T-05, T-06, T-07, T-08, T-15 |
 | [T-20](t-20-performance-pass.md) | Performance pass | T-16, T-17, T-18, T-19 |
 
 > **Gate 3** — mobile Lighthouse at 90 or above.
@@ -105,7 +106,8 @@ T-01 → T-04A → T-06 → T-08 → T-09 → T-10 → T-11 → T-14 → T-17 �
 
 Everything else runs alongside it. Parallelises cleanly: T-02/T-03/T-04
 after T-01; T-04B after T-02 and T-04, alongside T-04A; T-15 and T-16 as soon as T-05 lands; T-13 needs only T-10, so
-it runs while T-11 and T-12 are in flight; T-22 is independent of all UI
+it runs while T-11 and T-12 are in flight; T-19A touches only the admin and
+T-22 is independent of all UI
 work.
 
 **What must not be reordered:** T-04A before Phase 2, Phase 2 before

@@ -579,9 +579,24 @@ Done when: the map iframe is `loading="lazy"` and does not affect LCP;
 validation messages come from the catalog in the visitor's locale;
 call and directions clicks appear in GA4 DebugView.
 
+**T-19A · Admin interface**
+The Payload admin configured and themed to the Canva "AutoWash247 Admin
+CMS UI" deck: brand colours and logo, navigation grouped as the deck
+groups it, list columns and filters, side-by-side live preview beside the
+editor, and a dashboard. **Configuration of Payload's own admin, not a
+replacement for it** — the deck's screens are Payload's information
+architecture restyled, and most of what they show is already built.
+Depends on: T-03, T-05, T-06, T-07, T-08, T-15.
+Done when: an editor sees the branded admin with the deck's navigation
+grouping and a live preview beside the editor, and every behaviour the
+deck depicts either works or is listed in the task file as already
+delivered by an earlier task.
+
 **T-20 · Performance pass**
 Audit every image through `next/image`, `priority` on each hero, verify
 no client component sits above the fold, trim unused CSS and JS.
+The admin is **out of scope** — it is an authenticated internal tool, it
+is `noindex` and disallowed in robots, and Payload owns its bundle.
 Depends on: T-16, T-17, T-18, T-19.
 Done when: mobile Lighthouse performance and SEO are both 90 or above on
 the home page, a service page and the contact page.
@@ -600,7 +615,7 @@ both custom events are visible in GA4.
 **T-22 · Admin hardening**
 Rate limit the login route, enable 2FA for `admin` accounts, confirm
 `/admin` and `/api` are disallowed in robots, schedule daily Postgres
-backups.
+backups. Security and operations only — how the admin *looks* is T-19A.
 Depends on: T-03, T-13.
 Done when: repeated failed logins are throttled; a restore from backup has
 been tested at least once.
@@ -656,6 +671,9 @@ Everything else can run alongside it. Work that parallelises cleanly:
   Phase 2 to finish.
 - T-13 only needs T-10, so it can run while T-11 and T-12 are in progress.
 - T-22 is independent of all UI work.
+- T-19A touches only the admin, so it can run alongside any public-site task
+  once the collections it presents exist. It is **not** on the critical path:
+  nothing public depends on it.
 
 What must not be reordered:
 
