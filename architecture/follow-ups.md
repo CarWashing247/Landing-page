@@ -328,6 +328,30 @@ that way. The task file needs correcting when T-15 starts.
 
 ---
 
+### D3 · Three product decisions in the Admin CMS UI design
+
+**Owner: T-19A** (recorded in `task/t-19a-admin-interface.md`)
+
+The Canva deck "AutoWash247 Admin CMS UI" (`DAHXNnCsHfc`) shows three things
+that are product scope rather than styling, and T-19A deliberately does not
+build them:
+
+- **A `Menu` collection.** The sidebar lists "Menu" between Media and Users,
+  implying CMS-managed navigation. Today the header's items come from the T-15A
+  catalog, a developer-edited file. Moving them into the CMS is a new collection,
+  new access rules and a new cache tag.
+- **An approval step.** Page 7 shows Soạn thảo → Xem trước → **Kiểm duyệt** →
+  Xuất bản. Payload has drafts and versions but no review-and-approve gate, and
+  Design.md section 2's publishing model has three stages, not four. With two
+  roles and a small team it may not be wanted at all.
+- **Media folders.** The deck shows a folder taxonomy. Payload supports this
+  natively (`folders` on the root config), so it is a flag and a migration — but
+  it adds a dimension everything uploaded must be filed into, which the editors
+  should want before it is imposed.
+
+All three are cheap to decide and expensive to retrofit, which is why they are
+here rather than assumed either way.
+
 ## E. Repository hygiene
 
 ### E1 · `AGENTS.md` duplicates `CLAUDE.md`
