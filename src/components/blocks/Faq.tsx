@@ -21,7 +21,7 @@ export const Faq = ({ block }: { block: FaqBlock }) => (
     {block.heading ? <h2 className="text-h2">{block.heading}</h2> : null}
     <div className="mt-8 flex flex-col gap-3">
       {(block.items ?? []).map((item) => (
-        <details className="bg-white rounded-lg p-4" key={item.id ?? item.question}>
+        <details className="bg-card rounded-lg p-4" key={item.id ?? item.question}>
           <summary className="text-h3 cursor-pointer">{item.question}</summary>
           <p className="text-body mt-3">{item.answer}</p>
         </details>

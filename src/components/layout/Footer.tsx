@@ -104,7 +104,7 @@ export const Footer = async ({ locale }: { locale: Locale }) => {
         ) : null}
       </div>
 
-      <div className="border-t border-white/10">
+      <div className="border-t border-card/10">
         <p className="text-label mx-auto max-w-6xl px-4 py-6 opacity-70">
           © {settings?.brandName ?? 'AutoWash247'}. {copy.footer.rights}
         </p>

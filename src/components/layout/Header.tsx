@@ -4,6 +4,7 @@ import type { Locale } from '../../lib/locales'
 import { otherLocales, pathForHome } from '../../lib/locales'
 import { NAV, callHref } from '../../lib/routes'
 import { publishable } from '../../lib/schema/shared'
+import { Mark } from '../brand/Mark'
 import { MobileMenu } from './MobileMenu'
 
 /**
@@ -46,7 +47,16 @@ export const Header = async ({ locale }: { locale: Locale }) => {
   return (
     <header className="bg-primary">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
-        <a className="text-on-primary text-h3 no-underline" href={pathForHome(locale)}>
+        {/*
+          The logo is the mark plus the brand name as live text, not a single
+          baked asset — the name belongs to `SiteSettings` (AGENT.md), so
+          renaming the business stays a CMS edit rather than a redraw.
+        */}
+        <a
+          className="text-on-primary text-h3 flex items-center gap-2 no-underline"
+          href={pathForHome(locale)}
+        >
+          <Mark className="h-7 w-7 shrink-0" />
           {settings?.brandName ?? 'AutoWash247'}
         </a>
 
@@ -105,12 +115,23 @@ const LanguageSwitch = ({ locale }: { locale: Locale }) => (
     {[locale, ...otherLocales(locale)].map((candidate) => (
       <li key={candidate}>
         {candidate === locale ? (
-          <span aria-current="true" className="text-accent px-1">
+          <span
+            aria-current="true"
+            /*
+             * Marked by weight and an underline, not by colour. The accent is
+             * orange and the header is green: measured at 1.06:1 against each
+             * other, which is invisible. Two greens or a green and an orange
+             * cannot carry this distinction, so it is carried by something that
+             * is not hue — which is the right answer anyway, because colour
+             * alone never conveys state.
+             */
+            className="text-on-primary px-1 font-semibold underline underline-offset-4"
+          >
             {candidate.toUpperCase()}
           </span>
         ) : (
           <a
-            className="text-on-primary px-1 no-underline"
+            className="text-on-primary/70 px-1 no-underline"
             href={pathForHome(candidate)}
           >
             {candidate.toUpperCase()}

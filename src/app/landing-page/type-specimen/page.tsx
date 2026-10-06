@@ -57,12 +57,14 @@ const ROLES = [
 const STACKED = 'ờ ẵ ụ ệ Đ ữ ạ ỉ ỡ ế ộ ự ằ ẳ ẫ ấ ầ ẩ ẽ ó ò ỏ õ ọ ơ ư đ'
 
 const SWATCHES = [
-  { bg: 'bg-primary', fg: 'text-on-primary', hex: '#0B1F33', name: 'Primary' },
-  { bg: 'bg-accent', fg: 'text-on-accent', hex: '#29C8B5', name: 'Accent' },
-  { bg: 'bg-highlight', fg: 'text-on-highlight', hex: '#C8F36A', name: 'Highlight' },
-  { bg: 'bg-ink', fg: 'text-on-ink', hex: '#071522', name: 'Ink' },
-  { bg: 'bg-surface', fg: 'text-on-surface', hex: '#F3F6F8', name: 'Surface' },
-  { bg: 'bg-white', fg: 'text-on-white', hex: '#FFFFFF', name: 'White' },
+  { bg: 'bg-primary', fg: 'text-on-primary', hex: '#059669', name: 'Primary' },
+  { bg: 'bg-secondary', fg: 'text-on-secondary', hex: '#10B981', name: 'Secondary' },
+  { bg: 'bg-accent', fg: 'text-on-accent', hex: '#EA580C', name: 'Accent' },
+  { bg: 'bg-background', fg: 'text-foreground', hex: '#ECFDF5', name: 'Background' },
+  { bg: 'bg-card', fg: 'text-card-foreground', hex: '#FFFFFF', name: 'Card' },
+  { bg: 'bg-muted', fg: 'text-muted-foreground', hex: '#E8F1F3', name: 'Muted' },
+  { bg: 'bg-foreground', fg: 'text-on-foreground', hex: '#064E3B', name: 'Foreground' },
+  { bg: 'bg-destructive', fg: 'text-on-destructive', hex: '#DC2626', name: 'Destructive' },
 ] as const
 
 const RADII = [
@@ -83,7 +85,7 @@ const Specimen = () => {
     <main className="mx-auto max-w-4xl p-8">
       <h1>Type specimen</h1>
       <p className="text-label">
-        Inter · subsets latin + vietnamese · display swap. Tokens from the Canva UI Foundation deck.
+        Inter · subsets latin + vietnamese · display swap. Tokens from design-system/autowash247/MASTER.md.
       </p>
 
       <h2 className="mt-8">Roles</h2>
