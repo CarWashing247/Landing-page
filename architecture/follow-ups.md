@@ -310,7 +310,12 @@ adds more data-reading components, not after.
 
 ### D1 · Is `/` a CMS document, and under what slug?
 
-**Owner: T-17** (recorded in `task/t-09-build-metadata.md`)
+**Owner: T-17A** (recorded in `task/t-09-build-metadata.md` and
+`task/t-17a-home-page.md`)
+
+T-17 was listed as the owner and merged without deciding it — reasonably, since
+it built the blocks rather than the page that would use them. T-17A is the task
+that cannot start without an answer.
 
 T-23 lists `/` among the documents to create, but nothing in `Design.md` says
 which slug a home document would carry. T-09 did not invent one, because doing
