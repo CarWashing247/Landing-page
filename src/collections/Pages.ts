@@ -48,6 +48,21 @@ export const Pages: CollectionConfig = {
   },
   admin: {
     /**
+     * Deck page 2 groups the sidebar into Collections, Globals and Users.
+     * Payload's default is one flat list, so the group is set per collection
+     * and per global; the editor's shorter sidebar needs nothing here, because
+     * Payload already hides what `read` denies (T-03).
+     *
+     * **The Vietnamese value is the English word, because that is what the deck
+     * shows.** Page 2's sidebar is otherwise fully Vietnamese — `Các trang`,
+     * `Thư viện ảnh`, `Thông tin doanh nghiệp` — yet its three group headings
+     * read `Collections`, `Globals` and `Users`. Taking that verbatim is the
+     * rule for deck copy; inventing Vietnamese for them would be writing copy
+     * rather than taking it, which CLAUDE.md forbids. Recorded as a follow-up
+     * so someone who owns the wording can supply it.
+     */
+    group: { en: 'Collections', vi: 'Collections' },
+    /**
      * The Preview button. Returns a relative URL so an editor working against
      * a preview deployment is never sent to production, and `null` when this
      * locale has no slug yet — Payload then hides the button rather than

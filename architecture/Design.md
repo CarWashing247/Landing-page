@@ -589,12 +589,14 @@ validation messages come from the catalog in the visitor's locale;
 call and directions clicks appear in GA4 DebugView.
 
 **T-19A · Admin interface**
-The Payload admin configured and themed to the Canva "AutoWash247 Admin
-CMS UI" deck: brand colours and logo, navigation grouped as the deck
-groups it, list columns and filters, side-by-side live preview beside the
-editor, and a dashboard. **Configuration of Payload's own admin, not a
+The Payload admin configured and themed to the Canva "AutoWash247 CMS
+Admin UI" deck (`DAHXOjaoczk`): the dark brand theme and logo, navigation
+grouped as the deck groups it, list columns, and side-by-side live preview
+beside the editor. **Configuration of Payload's own admin, not a
 replacement for it** — the deck's screens are Payload's information
 architecture restyled, and most of what they show is already built.
+Remapped from the earlier `DAHXNnCsHfc` deck on 2026-10-06, which dropped
+the dashboard and the brand-colour field; the task file says what changed.
 Depends on: T-03, T-05, T-06, T-07, T-08, T-15.
 Done when: an editor sees the branded admin with the deck's navigation
 grouping and a live preview beside the editor, and every behaviour the

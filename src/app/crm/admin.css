@@ -1,0 +1,220 @@
+/*
+ * The Payload admin's brand theme (T-19A).
+ *
+ * Design source: the Canva deck "AutoWash247 CMS Admin UI" (`DAHXOjaoczk`),
+ * all ten pages of which are dark — deep navy surfaces, a teal accent on
+ * primary actions and the active navigation item, and lime for the published
+ * state. Payload's stock admin is light, so this is the single largest visual
+ * change the task makes.
+ *
+ * **This file is imported by `src/app/crm/layout.tsx` and nowhere else.** That
+ * layout's comment says its shape is dictated by Payload and to change it only
+ * for an upgrade; this import is the one exception T-19A needed, because
+ * Payload 3 has **no `admin.css` config key** — checked against the installed
+ * `payload@3.90.2` types, which offer `admin.meta`, `admin.components`,
+ * `admin.theme` and `admin.livePreview` and nothing for a stylesheet.
+ *
+ * **It must not import `globals.css`.** Tailwind's preflight resets the
+ * elements Payload styles itself, which is why the `landing-page` and `crm`
+ * folders have separate layouts in the first place. What it imports instead is
+ * `brand.css`, the plain stylesheet holding the colour values — so the admin
+ * and the public site read the same six colours and cannot drift apart.
+ *
+ * **No new hex values.** The acceptance criterion is that the admin's colours
+ * come from the T-15 tokens, and a 21-step neutral ramp written by hand would
+ * be 21 new ones. Each ramp below is mixed from a token instead: step N is N/10
+ * percent of that token against white, so `--color-base-900` is 90% ink. That
+ * is also what gives every surface the navy cast the deck has, rather than
+ * Payload's neutral grey.
+ *
+ * **Everything here is unlayered on purpose.** Payload wraps its own rules in
+ * `@layer payload-default` and `@layer payload`, and unlayered CSS beats any
+ * layered rule regardless of specificity or source order. So these overrides
+ * need no `!important` and no selector arms race, and they keep working if
+ * Payload re-orders its stylesheets in an upgrade.
+ */
+
+@import '../brand.css';
+
+/*
+ * The neutral ramp, re-cast from grey to the brand ink.
+ *
+ * Payload derives every surface, border and body colour from `--color-base-*`
+ * through `--theme-elevation-*`, and in dark mode it reads the ramp backwards:
+ * `--theme-elevation-0`, the page background, is `--color-base-900`. Replacing
+ * the ramp at the bottom therefore themes the whole admin, which is why there
+ * are no per-component overrides below beyond the three the deck actually
+ * singles out.
+ */
+:root {
+  --color-base-0: var(--brand-white);
+  --color-base-50: color-mix(in srgb, var(--brand-ink) 5%, var(--brand-white));
+  --color-base-100: color-mix(in srgb, var(--brand-ink) 10%, var(--brand-white));
+  --color-base-150: color-mix(in srgb, var(--brand-ink) 15%, var(--brand-white));
+  --color-base-200: color-mix(in srgb, var(--brand-ink) 20%, var(--brand-white));
+  --color-base-250: color-mix(in srgb, var(--brand-ink) 25%, var(--brand-white));
+  --color-base-300: color-mix(in srgb, var(--brand-ink) 30%, var(--brand-white));
+  --color-base-350: color-mix(in srgb, var(--brand-ink) 35%, var(--brand-white));
+  --color-base-400: color-mix(in srgb, var(--brand-ink) 40%, var(--brand-white));
+  --color-base-450: color-mix(in srgb, var(--brand-ink) 45%, var(--brand-white));
+  --color-base-500: color-mix(in srgb, var(--brand-ink) 50%, var(--brand-white));
+  --color-base-550: color-mix(in srgb, var(--brand-ink) 55%, var(--brand-white));
+  --color-base-600: color-mix(in srgb, var(--brand-ink) 60%, var(--brand-white));
+  --color-base-650: color-mix(in srgb, var(--brand-ink) 65%, var(--brand-white));
+  --color-base-700: color-mix(in srgb, var(--brand-ink) 70%, var(--brand-white));
+  --color-base-750: color-mix(in srgb, var(--brand-ink) 75%, var(--brand-white));
+  --color-base-800: color-mix(in srgb, var(--brand-ink) 80%, var(--brand-white));
+  --color-base-850: color-mix(in srgb, var(--brand-ink) 85%, var(--brand-white));
+  --color-base-900: color-mix(in srgb, var(--brand-ink) 90%, var(--brand-white));
+  --color-base-950: color-mix(in srgb, var(--brand-ink) 95%, var(--brand-white));
+  --color-base-1000: var(--brand-ink);
+}
+
+/*
+ * Payload's "success" ramp, re-cast to the highlight colour.
+ *
+ * It is what the published-state pill and the save confirmation are drawn from,
+ * and the deck shows both in lime. Payload's own success ramp is blue, which in
+ * a teal-accented admin reads as another accent rather than as "this is live".
+ */
+:root {
+  --color-success-0: var(--brand-white);
+  --color-success-50: color-mix(in srgb, var(--brand-highlight) 5%, var(--brand-white));
+  --color-success-100: color-mix(in srgb, var(--brand-highlight) 10%, var(--brand-white));
+  --color-success-150: color-mix(in srgb, var(--brand-highlight) 15%, var(--brand-white));
+  --color-success-200: color-mix(in srgb, var(--brand-highlight) 20%, var(--brand-white));
+  --color-success-250: color-mix(in srgb, var(--brand-highlight) 25%, var(--brand-white));
+  --color-success-300: color-mix(in srgb, var(--brand-highlight) 30%, var(--brand-white));
+  --color-success-350: color-mix(in srgb, var(--brand-highlight) 35%, var(--brand-white));
+  --color-success-400: color-mix(in srgb, var(--brand-highlight) 40%, var(--brand-white));
+  --color-success-450: color-mix(in srgb, var(--brand-highlight) 45%, var(--brand-white));
+  --color-success-500: color-mix(in srgb, var(--brand-highlight) 50%, var(--brand-white));
+  --color-success-550: color-mix(in srgb, var(--brand-highlight) 55%, var(--brand-white));
+  --color-success-600: color-mix(in srgb, var(--brand-highlight) 60%, var(--brand-white));
+  --color-success-650: color-mix(in srgb, var(--brand-highlight) 65%, var(--brand-white));
+  --color-success-700: color-mix(in srgb, var(--brand-highlight) 70%, var(--brand-white));
+  --color-success-750: color-mix(in srgb, var(--brand-highlight) 75%, var(--brand-white));
+  --color-success-800: color-mix(in srgb, var(--brand-highlight) 80%, var(--brand-white));
+  --color-success-850: color-mix(in srgb, var(--brand-highlight) 85%, var(--brand-white));
+  --color-success-900: color-mix(in srgb, var(--brand-highlight) 90%, var(--brand-white));
+  --color-success-950: color-mix(in srgb, var(--brand-highlight) 95%, var(--brand-white));
+  --color-success-1000: var(--brand-highlight);
+}
+
+/*
+ * Primary actions, in the accent.
+ *
+ * Payload's primary button is `--theme-elevation-800` on `--theme-elevation-0`,
+ * which in dark mode is a near-white button. The deck's Publish and New Page
+ * buttons are the teal accent, so the button's own custom properties are
+ * overridden rather than its rules — `.btn--style-primary` declares `--color`,
+ * `--bg-color` and `--hover-bg` for exactly this.
+ */
+.btn--style-primary {
+  --bg-color: var(--brand-accent);
+  --color: var(--brand-on-accent);
+  --hover-bg: color-mix(in srgb, var(--brand-accent) 80%, var(--brand-white));
+  --hover-color: var(--brand-on-accent);
+}
+
+/*
+ * The active navigation item and the links inside the admin.
+ *
+ * The deck marks the current collection with the accent (page 3's `Pages`,
+ * page 7's `Services`). Payload marks it with weight alone.
+ */
+.nav__link--active,
+.nav__link[aria-current='page'] {
+  color: var(--brand-accent);
+}
+
+/*
+ * The focus ring. Payload derives it from `--theme-text`, which on a dark
+ * surface is the same near-white as the body copy, so a focused control is hard
+ * to find. The accent is the one colour on this palette that is not used for
+ * text.
+ */
+:root {
+  --accessibility-outline: 2px solid var(--brand-accent);
+}
+
+/*
+ * The error ramp, re-cast to the brand's danger colour.
+ *
+ * Payload's stock error red is a saturated `rgb(218, 75, 72)` scale, and
+ * against the dark navy it reads as an alarm rather than as a field that still
+ * needs filling in — the SEO workspace alone shows three of them (`Missing`,
+ * `Missing`, `No image`) on a page nobody has written metadata for yet, which is
+ * the normal state of a new document.
+ *
+ * `--brand-danger` is the colour T-19 already chose for exactly this job on the
+ * public site (`architecture/follow-ups.md` D4), so using it here means the one
+ * error colour in the project is the one error colour in both places.
+ */
+:root {
+  --color-error-0: var(--brand-white);
+  --color-error-50: color-mix(in srgb, var(--brand-danger) 5%, var(--brand-white));
+  --color-error-100: color-mix(in srgb, var(--brand-danger) 10%, var(--brand-white));
+  --color-error-150: color-mix(in srgb, var(--brand-danger) 15%, var(--brand-white));
+  --color-error-200: color-mix(in srgb, var(--brand-danger) 20%, var(--brand-white));
+  --color-error-250: color-mix(in srgb, var(--brand-danger) 25%, var(--brand-white));
+  --color-error-300: color-mix(in srgb, var(--brand-danger) 30%, var(--brand-white));
+  --color-error-350: color-mix(in srgb, var(--brand-danger) 35%, var(--brand-white));
+  --color-error-400: color-mix(in srgb, var(--brand-danger) 40%, var(--brand-white));
+  --color-error-450: color-mix(in srgb, var(--brand-danger) 45%, var(--brand-white));
+  --color-error-500: color-mix(in srgb, var(--brand-danger) 50%, var(--brand-white));
+  --color-error-550: color-mix(in srgb, var(--brand-danger) 55%, var(--brand-white));
+  --color-error-600: color-mix(in srgb, var(--brand-danger) 60%, var(--brand-white));
+  --color-error-650: color-mix(in srgb, var(--brand-danger) 65%, var(--brand-white));
+  --color-error-700: color-mix(in srgb, var(--brand-danger) 70%, var(--brand-white));
+  --color-error-750: color-mix(in srgb, var(--brand-danger) 75%, var(--brand-white));
+  --color-error-800: color-mix(in srgb, var(--brand-danger) 80%, var(--brand-white));
+  --color-error-850: color-mix(in srgb, var(--brand-danger) 85%, var(--brand-white));
+  --color-error-900: color-mix(in srgb, var(--brand-danger) 90%, var(--brand-white));
+  --color-error-950: color-mix(in srgb, var(--brand-danger) 95%, var(--brand-white));
+  --color-error-1000: var(--brand-danger);
+}
+
+/*
+ * The SEO plugin's status badges, which are the one thing here that cannot be
+ * themed by a custom property.
+ *
+ * `@payloadcms/plugin-seo` renders them with **inline styles** —
+ * `backgroundColor: 'red'`, `'orange'`, `'orangered'`, `'green'` and `'#F3F3F3'`
+ * on a `div` with no class of its own (verified in the browser: the element is
+ * `<div style="…background-color: red; color: white"><small>Missing</small></div>`).
+ * An inline style beats every stylesheet, so a variable override cannot reach
+ * it and `!important` is the only lever there is.
+ *
+ * It matters because the badges are not an edge case: a new document shows
+ * three of them at once — `Missing`, `Missing`, `No image` — and Payload's
+ * saturated red on the dark navy reads as something broken rather than as
+ * metadata nobody has written yet, which is the normal state of a new page.
+ *
+ * Matching on the `style` attribute is ugly and it is the honest option: these
+ * elements have nothing else to select. It is pinned to the exact strings the
+ * plugin ships, so a plugin upgrade that changes them makes the badges revert
+ * to their own colours rather than breaking the panel. Keep the mapping
+ * semantic — red and orangered are failures, orange is a warning, green passes.
+ */
+.field-type [style*='background-color: red'],
+.field-type [style*='background-color: orangered'] {
+  background-color: var(--brand-danger) !important;
+  color: var(--brand-on-danger) !important;
+}
+
+.field-type [style*='background-color: orange'] {
+  background-color: color-mix(in srgb, var(--brand-highlight) 70%, var(--brand-ink)) !important;
+  color: var(--brand-on-highlight) !important;
+}
+
+.field-type [style*='background-color: green'] {
+  background-color: var(--brand-highlight) !important;
+  color: var(--brand-on-highlight) !important;
+}
+
+/* The neutral "characters to go" track, which ships as a near-white `#F3F3F3`. */
+.field-type [style*='background-color: rgb(243, 243, 243)'],
+.field-type [style*='background-color: #F3F3F3'] {
+  background-color: var(--theme-elevation-150) !important;
+}

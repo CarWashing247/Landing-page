@@ -111,6 +111,7 @@ export const Users: CollectionConfig = {
     admin: canUseAdminPanel,
   },
   admin: {
+    group: { en: 'Users', vi: 'Users' },
     useAsTitle: 'email',
     defaultColumns: ['email', 'role', 'updatedAt'],
     // Cosmetic only — the `access` rules above are the control. This keeps an

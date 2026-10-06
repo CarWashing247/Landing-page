@@ -267,6 +267,35 @@ decks do cover, which is T-23's job and not something to machine-translate
 (CLAUDE.md). What this entry asks for is that T-23's list gains the sixth
 document, and that whoever seeds it knows about the per-locale slug.
 
+### A11 · Every heading on a dark band was invisible — fixed in T-19A
+
+**Owner: was T-15 / T-17. Fixed, recorded here because the cause outlived the
+task that introduced it.**
+
+`src/app/globals.css`'s base layer set `color: var(--color-primary)` on `h1`,
+`h2` and `h3`, so that an editor's rich-text heading lands on the brand colour
+without a class. But `Band tone="primary"` and the hero both paint
+`bg-primary text-on-primary`, and a heading that re-declares the primary colour
+paints itself in its own background: **dark navy on dark navy.** Every hero
+`<h1>` and every CTA `<h2>` was unreadable.
+
+It survived three UI tasks because it is invisible in both senses. The text is
+in the HTML, so the markup, the metadata, the heading outline and every
+`curl`-based check in every task's verification block all passed — and no page
+had any content to render until T-19A seeded some. Found by screenshotting
+`/bang-gia`, confirmed with `getComputedStyle`: `rgb(11, 31, 51)` on
+`rgb(11, 31, 51)`.
+
+Fixed by making the three rules `color: inherit`, so a heading takes the colour
+its band already states — which is what the `on-*` tokens exist for. The sizes
+stay, because that half of the rule is what rich text needs. On a light band the
+rendered colour moves from `--color-primary` to `--color-ink`, two near-black
+navies one step apart.
+
+**Worth generalising:** `curl | grep '<h1'` cannot see a contrast bug, and three
+tasks' verification blocks were built on exactly that. Anything about appearance
+needs a rendered page.
+
 ## B. Documentation inconsistencies
 
 ### B1 · T-16 and T-17 omit T-15A from their dependencies
@@ -485,29 +514,25 @@ them.
 
 ---
 
-### D3 · Three product decisions in the Admin CMS UI design
+### D3 · The Pages list has an author filter with no author field
 
 **Owner: T-19A** (recorded in `task/t-19a-admin-interface.md`)
 
-The Canva deck "AutoWash247 Admin CMS UI" (`DAHXNnCsHfc`) shows three things
-that are product scope rather than styling, and T-19A deliberately does not
-build them:
+Page 3 of the admin deck (`DAHXOjaoczk`) shows an `All Authors` dropdown beside
+the search box on the Pages list. `Pages` has no author relationship, so there
+is nothing to filter on. Adding one is a schema change plus a migration plus a
+`defaultValue` hook to stamp the creating user — not a list-view setting, and
+not something to slip into a theming task.
 
-- **A `Menu` collection.** The sidebar lists "Menu" between Media and Users,
-  implying CMS-managed navigation. Today the header's items come from the T-15A
-  catalog, a developer-edited file. Moving them into the CMS is a new collection,
-  new access rules and a new cache tag.
-- **An approval step.** Page 7 shows Soạn thảo → Xem trước → **Kiểm duyệt** →
-  Xuất bản. Payload has drafts and versions but no review-and-approve gate, and
-  Design.md section 2's publishing model has three stages, not four. With two
-  roles and a small team it may not be wanted at all.
-- **Media folders.** The deck shows a folder taxonomy. Payload supports this
-  natively (`folders` on the root config), so it is a flag and a migration — but
-  it adds a dimension everything uploaded must be filed into, which the editors
-  should want before it is imposed.
+Worth deciding rather than assuming: with two roles and a small team, "who last
+touched this" is already visible in version history, and an author column earns
+its place only if more than one person writes pages.
 
-All three are cheap to decide and expensive to retrofit, which is why they are
-here rather than assumed either way.
+**This entry replaced the three product decisions the previous admin deck
+raised** — a `Menu` collection, a `Kiểm duyệt` approval gate and a media folder
+taxonomy. The deck that showed them (`DAHXNnCsHfc`) was superseded on
+2026-10-06, and none of the three appears in its replacement. They are not
+deferred; they are no longer asked for.
 
 ### D4 · The form's error colour is not in the design system
 
@@ -554,6 +579,26 @@ in place because deleting a string one deck still shows is also a decision.
 
 Nothing is broken; the site is internally consistent. What is open is which deck
 is canonical when they differ, which matters again at T-23.
+
+### D6 · The admin's navigation group headings are untranslated
+
+**Owner: whoever owns admin copy** (recorded in `task/t-19a-admin-interface.md`)
+
+`admin.group` on every collection and global is `{ en: 'Collections', vi:
+'Collections' }` and the same for `Globals` and `Users` — the English word in
+both locales.
+
+That is what the design shows. Page 2 of `DAHXOjaoczk` is the role-aware
+navigation screen, its sidebar is otherwise fully Vietnamese (`Các trang`,
+`Thư viện ảnh`, `Thông tin doanh nghiệp`), and its three group headings read
+`Collections`, `Globals` and `Users`. T-19A took that verbatim rather than
+inventing Vietnamese for them, because CLAUDE.md's rule is to flag copy that no
+deck supplies rather than write it.
+
+So a Vietnamese editor sees three English structural words above otherwise
+Vietnamese navigation. It is not wrong — it is what was signed off — but it is
+very likely an oversight in the deck rather than a decision, and it is three
+short nouns to fix once someone confirms the wording.
 
 ## E. Repository hygiene
 
