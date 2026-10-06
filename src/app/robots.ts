@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next'
 
-import { requireEnv } from '../lib/env'
+import { siteOrigin } from '../lib/env'
 
 /**
  * `/robots.txt`.
@@ -27,7 +27,7 @@ import { requireEnv } from '../lib/env'
  * and the sitemap simply never gets discovered.
  */
 const robots = (): MetadataRoute.Robots => {
-  const base = requireEnv('NEXT_PUBLIC_SITE_URL').replace(/\/$/, '')
+  const base = siteOrigin()
 
   return {
     rules: {

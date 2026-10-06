@@ -5,7 +5,9 @@ import { notFound } from 'next/navigation'
 import { loadPage, loadSiteSettings } from '../lib/content'
 import type { Locale } from '../lib/locales'
 import { pathForPage } from '../lib/locales'
+import { faqSchema } from '../lib/schema/faq'
 import { DraftBanner } from './DraftBanner'
+import { JsonLd } from './seo/JsonLd'
 import { buildMetadata } from './seo/metadata'
 
 /**
@@ -52,6 +54,18 @@ export const ContentPage = async ({ locale, slug }: { locale: Locale; slug: stri
 
   return (
     <>
+      {/*
+        `FAQPage`, and only when the page actually carries an FAQ block. Nothing
+        emits one today because the block itself is T-17 — `faqSchema` returns
+        `null` for a layout without one, which is also the acceptance criterion.
+      */}
+      <JsonLd
+        schema={faqSchema({
+          layout: found.doc.layout,
+          locale,
+          path: pathForPage(slug, locale),
+        })}
+      />
       <DraftBanner locale={locale} path={pathForPage(slug, locale)} />
       <main>
         <h1>{found.doc.title}</h1>

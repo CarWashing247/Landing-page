@@ -1,7 +1,7 @@
 import { unstable_cache } from 'next/cache'
 import { cache } from 'react'
 
-import type { Page, Service, SiteSetting } from '../payload-types'
+import type { BusinessInfo, Page, Service, SiteSetting } from '../payload-types'
 import { GLOBALS_TAG, REVALIDATE_SECONDS, SITEMAP_TAG, pageTag, serviceTag } from './cache-tags'
 import { logger } from './log'
 import type { Locale } from './locales'
@@ -98,6 +98,47 @@ const siteSettings = unstable_cache(
 export const loadSiteSettings = cache(
   async (locale: Locale): Promise<SiteSetting | null> => siteSettings(locale),
 )
+
+/**
+ * `BusinessInfo`, fetched once per render.
+ *
+ * Separate from `siteSettings` above even though both are globals under the same
+ * tag, because they are read in different places and one of them is read on every
+ * page: merging them into one call would make a page that needs only the brand
+ * name pull the address and the opening-hours array too.
+ *
+ * **No `locale` argument, and that is the point of the global.** Nothing in
+ * `BusinessInfo` is localized (Design.md 2.2) — a street address translated into
+ * English is wrong in both languages, and AGENT.md 5.4's byte-identical
+ * requirement cannot hold for a field with two values. Passing no locale means
+ * there is no per-locale cache entry and no way for the two locales' JSON-LD to
+ * disagree about the phone number.
+ *
+ * `null` on failure, like `siteSettings`: a fresh install has no row, and
+ * `autoWashSchema` already returns `null` for a business it cannot describe, so
+ * the page renders without structured data rather than 500ing.
+ */
+const businessInfo = unstable_cache(
+  async (): Promise<BusinessInfo | null> => {
+    const log = logger('content:business-info')
+    const payload = await getPayload()
+
+    try {
+      return await payload.findGlobal({ slug: 'business-info', depth: 0 })
+    } catch (error) {
+      // The message, never the error object: AGENT.md 5.7.
+      log.error('business info unavailable', {
+        reason: error instanceof Error ? error.message : 'unknown',
+      })
+
+      return null
+    }
+  },
+  ['content', 'business-info'],
+  { revalidate: REVALIDATE_SECONDS, tags: [GLOBALS_TAG] },
+)
+
+export const loadBusinessInfo = cache(async (): Promise<BusinessInfo | null> => businessInfo())
 
 /**
  * The two localized values that must NOT be read through Payload's fallback.

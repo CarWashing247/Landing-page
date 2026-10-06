@@ -2,10 +2,12 @@ import type { Metadata } from 'next'
 import { draftMode } from 'next/headers'
 import { notFound } from 'next/navigation'
 
-import { loadService, loadSiteSettings } from '../lib/content'
+import { loadBusinessInfo, loadService, loadSiteSettings } from '../lib/content'
 import type { Locale } from '../lib/locales'
 import { pathForService } from '../lib/locales'
+import { serviceSchema } from '../lib/schema/service'
 import { DraftBanner } from './DraftBanner'
+import { JsonLd } from './seo/JsonLd'
 import { buildMetadata } from './seo/metadata'
 
 /**
@@ -13,8 +15,10 @@ import { buildMetadata } from './seo/metadata'
  * only differences are the collection and that a service's heading field is
  * `name` rather than `title`.
  *
- * The full template — price, duration, what the package includes — is T-18, and
- * the `Service` + `Offer` JSON-LD is T-14.
+ * The full template — price, duration, what the package includes — is T-18. The
+ * `Service` + `Offer` JSON-LD is already here (T-14), which is deliberate: the
+ * schema is built from the CMS fields, not from what the template happens to
+ * render, so it does not wait on the visual design.
  */
 
 export const servicePageMetadata = async (slug: string, locale: Locale): Promise<Metadata> => {
@@ -46,6 +50,17 @@ export const ServicePage = async ({ locale, slug }: { locale: Locale; slug: stri
 
   return (
     <>
+      {/*
+        `provider` is a reference to the home page's business node rather than a
+        second copy of the name and address — see `src/lib/schema/service.ts`.
+      */}
+      <JsonLd
+        schema={serviceSchema({
+          business: await loadBusinessInfo(),
+          locale,
+          service: found.doc,
+        })}
+      />
       <DraftBanner locale={locale} path={pathForService(slug, locale)} />
       <main>
         <h1>{found.doc.name}</h1>

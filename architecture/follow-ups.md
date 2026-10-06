@@ -139,6 +139,32 @@ fix before another file copies it.
 
 ---
 
+### A7 · T-14's Rich Results Test has not been run
+
+**Owner: whoever deploys first, and T-21 before it submits to Search Console**
+(recorded in `task/t-14-json-ld.md`)
+
+The acceptance criterion is "every emitted schema passes Google's Rich Results
+Test with zero errors". The test takes a public URL and this site is not
+deployed; its code-paste mode needs a browser session and sends the page to an
+external service, which was not done unasked.
+
+There is also no browser tool in this environment: `WebFetch` cannot reach
+`localhost` and cannot drive a JavaScript application, so the code-paste mode is
+not reachable either.
+
+Verified instead, and it is worth more than it sounds: every emitted node is
+checked against schema.org's own published vocabulary in
+`src/lib/schema/schema-org.test.ts` — every `@type` must be a real class, every
+property must be defined on that type or an ancestor — along with the properties
+Google documents as required per type, and every block was read out of the HTML
+with `curl` on all three route types in both locales. That check found a real
+error T-14 had shipped (`inLanguage` on `AutoWash` and `Service`; see B4).
+
+It is still not sufficient. It covers schema.org's vocabulary, not Google's
+rich-result eligibility, and only Google's test covers the latter. Run it on the
+first deployed URL.
+
 ## B. Documentation inconsistencies
 
 ### B1 · T-16 and T-17 omit T-15A from their dependencies
@@ -185,6 +211,51 @@ The same T-12 commit also says `draftMode()` is read "in the page component and
 in the banner" for the home pages. It is not read there at all — see A5.
 
 ---
+
+### B3 · T-14's task file contradicted Design.md twice
+
+**Owner: none — both corrected in `task/t-14-json-ld.md` during T-14**
+
+Recorded here only because the pattern is worth noticing: the task file asked for
+an `Organization` node in the root layout, which neither Design.md's T-14
+paragraph nor AGENT.md 5.4 mentions and which would put two entity nodes for one
+business on every page; and it asked for `Mo`–`Su` day tokens, which belong to the
+`openingHours` string form rather than to the `openingHoursSpecification` that
+Design.md actually names.
+
+Both were followed to the point of writing the code before being checked against
+Design.md. CLAUDE.md's rule — the task file is what is wrong when they disagree —
+is what caught them, and it is worth applying before implementing rather than
+after.
+
+### B4 · AGENT.md 5.4 requires `inLanguage` on schemas that cannot carry it
+
+**Owner: `AGENT.md` — needs a decision, recorded in `task/t-14-json-ld.md`**
+
+AGENT.md 5.4 says "Every emitted schema carries `inLanguage` for the rendered
+locale". Checked against schema.org's published vocabulary, `inLanguage` is
+defined on `CreativeWork`, `Event`, `BroadcastService`, `CommunicateAction`,
+`LinkRole`, `PronounceableText` and `WriteAction` only:
+
+| Node | `inLanguage` valid? | Why |
+| --- | --- | --- |
+| `FAQPage` | yes | `FAQPage` < `WebPage` < `CreativeWork` |
+| `AutoWash` | **no** | `AutoWash` < `AutomotiveBusiness` < `LocalBusiness` < `Organization`/`Place` |
+| `Service` | **no** | `Service` < `Thing`, and no language property is defined on it |
+
+T-14 emits it on `FAQPage` alone and `src/lib/schema/schema-org.test.ts` pins
+that. The only language property valid on `AutoWash` is `knowsLanguage`, which
+states which languages the business can serve customers in — a claim about the
+business that nothing in the CMS supports.
+
+Nothing is lost by the omission: `<html lang>`, the reciprocal `hreflang` set and
+`og:locale` all carry the page's language already (T-09).
+
+**Left as a note rather than an edit** because AGENT.md is the binding document
+and narrowing one of its rules is not a typo fix. The sentence wants to become
+something like "every emitted schema that schema.org defines `inLanguage` on
+carries it". One line in `src/lib/schema/` reverts the behaviour if literal
+compliance is preferred instead.
 
 ## C. Deferred migrations
 
@@ -325,6 +396,14 @@ surrounding assumption changed.
   occupies an entry for an hour. Bounded by the revalidate floor, and load
   bearing: it is what makes publishing a draft take effect through T-11's purge
   rather than only through the floor.
+- **A rebuild does not refresh `unstable_cache`; only a purge or the floor does.**
+  Observed during T-14: a social link added to `SiteSettings` before a rebuild was
+  still missing from the rendered JSON-LD afterwards, and appeared the moment
+  `globals` was purged. This is `unstable_cache` working as documented — entries
+  survive a deployment on purpose — and T-11's hooks purge on every real edit, so
+  it affects seeding and verification rather than editors. It is also the
+  explanation for the "stale sitemap" episode during T-13. Worth knowing before
+  concluding that fresh data did not reach a page.
 - **Changing the shape of anything cached in `src/lib/content.ts` needs its cache
   key bumped, and nothing enforces that.** `unstable_cache` entries survive a
   deployment on purpose, so a new build is handed the previous build's values

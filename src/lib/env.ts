@@ -37,3 +37,20 @@ export const requireEnv = (name: string): string => {
 
   return value
 }
+
+/**
+ * The site's origin, with no trailing slash.
+ *
+ * Every absolute URL the site emits for a crawler is built from this: the
+ * `Sitemap:` line in `robots.txt`, every `<loc>` and `hreflang` in the sitemap,
+ * and every `@id` and `url` in the JSON-LD. They have to agree character for
+ * character, because a schema `@id` that differs from the canonical URL by a
+ * trailing slash is a different node to Google, and T-14 links the `Service` on
+ * a service page to the business node emitted on the home page by exactly that
+ * string.
+ *
+ * The trailing slash is stripped here rather than at each call site because
+ * `NEXT_PUBLIC_SITE_URL` is written by hand in three environments and half of
+ * them will have one.
+ */
+export const siteOrigin = (): string => requireEnv('NEXT_PUBLIC_SITE_URL').replace(/\/$/, '')

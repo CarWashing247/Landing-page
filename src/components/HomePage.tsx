@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
 
-import { loadSiteSettings } from '../lib/content'
+import { loadBusinessInfo, loadSiteSettings } from '../lib/content'
 import type { Locale } from '../lib/locales'
 import { LOCALES, pathForHome } from '../lib/locales'
+import { autoWashSchema } from '../lib/schema/autowash'
+import { JsonLd } from './seo/JsonLd'
 import { buildMetadata } from './seo/metadata'
 
 /**
@@ -15,15 +17,32 @@ import { buildMetadata } from './seo/metadata'
  * Interface strings move to the T-15A catalog; the literals below are the
  * ones that task converts.
  */
-export const HomePage = ({ locale }: { locale: Locale }) => (
-  <main>
-    <h1>AutoWash247</h1>
-    <p>
-      {locale === 'vi'
-        ? 'TODO(copy): nội dung trang chủ — xem T-17 (blocks) và T-23 (seed).'
-        : 'TODO(copy): home page content — see T-17 (blocks) and T-23 (seed).'}
-    </p>
-  </main>
+export const HomePage = async ({ locale }: { locale: Locale }) => (
+  <>
+    {/*
+      The `AutoWash` business node lives on the home page alone, with a stable
+      `@id` that service pages reference as their `provider` — one business
+      entity for the whole site rather than a copy of the name and address on
+      every page. `autoWashSchema` returns `null` while `BusinessInfo` still
+      holds `TODO(data):` placeholders, so nothing is emitted until T-23 fills
+      them in, and then it appears without a deploy.
+    */}
+    <JsonLd
+      schema={autoWashSchema({
+        business: await loadBusinessInfo(),
+        locale,
+        settings: await loadSiteSettings(locale),
+      })}
+    />
+    <main>
+      <h1>AutoWash247</h1>
+      <p>
+        {locale === 'vi'
+          ? 'TODO(copy): nội dung trang chủ — xem T-17 (blocks) và T-23 (seed).'
+          : 'TODO(copy): home page content — see T-17 (blocks) and T-23 (seed).'}
+      </p>
+    </main>
+  </>
 )
 
 /**
