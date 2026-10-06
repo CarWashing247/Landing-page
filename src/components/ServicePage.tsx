@@ -3,6 +3,7 @@ import { draftMode } from 'next/headers'
 import { notFound } from 'next/navigation'
 
 import { loadBusinessInfo, loadService, loadSiteSettings } from '../lib/content'
+import { t } from '../i18n/t'
 import type { Locale } from '../lib/locales'
 import { pathForService } from '../lib/locales'
 import { serviceSchema } from '../lib/schema/service'
@@ -64,11 +65,7 @@ export const ServicePage = async ({ locale, slug }: { locale: Locale; slug: stri
       <DraftBanner locale={locale} path={pathForService(slug, locale)} />
       <main>
         <h1>{found.doc.name}</h1>
-        <p>
-          {locale === 'vi'
-            ? 'TODO(copy): nội dung trang dịch vụ — bố cục đầy đủ là T-18.'
-            : 'TODO(copy): service page body — the full template is T-18.'}
-        </p>
+        <p>{t(locale).placeholder.serviceBody}</p>
       </main>
     </>
   )

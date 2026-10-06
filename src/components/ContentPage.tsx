@@ -3,6 +3,7 @@ import { draftMode } from 'next/headers'
 import { notFound } from 'next/navigation'
 
 import { loadPage, loadSiteSettings } from '../lib/content'
+import { t } from '../i18n/t'
 import type { Locale } from '../lib/locales'
 import { pathForPage } from '../lib/locales'
 import { faqSchema } from '../lib/schema/faq'
@@ -69,11 +70,7 @@ export const ContentPage = async ({ locale, slug }: { locale: Locale; slug: stri
       <DraftBanner locale={locale} path={pathForPage(slug, locale)} />
       <main>
         <h1>{found.doc.title}</h1>
-        <p>
-          {locale === 'vi'
-            ? 'TODO(copy): nội dung trang — các khối nội dung là T-17, nội dung thật là T-23.'
-            : 'TODO(copy): page body — blocks are T-17, real content is T-23.'}
-        </p>
+        <p>{t(locale).placeholder.pageBody}</p>
       </main>
     </>
   )

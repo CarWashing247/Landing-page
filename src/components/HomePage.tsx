@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 import { loadBusinessInfo, loadSiteSettings } from '../lib/content'
+import { t } from '../i18n/t'
 import type { Locale } from '../lib/locales'
 import { LOCALES, pathForHome } from '../lib/locales'
 import { autoWashSchema } from '../lib/schema/autowash'
@@ -36,11 +37,7 @@ export const HomePage = async ({ locale }: { locale: Locale }) => (
     />
     <main>
       <h1>AutoWash247</h1>
-      <p>
-        {locale === 'vi'
-          ? 'TODO(copy): nội dung trang chủ — xem T-17 (blocks) và T-23 (seed).'
-          : 'TODO(copy): home page content — see T-17 (blocks) and T-23 (seed).'}
-      </p>
+      <p>{t(locale).placeholder.homeBody}</p>
     </main>
   </>
 )

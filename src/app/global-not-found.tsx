@@ -1,4 +1,6 @@
 import { notFoundMetadata } from '../components/seo/metadata'
+import { t } from '../i18n/t'
+import { DEFAULT_LOCALE } from '../lib/locales'
 import './globals.css'
 
 /**
@@ -19,16 +21,29 @@ import './globals.css'
  */
 export const metadata = notFoundMetadata('AutoWash247')
 
-const GlobalNotFound = () => (
-  <html lang="vi">
-    <body>
-      <main>
-        <h1>404</h1>
-        <p>TODO(copy): page not found message.</p>
-        <a href="/">TODO(copy): link back to the home page</a>
-      </main>
-    </body>
-  </html>
-)
+/**
+ * The default locale, because there is nothing else to go on.
+ *
+ * This page renders for URLs that matched no route at all, so there is no locale
+ * segment to read and no `params` to resolve — an unknown URL is as likely to be
+ * a typo of a Vietnamese path as an English one. `lang` has to agree with the
+ * strings actually rendered, so both come from the same constant rather than
+ * `lang` being hardcoded next to copy that could change independently.
+ */
+const GlobalNotFound = () => {
+  const copy = t(DEFAULT_LOCALE)
+
+  return (
+    <html lang={DEFAULT_LOCALE}>
+      <body>
+        <main>
+          <h1>{copy.notFound.title}</h1>
+          <p>{copy.notFound.message}</p>
+          <a href="/">{copy.notFound.backHome}</a>
+        </main>
+      </body>
+    </html>
+  )
+}
 
 export default GlobalNotFound

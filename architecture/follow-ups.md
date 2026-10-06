@@ -37,8 +37,12 @@ payload while the SSR shell stays `__next_error__` with the same empty body; the
 flag exists precisely because this app has two root layouts. It is a 404
 architecture decision, so it belongs with the shell.
 
-The 404 copy is still `TODO(copy)`, so no finished wording regressed — only the
-shell.
+~~The 404 copy is still `TODO(copy)`~~ **The 404 copy now exists** (T-15A moved it
+into the message catalog: "Không tìm thấy trang này." / "We could not find that
+page."), which makes this entry more visible rather than less — there is now
+finished wording that nobody can see. Re-measured during T-15A: `/khong-ton-tai`
+returns 404 with an empty body and `<html id="__next_error__">`, so none of the
+catalog strings render.
 
 ### A2 · `titleSuffix`'s placeholder produces `Liên hệ| AutoWash247`
 
@@ -396,6 +400,15 @@ surrounding assumption changed.
   occupies an entry for an hour. Bounded by the revalidate floor, and load
   bearing: it is what makes publishing a draft take effect through T-11's purge
   rather than only through the floor.
+- **The Canva designs contain sample business data that reads as real.** Page 8
+  of "AutoWash247 Website UI" shows a hotline of `1900 0000`,
+  `info@autowash247.vn`, an address on Đường Lê Duẩn and hours of
+  `Thứ 2 - Thứ 7: 08:00 - 18:00`. They are design placeholders, not the
+  business's details, and they are deliberately absent from the T-15A catalog —
+  business data lives in `BusinessInfo`, where it is still `TODO(data):`. The
+  risk is that they are plausible enough to be copied in by someone building the
+  contact page or seeding content, and an invented address reaches JSON-LD and
+  Google Business Profile. T-19 and T-23 are where that would happen.
 - **A rebuild does not refresh `unstable_cache`; only a purge or the floor does.**
   Observed during T-14: a social link added to `SiteSettings` before a rebuild was
   still missing from the rendered JSON-LD afterwards, and appeared the moment

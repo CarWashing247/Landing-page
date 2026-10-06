@@ -1,5 +1,6 @@
 import { draftMode } from 'next/headers'
 
+import { t } from '../i18n/t'
 import type { Locale } from '../lib/locales'
 
 /**
@@ -15,9 +16,9 @@ import type { Locale } from '../lib/locales'
  * Rendering `null` when draft mode is off is what keeps it out of the published
  * HTML entirely.
  *
- * The strings are `TODO(copy)`: T-15A owns the interface catalog and lists the
- * draft banner among the keys it converts. They are deliberately not
- * machine-translated in the meantime (CLAUDE.md).
+ * The strings come from the T-15A catalog. The Vietnamese is still `TODO(copy)`
+ * there — no deck shows an editor-facing preview state, so nobody has written
+ * it — but the literals are out of this component, which is what T-15A owns.
  */
 export const DraftBanner = async ({ locale, path }: { locale: Locale; path?: string }) => {
   const { isEnabled } = await draftMode()
@@ -26,6 +27,7 @@ export const DraftBanner = async ({ locale, path }: { locale: Locale; path?: str
     return null
   }
 
+  const copy = t(locale)
   const exit = new URLSearchParams({ locale })
 
   if (path) {
@@ -48,11 +50,7 @@ export const DraftBanner = async ({ locale, path }: { locale: Locale; path?: str
         zIndex: 9999,
       }}
     >
-      <span>
-        {locale === 'vi'
-          ? 'TODO(copy): bạn đang xem bản nháp — nội dung này chưa được xuất bản.'
-          : 'TODO(copy): you are viewing a draft — this content is not published.'}
-      </span>{' '}
+      <span>{copy.draft.message}</span>{' '}
       <form action={`/api/draft/exit?${exit.toString()}`} method="post" style={{ display: 'inline' }}>
         <button
           style={{
@@ -66,7 +64,7 @@ export const DraftBanner = async ({ locale, path }: { locale: Locale; path?: str
           }}
           type="submit"
         >
-          {locale === 'vi' ? 'TODO(copy): thoát xem thử' : 'TODO(copy): exit preview'}
+          {copy.draft.exit}
         </button>
       </form>
     </aside>
