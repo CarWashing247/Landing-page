@@ -461,10 +461,19 @@ npm error Missing: yaml@2.9.1 from lock file
 simply behind — it was last committed in T-08, and `cosmiconfig` now wants a
 `yaml` the tree does not carry.
 
-This is not local-only inconvenience: `npm ci` is what a CI job and Vercel's
-default install step run, and both fail the same way. The fix is one `npm install`
-and committing the lockfile it produces, on its own, so the diff is reviewable as
-a dependency change rather than riding a feature branch.
+**Correction, from T-18.** This entry first said Vercel's install step fails the
+same way, and named it as a candidate cause of the deployment failures standing
+at the time. It is not: the lockfile is unchanged since T-08 and the deployments
+for T-17 (#27) and T-18 (#28) both completed, so whatever install command the
+project runs tolerates it. The deployment failures had the other cause this
+register listed — the build reads Vault, so it needs `VAULT_ADDR`,
+`VAULT_ROLE_ID`, `VAULT_SECRET_ID` and `DATABASE_URI` in the Vercel project —
+and they are green now.
+
+What is left is real but narrower: a clean `npm ci` fails, so a contributor
+following the README and any CI job that uses `npm ci` both stop. The fix is one
+`npm install` and committing the lockfile it produces, on its own, so the diff is
+reviewable as a dependency change rather than riding a feature branch.
 
 ---
 
