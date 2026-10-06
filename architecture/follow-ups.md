@@ -226,6 +226,47 @@ expects; the second is one string.
 Not T-18's to take: the template renders the hero the task asked for, and the
 share-image chain is the metadata builder's contract.
 
+### A10 · `/dich-vu` 404s, and no task creates the document behind it
+
+**Owner: T-23, with a planning hole behind it** (recorded in
+`task/t-23-content-seed.md`)
+
+The header links "Dịch vụ" to `/dich-vu` (`src/lib/routes.ts`, T-16), and that
+file states the contract: "the services index is the segment itself — `/dich-vu`
+against `/en/services` — which is a `Pages` document at that slug rather than a
+route of its own". Nothing creates that document. Design.md section 3 lists five
+routes and the index is not one of them; T-23 step 1 copies that list — `/`,
+`bang-gia`, `huong-dan`, `lien-he`, plus `dich-vu/<slug>` per package — so the
+seed will not create it either.
+
+The result is a header link that 404s on every page of the site, which is how
+this was found: reported from a running deployment, not from reading the code.
+
+**The routing is fine, and that is worth recording** because it looks like the
+suspect. A static `dich-vu/` folder (the service detail route) sits beside
+`[slug]` in the same segment, and Next still falls back to `[slug]` for
+`/landing-page/dich-vu` because that folder has no page of its own. Measured
+against the built server: 404 before a published page existed at the slug, 200
+after, in both locales — and the next build prerendered
+`● /landing-page/dich-vu` next to `● /landing-page/dich-vu/rua-xe-nhanh`, and
+`● /landing-page-en/services` next to `● /landing-page-en/services/quick-wash`,
+with no route collision.
+
+So the fix is content, and it is two decisions rather than one `create`:
+
+- **Both locales need their own slug** — `dich-vu` for `vi` and `services` for
+  `en`. An `en` page with no slug of its own inherits the Vietnamese one through
+  Payload's fallback, and `publishedSlugs()` then drops it, so the English index
+  silently stays a 404 while the Vietnamese one works. That was the second half
+  of the measurement above.
+- **The slug cannot be corrected later** (T-06 locks it on publish), so it has to
+  be right the first time.
+
+Not fixed here: creating it means writing real Vietnamese copy for a page the
+decks do cover, which is T-23's job and not something to machine-translate
+(CLAUDE.md). What this entry asks for is that T-23's list gains the sixth
+document, and that whoever seeds it knows about the per-locale slug.
+
 ## B. Documentation inconsistencies
 
 ### B1 · T-16 and T-17 omit T-15A from their dependencies

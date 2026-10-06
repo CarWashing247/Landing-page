@@ -53,6 +53,15 @@ one, usually not the intended one.
 1. Create the five routes with the slugs from Design.md:
    `/` (home), `bang-gia`, `huong-dan`, `lien-he`, plus one
    `dich-vu/<slug>` per package.
+1a. **And the services index, which that list misses.** The header links
+   "Dịch vụ" to `/dich-vu`, and `src/lib/routes.ts` expects a `Pages` document at
+   that slug — Design.md section 3 does not list it, so without this step the
+   link 404s on every page. Found that way on a running deployment; see
+   `follow-ups.md` A10 for the measurement. Two things it is easy to get wrong:
+   each locale needs **its own slug** (`dich-vu` for `vi`, `services` for `en`,
+   matching `SERVICE_SEGMENT`) because an untranslated `en` slug falls back to the
+   Vietnamese one and is then dropped from the prerendered set, and the slug is
+   read-only once published (T-06), so it has to be right the first time.
 2. Upload images; write a real Vietnamese `alt` for each — descriptive, not
    keyword-stuffed.
 3. Fill the SEO tab on each: title at 50–60 characters, description at
