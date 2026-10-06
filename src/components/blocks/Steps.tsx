@@ -17,10 +17,10 @@ type StepsBlock = Extract<NonNullable<Page['layout']>[number], { blockType: 'ste
 export const Steps = ({ block }: { block: StepsBlock }) => (
   <Band>
     {block.heading ? <h2 className="text-h2">{block.heading}</h2> : null}
-    <ol className="mt-8 grid gap-8 md:grid-cols-3">
+    <ol className="mt-10 grid gap-6 md:grid-cols-3">
       {(block.steps ?? []).map((step, index) => (
-        <li key={step.id ?? step.title}>
-          <p aria-hidden="true" className="text-h2 text-accent">
+        <li className="border-border rounded-card bg-surface border p-6" key={step.id ?? step.title}>
+          <p aria-hidden="true" className="text-h2 text-action">
             {String(index + 1).padStart(2, '0')}
           </p>
           <h3 className="text-h3 mt-2">{step.title}</h3>

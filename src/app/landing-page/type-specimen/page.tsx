@@ -57,22 +57,22 @@ const ROLES = [
 const STACKED = 'ờ ẵ ụ ệ Đ ữ ạ ỉ ỡ ế ộ ự ằ ẳ ẫ ấ ầ ẩ ẽ ó ò ỏ õ ọ ơ ư đ'
 
 const SWATCHES = [
-  { bg: 'bg-primary', fg: 'text-on-primary', hex: '#059669', name: 'Primary' },
-  { bg: 'bg-secondary', fg: 'text-on-secondary', hex: '#10B981', name: 'Secondary' },
-  { bg: 'bg-accent', fg: 'text-on-accent', hex: '#EA580C', name: 'Accent' },
-  { bg: 'bg-background', fg: 'text-foreground', hex: '#ECFDF5', name: 'Background' },
-  { bg: 'bg-card', fg: 'text-card-foreground', hex: '#FFFFFF', name: 'Card' },
-  { bg: 'bg-muted', fg: 'text-muted-foreground', hex: '#E8F1F3', name: 'Muted' },
-  { bg: 'bg-foreground', fg: 'text-on-foreground', hex: '#064E3B', name: 'Foreground' },
-  { bg: 'bg-destructive', fg: 'text-on-destructive', hex: '#DC2626', name: 'Destructive' },
+  { bg: 'bg-ink', fg: 'text-on-ink', hex: '#0F172A', name: 'Ink' },
+  { bg: 'bg-slate', fg: 'text-on-slate', hex: '#1E293B', name: 'Slate' },
+  { bg: 'bg-action', fg: 'text-on-action', hex: '#C62929', name: 'Action' },
+  { bg: 'bg-paper', fg: 'text-ink', hex: '#F8FAFC', name: 'Paper' },
+  { bg: 'bg-surface', fg: 'text-ink', hex: '#FFFFFF', name: 'Surface' },
+  { bg: 'bg-mist', fg: 'text-ink', hex: '#E9EDF1', name: 'Mist' },
+  { bg: 'bg-success', fg: 'text-on-success', hex: '#116B52', name: 'Success' },
+  { bg: 'bg-notice', fg: 'text-on-notice', hex: '#FFF4DA', name: 'Notice' },
 ] as const
 
 const RADII = [
-  { cls: 'rounded-sm', label: '4px · sm' },
-  { cls: 'rounded-md', label: '8px · md' },
-  { cls: 'rounded-lg', label: '12px · lg — controls and cards' },
-  { cls: 'rounded-xl', label: '16px · xl' },
-  { cls: 'rounded-2xl', label: '24px · 2xl' },
+  { cls: 'rounded-sm', label: '6px · sm' },
+  { cls: 'rounded-md', label: '10px · md' },
+  { cls: 'rounded-control', label: '12px · control — buttons, inputs' },
+  { cls: 'rounded-card', label: '20px · card — cards, media panels' },
+  { cls: 'rounded-full', label: 'pill' },
 ] as const
 
 const Specimen = () => {
@@ -85,13 +85,13 @@ const Specimen = () => {
     <main className="mx-auto max-w-4xl p-8">
       <h1>Type specimen</h1>
       <p className="text-label">
-        Inter · subsets latin + vietnamese · display swap. Tokens from design-system/autowash247/MASTER.md.
+        Inter · subsets latin + vietnamese · display swap. Tokens from architecture/phase3-uiux-promax.md.
       </p>
 
       <h2 className="mt-8">Roles</h2>
       {ROLES.map((role) => (
         <section className="mt-6" key={role.role}>
-          <p className="text-label text-accent">
+          <p className="text-label text-action">
             {role.role} — {role.spec}
           </p>
           <p className={role.cls}>{role.sample}</p>
@@ -105,7 +105,7 @@ const Specimen = () => {
       </p>
       {WEIGHTS.map((weight) => (
         <section className="mt-4" key={weight.value}>
-          <p className="text-label text-accent">{weight.label}</p>
+          <p className="text-label text-action">{weight.label}</p>
           <p className="text-h3" style={{ fontWeight: weight.value }}>
             {STACKED}
           </p>
@@ -118,7 +118,7 @@ const Specimen = () => {
       <h2 className="mt-12">Colour pairs</h2>
       <div className="mt-4 grid grid-cols-2 gap-4">
         {SWATCHES.map((swatch) => (
-          <div className={`${swatch.bg} ${swatch.fg} rounded-lg p-6`} key={swatch.name}>
+          <div className={`${swatch.bg} ${swatch.fg} rounded-control p-6`} key={swatch.name}>
             <p className="text-h3">{swatch.name}</p>
             <p className="text-label">{swatch.hex}</p>
             <p className="text-body">Rửa xe tự động — text on this colour</p>

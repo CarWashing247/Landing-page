@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AutoWash247 — landing design preview</title>
+  <link rel="stylesheet" href="./tokens.css">
+  <style>
+    .wrap { width: min(1120px, calc(100% - 40px)); margin-inline: auto; }
+    .site-header { background: var(--surface); border-bottom: 1px solid var(--border); }
+    .site-header__inner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 80px; }
+    .nav { display: flex; align-items: center; gap: 1.75rem; font-size: .875rem; font-weight: 650; }
+    .nav a:hover { color: var(--action); }
+    .header-actions { display: flex; align-items: center; gap: 1rem; }
+    .locale { font-size: .8rem; font-weight: 700; color: var(--secondary); }
+    .menu { display: none; min-width: 44px; min-height: 44px; border: 1px solid var(--border); border-radius: 10px; background: white; }
+    .menu__lines, .menu__lines::before, .menu__lines::after { display: block; width: 18px; height: 2px; border-radius: 2px; background: var(--ink); content: ''; }
+    .menu__lines::before { transform: translateY(-6px); }
+    .menu__lines::after { transform: translateY(4px); }
+    .hero { display: grid; grid-template-columns: 1.02fr .98fr; gap: 3rem; align-items: center; padding-block: 72px 84px; }
+    .hero h1 { max-width: 11ch; margin: 1rem 0 1.35rem; font-size: clamp(3.2rem, 5.4vw, 5.8rem); font-weight: 800; }
+    .hero p { max-width: 33rem; font-size: 1.15rem; color: var(--secondary); }
+    .hero__actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 2rem; }
+    .hero__meta { display: flex; flex-wrap: wrap; gap: 1.35rem; margin-top: 2.3rem; color: var(--secondary); font-size: .85rem; font-weight: 600; }
+    .hero__meta span::before { content: ''; display: inline-block; width: 7px; height: 7px; margin-right: .5rem; border-radius: 50%; background: var(--action); vertical-align: .13em; }
+    .visual { position: relative; min-height: 500px; overflow: hidden; border-radius: 28px; background: radial-gradient(circle at 75% 20%, #536b82 0, #263a50 38%, #182536 75%); box-shadow: var(--shadow); }
+    .visual::before, .visual::after { content: ''; position: absolute; width: 650px; height: 650px; border: 1px solid rgb(255 255 255 / 14%); border-radius: 50%; left: 46%; top: -37%; }
+    .visual::after { width: 460px; height: 460px; left: 60%; top: -16%; }
+    .visual__grid { position: absolute; inset: auto 0 0; height: 40%; background: repeating-linear-gradient(90deg, transparent 0 70px, rgb(255 255 255 / 5%) 71px 72px), linear-gradient(transparent, rgb(0 0 0 / 27%)); transform: perspective(240px) rotateX(25deg); transform-origin: bottom; }
+    .visual__car { position: absolute; width: 82%; left: 9%; top: 37%; filter: drop-shadow(0 18px 25px rgb(0 0 0 / 38%)); }
+    .visual__chip { position: absolute; top: 25px; left: 25px; display: inline-flex; gap: .5rem; align-items: center; padding: .55rem .8rem; border: 1px solid rgb(255 255 255 / 25%); border-radius: 10px; color: white; background: rgb(255 255 255 / 9%); backdrop-filter: blur(8px); font-size: .77rem; font-weight: 700; }
+    .visual__chip::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #9ee3d1; }
+    .section { padding-block: 88px; }
+    .section--white { background: var(--surface); }
+    .section-heading { display: flex; justify-content: space-between; align-items: end; gap: 2rem; margin-bottom: 30px; }
+    .section-heading h2 { max-width: 15ch; margin: .6rem 0 0; font-size: clamp(2.2rem, 3.3vw, 3.5rem); }
+    .section-heading p { max-width: 27rem; margin-bottom: .2rem; color: var(--secondary); }
+    .steps, .services { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .step, .service { min-height: 240px; padding: 28px; border: 1px solid var(--border); border-radius: 20px; background: white; }
+    .step__number { color: var(--action); font-family: 'Inter Tight', sans-serif; font-size: 2rem; font-weight: 800; }
+    .step h3, .service h3 { margin: 1.7rem 0 .5rem; font-size: 1.45rem; }
+    .step p, .service p { color: var(--secondary); }
+    .service { display: flex; flex-direction: column; min-height: 310px; }
+    .service__top { display: flex; justify-content: space-between; gap: 1rem; }
+    .service__icon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 14px; background: #fceaea; color: var(--action); font-size: 1.25rem; }
+    .service__icon::before { content: ''; display: block; width: 19px; height: 19px; border: 2px solid currentColor; border-radius: 50% 50% 50% 4px; transform: rotate(-45deg); }
+    .service__price { margin-top: auto; padding-top: 1.5rem; font-size: .8rem; font-weight: 700; color: var(--secondary); }
+    .service .button { margin-top: 1rem; }
+    .faq { display: grid; grid-template-columns: .75fr 1.25fr; gap: 3rem; }
+    .faq h2 { font-size: clamp(2.2rem, 3.3vw, 3.5rem); }
+    details { border-bottom: 1px solid var(--border); }
+    summary { padding: 1.2rem 2rem 1.2rem 0; font-weight: 700; cursor: pointer; }
+    details p { max-width: 60ch; color: var(--secondary); }
+    .closing { display: flex; justify-content: space-between; align-items: center; gap: 2rem; padding: 48px; border-radius: 24px; color: white; background: var(--slate); }
+    .closing h2 { max-width: 18ch; margin: 0; font-size: clamp(2rem, 3vw, 3rem); }
+    .closing .eyebrow { color: #ffb1a9; }
+    .footer { margin-top: 80px; padding-block: 48px; border-top: 1px solid var(--border); color: var(--secondary); font-size: .875rem; }
+    .footer__inner { display: flex; justify-content: space-between; gap: 2rem; }
+    @media (max-width: 900px) { .nav, .header-actions > .button { display: none; } .menu { display: inline-grid; place-items: center; } .hero { gap: 1.5rem; } .visual { min-height: 400px; } }
+    @media (max-width: 700px) { .wrap { width: min(100% - 40px, 520px); } .site-header__inner { min-height: 68px; } .hero { display: flex; flex-direction: column; align-items: stretch; padding-block: 46px 58px; } .hero h1 { font-size: clamp(3.1rem, 12vw, 4.5rem); } .hero__actions .button { flex: 1 1 100%; } .hero__meta { gap: .5rem 1rem; } .visual { min-height: 330px; } .section { padding-block: 60px; } .section-heading { display: block; } .section-heading p { margin-top: 1rem; } .steps, .services, .faq { grid-template-columns: 1fr; } .step { min-height: 0; } .step h3 { margin-top: .7rem; } .closing { align-items: stretch; flex-direction: column; padding: 30px; } .footer__inner { flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <div class="preview-note">Design preview · Illustrative English copy · TODO(copy) and TODO(data) before publication</div>
+  <header class="site-header"><div class="wrap site-header__inner">
+    <a class="brand" href="#top"><span class="brand__mark">A/</span>AutoWash247</a>
+    <nav class="nav" aria-label="Preview navigation"><a href="#top">Home</a><a href="#services">Services</a><a href="#process">How it works</a><a href="#faq">Questions</a></nav>
+    <div class="header-actions"><span class="locale">VI / EN</span><a class="button button--primary" href="#closing">Find a station</a><button class="menu" aria-label="Menu"><span class="menu__lines" aria-hidden="true"></span></button></div>
+  </div></header>
+  <main id="top">
+    <section class="wrap hero">
+      <div><span class="eyebrow">Self-service car wash</span><h1>A clean car, on your time.</h1><p>Scan at the station, choose a wash, and get back on the road. The steps and prices stay clear from the start.</p><div class="hero__actions"><a class="button button--primary" href="#closing">Find a station →</a><a class="button button--outline" href="#process">See how it works</a></div><div class="hero__meta"><span>QR start</span><span>Clear packages</span><span>Simple process</span></div></div>
+      <div class="visual" role="img" aria-label="Abstract car wash design illustration"><span class="visual__chip">READY WHEN YOU ARE</span><div class="visual__grid"></div><svg class="visual__car" viewBox="0 0 540 240" fill="none" aria-hidden="true"><path d="M69 142h38l42-66c9-15 25-25 43-25h139c19 0 37 9 48 25l45 66h39c22 0 39 17 39 39v16H37v-16c0-22 14-39 32-39Z" fill="#e8eef4"/><path d="m160 133 39-60h127c18 0 25 3 35 18l29 42H160Z" fill="#5b7187"/><path d="M54 183h432" stroke="#b8c5d1" stroke-width="5"/><circle cx="145" cy="190" r="31" fill="#111b29"/><circle cx="145" cy="190" r="14" fill="#aab8c6"/><circle cx="399" cy="190" r="31" fill="#111b29"/><circle cx="399" cy="190" r="14" fill="#aab8c6"/><path d="M51 155h53m350 0h32" stroke="#db4948" stroke-width="9" stroke-linecap="round"/></svg></div>
+    </section>
+    <section class="section section--white" id="process"><div class="wrap"><div class="section-heading"><div><span class="eyebrow">How it works</span><h2>Three steps from arrival to clean.</h2></div><p>The editor controls the step titles and descriptions. This layout stays legible even with longer translated text.</p></div><div class="steps"><article class="step"><span class="step__number">01</span><h3>Scan</h3><p>Use the code at the station to start your visit.</p></article><article class="step"><span class="step__number">02</span><h3>Choose</h3><p>Review the available packages and select one.</p></article><article class="step"><span class="step__number">03</span><h3>Wash</h3><p>Follow the station instructions and continue your day.</p></article></div></div></section>
+    <section class="section" id="services"><div class="wrap"><div class="section-heading"><div><span class="eyebrow">Services</span><h2>Choose the wash that fits.</h2></div><p>Package names, inclusions, duration, and prices are shown only from published CMS records.</p></div><div class="services"><article class="service"><div class="service__top"><span class="service__icon" aria-hidden="true"></span></div><h3>Service package</h3><p>CMS description and included items appear here.</p><span class="service__price">PRICE FROM CMS · DURATION FROM CMS</span><a class="button button--outline" href="#closing">View package</a></article><article class="service"><div class="service__top"><span class="service__icon" aria-hidden="true"></span></div><h3>Service package</h3><p>CMS description and included items appear here.</p><span class="service__price">PRICE FROM CMS · DURATION FROM CMS</span><a class="button button--outline" href="#closing">View package</a></article><article class="service"><div class="service__top"><span class="service__icon" aria-hidden="true"></span></div><h3>Service package</h3><p>CMS description and included items appear here.</p><span class="service__price">PRICE FROM CMS · DURATION FROM CMS</span><a class="button button--outline" href="#closing">View package</a></article></div></div></section>
+    <section class="section section--white" id="faq"><div class="wrap faq"><div><span class="eyebrow">Questions</span><h2>What to know before you go.</h2><p class="muted">Questions and answers come from the FAQ block.</p></div><div><details><summary>How does the wash begin?</summary><p>The answer is entered by an editor and appears in the page HTML.</p></details><details><summary>Which package should I choose?</summary><p>The available packages come from published Services.</p></details><details><summary>Where can I find a station?</summary><p>The destination is configured in the CMS.</p></details></div></div></section>
+    <section class="wrap" id="closing"><div class="closing"><div><span class="eyebrow">Your next wash</span><h2>Ready when you are.</h2></div><a class="button button--primary" href="#top">Find a station →</a></div></section>
+  </main>
+  <footer class="footer"><div class="wrap footer__inner"><div class="brand"><span class="brand__mark">A/</span>AutoWash247</div><div>Business identity, address, phone, and hours: TODO(data)</div></div></footer>
+</body>
+</html>

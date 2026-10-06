@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --ink: #0f172a;
+  --slate: #1e293b;
+  --action: #c62929;
+  --action-hover: #a91f24;
+  --paper: #f8fafc;
+  --surface: #fff;
+  --mist: #e9edf1;
+  --border: #d8e1e8;
+  --secondary: #475569;
+  --success: #116b52;
+  --focus: #0369a1;
+  --shadow: 0 20px 50px rgb(15 23 42 / 7%);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; font: 400 16px/1.55 Inter, system-ui, sans-serif; color: var(--ink); background: var(--paper); }
+button, input { font: inherit; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+h1, h2, h3, p { margin-top: 0; }
+h1, h2, h3 { font-family: 'Inter Tight', Inter, system-ui, sans-serif; line-height: 1.12; letter-spacing: -.035em; }
+.eyebrow { color: var(--action); font-size: .75rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+.button { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: .7rem 1.25rem; border: 1px solid transparent; border-radius: 12px; font-weight: 700; cursor: pointer; transition: background-color .2s, border-color .2s, color .2s; }
+.button--primary { background: var(--action); color: white; }
+.button--primary:hover { background: var(--action-hover); }
+.button--outline { border-color: var(--border); background: var(--surface); }
+.button--outline:hover { border-color: var(--slate); }
+.muted { color: var(--secondary); }
+.brand { display: inline-flex; gap: .7rem; align-items: center; font-family: 'Inter Tight', Inter, sans-serif; font-size: 1.2rem; font-weight: 800; letter-spacing: -.04em; white-space: nowrap; }
+.brand__mark { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--action); color: white; font-size: .9rem; letter-spacing: -.1em; }
+.preview-note { padding: .5rem 1rem; background: #fff4da; color: #5b4200; text-align: center; font-size: .75rem; font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; } }

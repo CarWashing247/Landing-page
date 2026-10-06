@@ -46,14 +46,14 @@ export const Pricing = ({
     <ul className="mt-8 grid gap-6 md:grid-cols-3">
       {(block.services ?? []).map(asService).map((service) =>
         service ? (
-          <li className="flex flex-col rounded-xl bg-card p-6" key={service.id}>
+          <li className="border-border rounded-card flex flex-col border bg-surface p-6" key={service.id}>
             <h3 className="text-h3">
-              <a className="text-foreground no-underline" href={pathForService(service.slug, locale)}>
+              <a className="text-ink no-underline" href={pathForService(service.slug, locale)}>
                 {service.name}
               </a>
             </h3>
 
-            <p className="text-h2 text-primary mt-2">
+            <p className="text-h2 text-ink mt-2">
               {formatPrice(service.price, service.currency, locale)}
             </p>
             <p className="text-label mt-1 opacity-70">

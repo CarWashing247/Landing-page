@@ -1,4 +1,4 @@
-import { Inter } from 'next/font/google'
+import { Inter, Inter_Tight } from 'next/font/google'
 
 /**
  * Inter, the one typeface this site loads.
@@ -39,4 +39,27 @@ export const inter = Inter({
    */
   subsets: ['latin', 'vietnamese'],
   variable: '--font-inter',
+})
+
+/**
+ * Inter Tight, for display headings only.
+ *
+ * The Phase 3 interface direction (`architecture/phase3-uiux-promax.md`) pairs a
+ * tightly-tracked display face with Inter for body and controls — the headings
+ * in the prototypes are set at -0.035em, which Inter alone does not give. Inter
+ * Tight is the same superfamily, so the two share metrics and vertical rhythm
+ * and the pairing never looks like two unrelated fonts.
+ *
+ * **It carries the `vietnamese` subset too**, which is the whole reason this is
+ * a second `next/font` call rather than a CSS `font-stretch` on Inter: a display
+ * face that cannot render ế and ộ is useless on a Vietnamese site, and the
+ * subset has to be requested per family.
+ *
+ * Headings only. Loading a second family for body copy would double the font
+ * payload for text Inter already sets well.
+ */
+export const interTight = Inter_Tight({
+  display: 'swap',
+  subsets: ['latin', 'vietnamese'],
+  variable: '--font-inter-tight',
 })

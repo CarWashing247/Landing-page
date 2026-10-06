@@ -51,7 +51,7 @@ export const MapEmbed = ({
   title: string
   zoom?: number
 }) => (
-  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl md:aspect-[16/9]">
+  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-card md:aspect-[16/9]">
     <iframe
       className="absolute inset-0 h-full w-full border-0"
       height={450}

@@ -36,7 +36,7 @@ export const Header = async ({ locale }: { locale: Locale }) => {
   const links = NAV.map((item) => (
     <li key={item.key}>
       <a
-        className="text-on-primary hover:text-accent block py-2 no-underline md:py-0"
+        className="text-ink hover:text-action block py-2 no-underline md:py-0"
         href={item.href(locale)}
       >
         {copy.nav[item.key]}
@@ -45,7 +45,7 @@ export const Header = async ({ locale }: { locale: Locale }) => {
   ))
 
   return (
-    <header className="bg-primary">
+    <header className="bg-surface border-border border-b">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
         {/*
           The logo is the mark plus the brand name as live text, not a single
@@ -53,7 +53,7 @@ export const Header = async ({ locale }: { locale: Locale }) => {
           renaming the business stays a CMS edit rather than a redraw.
         */}
         <a
-          className="text-on-primary text-h3 flex items-center gap-2 no-underline"
+          className="text-ink font-display flex items-center gap-2 text-h3 no-underline"
           href={pathForHome(locale)}
         >
           <Mark className="h-7 w-7 shrink-0" />
@@ -82,7 +82,7 @@ export const Header = async ({ locale }: { locale: Locale }) => {
 
           {phone ? (
             <a
-              className="bg-accent text-on-accent text-label rounded-lg px-4 py-2 no-underline"
+              className="bg-action hover:bg-action-hover text-on-action text-label rounded-control inline-flex min-h-11 items-center px-5 font-bold no-underline transition-colors"
               // T-21 attaches the GA4 event here; the element is left in place
               // for it rather than wired up now.
               href={callHref(phone)}
@@ -125,13 +125,13 @@ const LanguageSwitch = ({ locale }: { locale: Locale }) => (
              * is not hue — which is the right answer anyway, because colour
              * alone never conveys state.
              */
-            className="text-on-primary px-1 font-semibold underline underline-offset-4"
+            className="text-ink px-1 font-semibold underline underline-offset-4"
           >
             {candidate.toUpperCase()}
           </span>
         ) : (
           <a
-            className="text-on-primary/70 px-1 no-underline"
+            className="text-secondary px-1 no-underline"
             href={pathForHome(candidate)}
           >
             {candidate.toUpperCase()}

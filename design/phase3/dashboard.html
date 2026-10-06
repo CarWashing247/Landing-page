@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AutoWash247 — CMS dashboard design preview</title>
+  <link rel="stylesheet" href="./tokens.css">
+  <style>
+    body { background: #edf1f4; }
+    .app { display: grid; grid-template-columns: 244px minmax(0,1fr); min-height: 100vh; }
+    .rail { padding: 28px 16px; color: #dbe6ef; background: var(--slate); }
+    .rail .brand { margin: 0 12px 48px; color: white; }
+    .rail__caption { margin: 28px 12px 8px; color: #a8b9c9; font-size: .68rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+    .rail a:not(.brand) { display: flex; align-items: center; min-height: 43px; padding: 9px 12px; border-radius: 9px; font-size: .86rem; font-weight: 600; }
+    .rail a:hover { background: rgb(255 255 255 / 7%); }
+    .rail a.active { background: var(--action); color: white; }
+    .rail-toggle { display: none; min-height: 44px; padding: 8px 12px; border: 1px solid #a8b9c9; border-radius: 9px; color: white; background: transparent; font-weight: 700; }
+    .work { min-width: 0; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; min-height: 72px; padding: 12px 32px; border-bottom: 1px solid var(--border); background: white; font-size: .83rem; }
+    .topbar span { color: var(--secondary); }
+    .content { max-width: 1440px; margin: auto; padding: 36px 32px 80px; }
+    .head { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 26px; }
+    h1 { margin: .5rem 0 .4rem; font-size: clamp(2.2rem, 3vw, 3.25rem); }
+    .head p { margin: 0; color: var(--secondary); }
+    .cards { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
+    .card { min-height: 206px; padding: 24px; border: 1px solid var(--border); border-radius: 16px; background: white; box-shadow: 0 4px 15px rgb(15 23 42 / 3%); }
+    .card__top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .card__icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px; background: #fceaea; color: var(--action); font-size: 1.3rem; font-weight: 700; }
+    .card h2 { margin: 24px 0 6px; font-size: 1.45rem; }
+    .card p { color: var(--secondary); font-size: .82rem; }
+    .card a { color: var(--action); font-size: .83rem; font-weight: 800; }
+    .lower { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(260px,1fr); gap: 16px; margin-top: 16px; }
+    .panel { border: 1px solid var(--border); border-radius: 16px; background: white; }
+    .panel__head { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid var(--border); }
+    .panel__head h2 { margin: 0; font-size: 1.2rem; }
+    .panel__head a { color: var(--action); font-size: .8rem; font-weight: 800; }
+    .empty { display: grid; place-items: center; min-height: 245px; padding: 28px; text-align: center; }
+    .empty__symbol { display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 14px; border: 2px solid var(--border); border-radius: 12px; color: var(--secondary); font-weight: 800; }
+    .empty strong { display: block; }
+    .empty p { max-width: 38ch; margin: 6px auto 0; color: var(--secondary); font-size: .82rem; }
+    .checklist { padding: 16px 24px 24px; }
+    .checklist div { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--border); font-size: .83rem; }
+    .checklist div:last-child { border: 0; }
+    .checklist b { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--mist); font-size: .7rem; }
+    @media (max-width: 1100px) { .cards { grid-template-columns: repeat(2,minmax(0,1fr)); } .lower { grid-template-columns: 1fr; } }
+    @media (max-width: 700px) { .app { grid-template-columns: 1fr; } .rail { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; } .rail .brand { margin: 0; } .rail nav, .rail__caption { display: none; } .rail-toggle { display: block; } .topbar { padding-inline: 20px; } .content { padding: 28px 20px 60px; } .head { align-items: stretch; flex-direction: column; } .head .button { width: 100%; } .cards { grid-template-columns: 1fr; } .card { min-height: 0; } }
+  </style>
+</head>
+<body>
+  <div class="preview-note">Payload dashboard design preview · No invented counts or content</div>
+  <div class="app"><aside class="rail"><a class="brand" href="#"><span class="brand__mark">A/</span>AutoWash247</a><button class="rail-toggle" aria-label="Open admin navigation">Menu</button><nav aria-label="Admin sections"><div class="rail__caption">Workspace</div><a class="active" href="#">Dashboard</a><div class="rail__caption">Collections</div><a href="#">Pages</a><a href="#">Services</a><a href="#">Media</a><div class="rail__caption">Globals</div><a href="#">Business information</a><a href="#">Site settings</a><div class="rail__caption">Users</div><a href="#">Users</a></nav></aside><div class="work"><header class="topbar"><strong>Dashboard</strong><span>Admin language · Account</span></header><main class="content"><div class="head"><div><span class="eyebrow">Content workspace</span><h1>Manage your site.</h1><p>Publish pages, maintain services, and review the content visitors see.</p></div><a class="button button--primary" href="#pages">Create page</a></div><div class="cards"><article class="card" id="pages"><div class="card__top"><span class="card__icon" aria-hidden="true">□</span><span class="muted">01</span></div><h2>Pages</h2><p>Build and update landing content with reusable blocks.</p><a href="#">Open pages →</a></article><article class="card"><div class="card__top"><span class="card__icon" aria-hidden="true">◫</span><span class="muted">02</span></div><h2>Services</h2><p>Keep packages, prices, durations, and included items accurate.</p><a href="#">Open services →</a></article><article class="card"><div class="card__top"><span class="card__icon" aria-hidden="true">▧</span><span class="muted">03</span></div><h2>Media</h2><p>Manage images and localized alternative text.</p><a href="#">Open media →</a></article></div><div class="lower"><section class="panel"><div class="panel__head"><h2>Recent content</h2><a href="#">View all</a></div><div class="empty"><div><span class="empty__symbol">—</span><strong>Content appears here when available.</strong><p>This preview does not invent pages, dates, authors, or publication states.</p></div></div></section><section class="panel"><div class="panel__head"><h2>Editorial checklist</h2></div><div class="checklist"><div><b>1</b> Add content in both locales</div><div><b>2</b> Review SEO fields and social image</div><div><b>3</b> Check the live preview</div><div><b>4</b> Publish when ready</div></div></section></div></main></div></div>
+</body>
+</html>

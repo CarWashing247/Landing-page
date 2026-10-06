@@ -47,7 +47,7 @@ export const DraftBanner = async ({ locale, path }: { locale: Locale; path?: str
        * normal flow the banner pushes the page down, which is correct for a
        * standing condition that applies to the whole document.
        */
-      className="bg-secondary text-on-secondary text-label flex flex-wrap items-center gap-2 px-4 py-2"
+      className="bg-notice text-on-notice text-label flex flex-wrap items-center gap-2 px-4 py-2"
       // `role="status"` rather than `alert`: it is a standing condition, not an
       // interruption, so a screen reader announces it without cutting off.
       role="status"

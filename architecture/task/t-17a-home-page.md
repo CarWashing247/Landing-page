@@ -36,7 +36,16 @@ That is the route Design.md section 3 puts the primary Vietnamese cluster on
 (`rửa xe tự động` + area name) and the one Gate 4 requires Search Console to
 have indexed. It is also the only page the `AutoWash` JSON-LD attaches to.
 
-## The decision this task cannot start without
+## The decision — now answered
+
+> **`/` becomes a `Pages` document with the reserved slug `home`, served at `/`
+> and `/en`.** The Phase 3 interface direction
+> ([`phase3-uiux-promax.md`](../phase3-uiux-promax.md)) records this as the
+> user-selected answer to D1 — path **A** below. Its consequences are no longer
+> optional and are part of this task: `/home` and `/en/home` must 404, and the
+> sitemap must contain exactly one entry per published, indexable locale.
+
+## The decision, as it was framed
 
 **Is `/` a CMS document, and under what slug?** Follow-up D1. The two answers
 lead to different work, and neither is obviously right:
@@ -67,7 +76,7 @@ is one reserved slug and a sitemap branch, both of which are small and local;
 the cost of B is paid every time someone wants a word changed on the most
 important page of the site.
 
-**Do not start building until this is answered.** Both paths touch `[slug]`, the
+~~**Do not start building until this is answered.**~~ **Answered — path A.** Both paths touch `[slug]`, the
 sitemap and `buildMetadata`, and doing one then switching is most of the work
 twice.
 

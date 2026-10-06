@@ -18,7 +18,7 @@ export const Hero = ({ block }: { block: HeroBlock }) => {
   const image = asMedia(block.image)
 
   return (
-    <section className="bg-primary text-on-primary">
+    <section className="bg-paper text-ink">
       <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-12 md:grid-cols-2 md:py-20">
         <div>
           <h1 className="text-display">{block.heading}</h1>
