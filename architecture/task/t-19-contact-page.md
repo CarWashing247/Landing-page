@@ -15,6 +15,11 @@ Address and directions come first; the form is secondary. The map must not
 cost LCP — an eagerly loaded Google Maps iframe is the single easiest way
 to fail Gate 3.
 
+> **Design source: Canva `DAHXNi05PeY` (AutoWash247 Desktop Pages).**
+> Tokens (colour, type scale, radii) are already implemented from the UI
+> Foundation deck by T-15 — use them by name, do not re-read hex values out of
+> the deck. **Note a scope conflict:** page 7 of the UI Foundation deck says "Map and contact integrations are out of scope for this release", which contradicts this task existing. Resolve before building.
+
 ## Scope
 
 **In scope**

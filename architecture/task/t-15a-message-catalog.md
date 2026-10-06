@@ -18,6 +18,11 @@ Built afterwards, the job becomes finding Vietnamese literals scattered
 across finished components and extracting them — which is the same mistake
 as retrofitting metadata, at a smaller scale.
 
+> **Design source: Canva `DAHXI-Jb8Ig` (UI Foundation) and the three page decks.**
+> Tokens (colour, type scale, radii) are already implemented from the UI
+> Foundation deck by T-15 — use them by name, do not re-read hex values out of
+> the deck. **The decks carry real Vietnamese copy written by the designer**, not machine translation — headings, the 24/7 badge ("ĐANG HOẠT ĐỘNG 24/7"), FAQ questions, the four process steps. Take the catalog's Vietnamese from there rather than translating or inventing it (CLAUDE.md).
+
 ## Scope
 
 **In scope**

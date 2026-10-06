@@ -15,6 +15,11 @@ and a filled SEO tab carrying the correct `keywordFocus`. One page per
 keyword cluster — two pages chasing the same term compete, and Google picks
 one, usually not the intended one.
 
+> **Design source: Canva all four Canva decks.**
+> Tokens (colour, type scale, radii) are already implemented from the UI
+> Foundation deck by T-15 — use them by name, do not re-read hex values out of
+> the deck. **Real Vietnamese copy exists in the decks** — designer-written, not machine-translated. Seed from it. Examples: "Rửa xe tự động 24/7, mọi lúc.", "Sạch nhanh. An tâm lái.", "Công nghệ cảm biến thông minh, hoạt động 24/7, mang lại trải nghiệm rửa xe nhanh, sạch và an toàn." Business data (address, phone, hours) is **not** in the decks and remains `TODO(data):` in `BusinessInfo`.
+
 ## Scope
 
 **In scope** — the keyword map, one page per cluster:
