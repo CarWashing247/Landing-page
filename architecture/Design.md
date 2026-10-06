@@ -563,6 +563,15 @@ Depends on: T-06, T-15, T-15A.
 Done when: an editor can compose a page from blocks in any order and the
 frontend renders it; the `Faq` block feeds T-14's `FAQPage` schema.
 
+**T-17A · Home page**
+`/` and `/en` built from the blocks T-17 ships, instead of the placeholder
+heading they render today. Requires deciding whether `/` is a CMS document
+— see the task file; nothing else in Phase 3 can answer it.
+Depends on: T-16, T-17.
+Done when: both locales' home pages render real sections rather than a
+hardcoded heading, an editor can change them without a deploy, and the
+`AutoWash` JSON-LD still comes from `BusinessInfo`.
+
 **T-18 · Service detail template**
 `/dich-vu/<slug>` rendering price, duration, what the package includes,
 and a CTA.
