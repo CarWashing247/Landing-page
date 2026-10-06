@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!--
+    The favicon. Fixed colours rather than currentColor: a browser tab has no
+    inherited colour to take, and the tile is what makes the mark readable at
+    16px against an arbitrary tab background.
+    Primary #059669 and card #FFFFFF, from design-system/autowash247/MASTER.md.
+  -->
+  <rect width="32" height="32" rx="7" fill="#059669"/>
+  <path d="M20 7c0 0-6 6.6-6 10.4a6 6 0 0 0 12 0C26 13.6 20 7 20 7Z" fill="#FFFFFF"/>
+  <path d="M4 12.5h7M4 17h5M4 21.5h3" stroke="#FFFFFF" stroke-linecap="round" stroke-width="2.2"/>
+</svg>

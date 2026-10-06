@@ -37,7 +37,7 @@ export const MobileMenu = ({ children, label }: { children: ReactNode; label: st
       </span>
     </summary>
 
-    <div className="bg-primary absolute inset-x-0 top-full z-50 border-t border-white/10 p-4">
+    <div className="bg-primary absolute inset-x-0 top-full z-50 border-t border-card/10 p-4">
       {children}
     </div>
   </details>

@@ -26,7 +26,7 @@ export const Band = ({
   children: React.ReactNode
   tone?: 'primary' | 'surface'
 }) => (
-  <section className={tone === 'primary' ? 'bg-primary text-on-primary' : 'bg-surface text-ink'}>
+  <section className={tone === 'primary' ? 'bg-primary text-on-primary' : 'bg-background text-foreground'}>
     <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">{children}</div>
   </section>
 )

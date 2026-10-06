@@ -46,9 +46,9 @@ export const Pricing = ({
     <ul className="mt-8 grid gap-6 md:grid-cols-3">
       {(block.services ?? []).map(asService).map((service) =>
         service ? (
-          <li className="flex flex-col rounded-xl bg-white p-6" key={service.id}>
+          <li className="flex flex-col rounded-xl bg-card p-6" key={service.id}>
             <h3 className="text-h3">
-              <a className="text-ink no-underline" href={pathForService(service.slug, locale)}>
+              <a className="text-foreground no-underline" href={pathForService(service.slug, locale)}>
                 {service.name}
               </a>
             </h3>

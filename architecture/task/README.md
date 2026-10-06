@@ -77,6 +77,7 @@ Branch names are the file names without the `.md`:
 | --- | --- | --- |
 | [T-15](t-15-design-foundation.md) | Design foundation | T-04 |
 | [T-15A](t-15a-message-catalog.md) | Interface message catalog | T-04A, T-15 |
+| [T-15B](t-15b-design-system-regeneration.md) | Design system regeneration | T-15 |
 | [T-16](t-16-layout-shell.md) | Layout shell | T-05, T-15 |
 | [T-17](t-17-content-blocks.md) | Content blocks | T-06, T-15 |
 | [T-17A](t-17a-home-page.md) | Home page | T-16, T-17 |

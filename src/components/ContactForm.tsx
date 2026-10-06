@@ -74,7 +74,7 @@ const messageFor = (copy: ContactFormCopy, code: string | undefined): string =>
 type Status = 'idle' | 'sending' | 'sent' | 'failed'
 
 const FIELD_CLASS =
-  'text-body border-ink/20 bg-white text-ink placeholder:text-ink/40 w-full rounded-xl border px-4 py-3'
+  'text-body border-foreground/20 bg-card text-foreground placeholder:text-foreground/40 w-full rounded-xl border px-4 py-3'
 
 export const ContactForm = ({
   copy,
