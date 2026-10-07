@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { SitemapDocument } from './content'
-import { pathForPage, pathForService } from './locales'
+import { HOME_SLUG, pathForPage, pathForService } from './locales'
 import { indexableLocales, lastModifiedFor, sitemapEntries } from './sitemap'
 
 const BASE = 'https://autowash247.vn'
@@ -48,6 +48,18 @@ describe('sitemapEntries', () => {
       `${BASE}/bang-gia`,
       `${BASE}/en/pricing`,
     ])
+  })
+
+  it('lists the home document at the locale root, never at /home', () => {
+    const home = doc({ slug: { en: HOME_SLUG, vi: HOME_SLUG } })
+    const [entry] = sitemapEntries([home], pathForPage, BASE)
+
+    expect(urls(sitemapEntries([home], pathForPage, BASE))).toEqual([`${BASE}/`, `${BASE}/en`])
+    expect(entry?.alternates?.languages).toEqual({
+      en: `${BASE}/en`,
+      vi: `${BASE}/`,
+      'x-default': `${BASE}/`,
+    })
   })
 
   it('uses the localized service segment', () => {

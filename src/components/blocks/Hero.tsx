@@ -83,8 +83,55 @@ export const Hero = ({ block }: { block: HeroBlock }) => {
               priority
             />
           </div>
-        ) : null}
+        ) : (
+          <HeroVisual />
+        )}
       </Wrap>
     </section>
   )
 }
+
+/**
+ * The prototype's abstract wash panel, drawn when the editor has not set an
+ * image yet.
+ *
+ * Without it a hero with no image leaves the right half of the desktop grid
+ * empty, and the page loses the one dark surface above the fold that the
+ * design leans on. It is pure decoration — CSS and an inline SVG, no request,
+ * no text — so it is `aria-hidden`, says nothing a screen reader should read
+ * out, and cannot become the LCP element. An uploaded image replaces it.
+ *
+ * Every colour is a token: the prototype's hex values map onto `ink`, `slate`,
+ * `secondary`, `mist`, `border` and `action`.
+ */
+const HeroVisual = () => (
+  <div
+    aria-hidden="true"
+    className="shadow-card relative min-h-[330px] overflow-hidden rounded-[28px] bg-[radial-gradient(circle_at_75%_20%,var(--color-secondary)_0,var(--color-slate)_42%,var(--color-ink)_88%)] md:min-h-[500px]"
+  >
+    {/* Two rings, the prototype's ::before and ::after. */}
+    <span className="border-on-slate/15 absolute top-[-37%] left-[46%] h-[650px] w-[650px] rounded-full border" />
+    <span className="border-on-slate/15 absolute top-[-16%] left-[60%] h-[460px] w-[460px] rounded-full border" />
+
+    {/* The wash-bay floor: faint lanes receding in perspective. */}
+    <span className="absolute inset-x-0 bottom-0 h-2/5 origin-bottom [transform:perspective(240px)_rotateX(25deg)] bg-[repeating-linear-gradient(90deg,transparent_0_70px,color-mix(in_srgb,var(--color-on-slate)_6%,transparent)_71px_72px)]" />
+
+    <svg
+      className="absolute top-[37%] left-[9%] w-[82%] drop-shadow-[0_18px_25px_rgb(0_0_0/38%)]"
+      fill="none"
+      viewBox="0 0 540 240"
+    >
+      <path
+        className="fill-mist"
+        d="M69 142h38l42-66c9-15 25-25 43-25h139c19 0 37 9 48 25l45 66h39c22 0 39 17 39 39v16H37v-16c0-22 14-39 32-39Z"
+      />
+      <path className="fill-secondary" d="m160 133 39-60h127c18 0 25 3 35 18l29 42H160Z" />
+      <path className="stroke-border" d="M54 183h432" strokeWidth="5" />
+      <circle className="fill-ink" cx="145" cy="190" r="31" />
+      <circle className="fill-border" cx="145" cy="190" r="14" />
+      <circle className="fill-ink" cx="399" cy="190" r="31" />
+      <circle className="fill-border" cx="399" cy="190" r="14" />
+      <path className="stroke-action" d="M51 155h53m350 0h32" strokeLinecap="round" strokeWidth="9" />
+    </svg>
+  </div>
+)
