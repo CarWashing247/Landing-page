@@ -17,6 +17,7 @@ import type { Block } from 'payload'
  */
 export const Pricing: Block = {
   slug: 'pricing',
+  admin: { images: { thumbnail: { url: '/block-previews/pricing.svg', alt: '' } } },
   labels: {
     singular: { en: 'Pricing', vi: 'Khối bảng giá' },
     plural: { en: 'Pricing blocks', vi: 'Các khối bảng giá' },

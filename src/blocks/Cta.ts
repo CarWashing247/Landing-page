@@ -3,6 +3,7 @@ import type { Block } from 'payload'
 /** A closing band: one line, one action. */
 export const Cta: Block = {
   slug: 'cta',
+  admin: { images: { thumbnail: { url: '/block-previews/cta.svg', alt: '' } } },
   labels: { singular: { en: 'Call to action', vi: 'Khối kêu gọi hành động' }, plural: { en: 'Calls to action', vi: 'Các khối kêu gọi hành động' } },
   fields: [
     {

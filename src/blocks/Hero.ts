@@ -16,6 +16,7 @@ import type { Block } from 'payload'
  */
 export const Hero: Block = {
   slug: 'hero',
+  admin: { images: { thumbnail: { url: '/block-previews/hero.svg', alt: '' } } },
   labels: { singular: { en: 'Hero', vi: 'Khối mở đầu' }, plural: { en: 'Heroes', vi: 'Các khối mở đầu' } },
   fields: [
     {

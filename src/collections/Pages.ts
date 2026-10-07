@@ -210,6 +210,7 @@ export const Pages: CollectionConfig = {
                 Contact,
                 {
                   slug: 'content',
+                  admin: { images: { thumbnail: { url: '/block-previews/content.svg', alt: '' } } },
                   labels: {
                     singular: { en: 'Text', vi: 'Văn bản' },
                     plural: { en: 'Text blocks', vi: 'Các khối văn bản' },

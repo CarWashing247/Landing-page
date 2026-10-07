@@ -220,7 +220,9 @@ style preferences.
 
 ### 5.5 Images and performance
 
-- All images go through `next/image`. No bare `<img>`.
+- All project-rendered public images go through `next/image`. No bare `<img>`
+  in public-page components. Payload renders the admin-only block picker SVGs
+  through its native drawer; do not replace that renderer just to use `next/image`.
 - The hero image on each page gets `priority`; everything below the fold
   is lazy.
 - `alt` is a required field on the `Media` collection. Do not make it
@@ -232,6 +234,14 @@ style preferences.
 
 ### 5.6 CMS authoring experience
 
+- Every block selectable in `Pages.layout` has a 3:2 SVG schematic in
+  `public/block-previews/` and uses Payload's native
+  `block.admin.images.thumbnail` setting. The image shows the block's real
+  structure, while Payload's localized label names it. Use `alt: ''` because
+  the adjacent button label already gives the control its accessible name.
+  Do not put invented business data, prices, or untranslated copy in a preview.
+  See `design/phase3/block-picker.html` and T-19D in `Design.md` before adding
+  or changing a block.
 - Every field has a `label` and, where the purpose is not obvious, an
   `admin.description` — each a `{ vi, en }` pair, never a bare string. The
   audience cannot read `canonical` and infer what it does.

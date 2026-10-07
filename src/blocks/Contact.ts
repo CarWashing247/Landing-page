@@ -27,6 +27,7 @@ import type { Block } from 'payload'
  */
 export const Contact: Block = {
   slug: 'contact',
+  admin: { images: { thumbnail: { url: '/block-previews/contact.svg', alt: '' } } },
   labels: {
     singular: { en: 'Contact', vi: 'Khối liên hệ' },
     plural: { en: 'Contact blocks', vi: 'Các khối liên hệ' },
