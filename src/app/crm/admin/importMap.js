@@ -28,6 +28,10 @@ import { MetaImageComponent as MetaImageComponent_a8a977ebc872c5d5ea7ee689724c08
 import { PreviewComponent as PreviewComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { Icon as Icon_f6725385e1c85d4569908fa222b1f780 } from '../../../components/admin/Logo.tsx'
 import { Logo as Logo_f6725385e1c85d4569908fa222b1f780 } from '../../../components/admin/Logo.tsx'
+import { WelcomeWidget as WelcomeWidget_e347fb91d64a2485bd189d4207e55cb4 } from '../../../components/admin/widgets/Welcome.tsx'
+import { CollectionsWidget as CollectionsWidget_8d301feda5887dc4d67a6559cdb46518 } from '../../../components/admin/widgets/Collections.tsx'
+import { RecentContentWidget as RecentContentWidget_9d8ecc22c091e475e629efba81bc394f } from '../../../components/admin/widgets/RecentContent.tsx'
+import { ChecklistWidget as ChecklistWidget_112b28741b92d124b903a029f1916f8b } from '../../../components/admin/widgets/Checklist.tsx'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -62,5 +66,9 @@ export const importMap = {
   "@payloadcms/plugin-seo/client#PreviewComponent": PreviewComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "/components/admin/Logo.tsx#Icon": Icon_f6725385e1c85d4569908fa222b1f780,
   "/components/admin/Logo.tsx#Logo": Logo_f6725385e1c85d4569908fa222b1f780,
+  "/components/admin/widgets/Welcome.tsx#WelcomeWidget": WelcomeWidget_e347fb91d64a2485bd189d4207e55cb4,
+  "/components/admin/widgets/Collections.tsx#CollectionsWidget": CollectionsWidget_8d301feda5887dc4d67a6559cdb46518,
+  "/components/admin/widgets/RecentContent.tsx#RecentContentWidget": RecentContentWidget_9d8ecc22c091e475e629efba81bc394f,
+  "/components/admin/widgets/Checklist.tsx#ChecklistWidget": ChecklistWidget_112b28741b92d124b903a029f1916f8b,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

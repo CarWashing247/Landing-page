@@ -1,0 +1,314 @@
+/*
+ * The admin's brand chrome, and nothing more.
+ *
+ * **Source: `design/phase3/dashboard.html` and `admin.html`** — a dark slate
+ * navigation rail with a red active item, light list and editor canvases, and
+ * the published state in green beside a text label.
+ *
+ * **This is not a re-theme of Payload.** T-19A once shipped 220 lines and 68
+ * custom properties restyling the whole panel, and T-19B removed it because the
+ * direction is that the admin follows Payload's own design. What the design
+ * document actually asks for is narrower than either: brand chrome, native
+ * everything else. So this file touches the rail, the primary action and the
+ * dashboard widgets, and leaves Payload's lists, editors, fields, tables and
+ * controls exactly as they ship.
+ *
+ * **It imports nothing.** `globals.css` would drag in Tailwind's preflight,
+ * which resets the elements Payload styles itself — that is why the
+ * `landing-page` and `crm` folders have separate layouts. The handful of values
+ * below are therefore literals, matching `design/phase3/tokens.css`.
+ *
+ * **The selectors beginning `.nav` and `.btn` are Payload's, not ours.** They
+ * are the one upgrade risk here: a class rename upstream makes the rail fall
+ * back to Payload's own styling, which is a visual regression rather than a
+ * broken panel. Re-check on a major Payload upgrade.
+ */
+
+:root {
+  --pd-slate: #1e293b;
+  --pd-action: #c62929;
+  --pd-action-hover: #a91f24;
+  --pd-border: #d8e1e8;
+  --pd-secondary: #475569;
+  --pd-rail-text: #dbe6ef;
+  --pd-rail-caption: #a8b9c9;
+  --pd-action-tint: #fceaea;
+}
+
+/* ---- The navigation rail ------------------------------------------------ */
+
+.nav {
+  background: var(--pd-slate);
+  color: var(--pd-rail-text);
+}
+
+.nav a,
+.nav button {
+  border-radius: 9px;
+  color: var(--pd-rail-text);
+}
+
+.nav a:hover,
+.nav button:hover {
+  background: rgb(255 255 255 / 7%);
+}
+
+/*
+ * The current section, as a filled red pill — the design asks the rail to "mark
+ * the current section clearly".
+ *
+ * **Payload exposes no active class and no `aria-current` on these links.** It
+ * marks the current item by rendering a `.nav__link-indicator` bar inside it,
+ * so `:has()` is what reaches it. That was found by reading Payload's own
+ * stylesheet after a first attempt on `aria-current` silently matched nothing —
+ * the rule applied to no element and the rail looked fine, which is the quiet
+ * way a selector guess fails.
+ *
+ * The indicator bar itself is hidden: the pill is the stronger marker and the
+ * design shows a pill rather than a rule.
+ */
+.nav__link:has(.nav__link-indicator) {
+  background: var(--pd-action);
+  color: #fff;
+}
+
+.nav__link:has(.nav__link-indicator) .nav__link-indicator {
+  display: none;
+}
+
+.nav__link {
+  border-radius: 9px;
+  padding-inline: 12px;
+}
+
+/* ---- The primary action ------------------------------------------------- */
+
+.btn--style-primary .btn__content,
+.btn--style-primary {
+  --color: #fff;
+  background-color: var(--pd-action);
+  border-color: var(--pd-action);
+}
+
+.btn--style-primary:hover {
+  background-color: var(--pd-action-hover);
+  border-color: var(--pd-action-hover);
+}
+
+/* ---- The dashboard widgets --------------------------------------------- */
+
+.pd-panel {
+  background: #fff;
+  border: 1px solid var(--pd-border);
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgb(15 23 42 / 3%);
+  padding: 24px;
+}
+
+.pd-panel__head {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.pd-panel__title {
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.pd-panel__action {
+  color: var(--pd-action);
+  font-size: 0.83rem;
+  font-weight: 800;
+}
+
+.pd-cards {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.pd-card__top {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.pd-card__icon {
+  align-items: center;
+  background: var(--pd-action-tint);
+  border-radius: 12px;
+  color: var(--pd-action);
+  display: grid;
+  font-size: 1.3rem;
+  font-weight: 700;
+  height: 42px;
+  place-items: center;
+  width: 42px;
+}
+
+.pd-card__ordinal {
+  color: var(--pd-secondary);
+}
+
+.pd-card__title {
+  font-size: 1.45rem;
+  margin: 24px 0 6px;
+}
+
+.pd-card__body {
+  color: var(--pd-secondary);
+  font-size: 0.82rem;
+}
+
+.pd-card__link {
+  color: var(--pd-action);
+  font-size: 0.83rem;
+  font-weight: 800;
+}
+
+/*
+ * The empty state. Centred and quiet — it is the normal state of a new install,
+ * not an error, and it should not look like one.
+ */
+.pd-empty {
+  padding: 32px 16px;
+  text-align: center;
+}
+
+.pd-empty__mark {
+  align-items: center;
+  border: 1px solid var(--pd-border);
+  border-radius: 12px;
+  color: var(--pd-secondary);
+  display: inline-grid;
+  height: 44px;
+  margin-bottom: 12px;
+  place-items: center;
+  width: 44px;
+}
+
+.pd-empty__title {
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.pd-empty__detail {
+  color: var(--pd-secondary);
+  font-size: 0.82rem;
+  margin: 0 auto;
+  max-width: 44ch;
+}
+
+.pd-list,
+.pd-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pd-list__row,
+.pd-steps__row {
+  align-items: center;
+  border-top: 1px solid var(--pd-border);
+  display: flex;
+  gap: 12px;
+  min-height: 48px;
+  padding: 10px 0;
+}
+
+.pd-list__meta {
+  color: var(--pd-secondary);
+  font-size: 0.78rem;
+  margin-left: auto;
+}
+
+.pd-steps__number {
+  align-items: center;
+  background: #eef2f6;
+  border-radius: 50%;
+  color: var(--pd-secondary);
+  display: grid;
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  font-weight: 700;
+  height: 26px;
+  place-items: center;
+  width: 26px;
+}
+
+@media (max-width: 1100px) {
+  .pd-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .pd-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- The dashboard's opening block ------------------------------------- */
+
+.pd-welcome {
+  align-items: flex-start;
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+}
+
+.pd-welcome__eyebrow {
+  color: var(--pd-action);
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.pd-welcome__title {
+  font-size: 2.2rem;
+  letter-spacing: -0.035em;
+  margin: 8px 0 6px;
+}
+
+.pd-welcome__lead {
+  color: var(--pd-secondary);
+  margin: 0;
+}
+
+/*
+ * A link styled as the primary action. 48px minimum height is the design's
+ * control size and the touch-target floor.
+ */
+.pd-welcome__action {
+  align-items: center;
+  background: var(--pd-action);
+  border-radius: 12px;
+  color: #fff;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-weight: 700;
+  min-height: 48px;
+  padding: 0 20px;
+}
+
+.pd-welcome__action:hover {
+  background: var(--pd-action-hover);
+  color: #fff;
+}
+
+@media (max-width: 700px) {
+  .pd-welcome {
+    flex-direction: column;
+  }
+
+  .pd-welcome__action {
+    justify-content: center;
+    width: 100%;
+  }
+}

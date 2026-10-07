@@ -29,6 +29,13 @@ import { RootLayout, handleServerFunctions } from '@payloadcms/next/layouts'
  */
 import '@payloadcms/next/css'
 
+/**
+ * The brand chrome (T-19C). Must come after Payload's own stylesheet, which it
+ * overrides in a handful of places; see the file for what it deliberately does
+ * not touch.
+ */
+import './admin.css'
+
 import { importMap } from './admin/importMap.js'
 
 type Args = {
