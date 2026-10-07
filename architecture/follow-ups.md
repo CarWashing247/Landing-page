@@ -330,13 +330,10 @@ and never shares one. `large` resolves to 868px and `medium` to 648px of a
 1308px column, both starting at the same x. No combination of the six
 `WidgetWidth` values produces a row, because nothing lays them out in one.
 
-**Not fixed, deliberately.** The only way through is to restyle Payload's own
-dashboard container, which is the re-theme T-19B removed and which
-`phase3-uiux-promax.md` rules out for this view ("configure Payload dashboard
-components; no second CMS or separate data store"). It costs vertical space on
-a screen that is not short of it. Re-check on a Payload upgrade: if the
-container becomes a grid, `large` + `small` should give the design's
-proportions.
+**Addressed in draft PR #43 (T-19F), pending merge.** The new task explicitly
+requires the reference's 60/40 row. It scopes a grid rule to the dashboard's
+native widget container and keeps Payload's widget API, data source, and other
+admin views. Keep this entry open until the PR merges.
 
 ### A13 · Published state in the list view is not green
 
