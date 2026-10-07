@@ -11,6 +11,7 @@ import type { Block } from 'payload'
  */
 export const Steps: Block = {
   slug: 'steps',
+  admin: { images: { thumbnail: { url: '/block-previews/steps.svg', alt: '' } } },
   labels: { singular: { en: 'Steps', vi: 'Khối các bước' }, plural: { en: 'Step blocks', vi: 'Các khối các bước' } },
   fields: [
     {

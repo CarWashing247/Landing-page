@@ -89,6 +89,7 @@ Branch names are the file names without the `.md`:
 | [T-19A](t-19a-admin-interface.md) | Admin interface | T-03, T-05, T-06, T-07, T-08, T-15 |
 | [T-19B](t-19a-admin-interface.md) | The admin follows Payload | T-19A, T-15B |
 | [T-19C](t-19c-admin-dashboard.md) | Admin chrome and dashboard | T-19B, T-15D |
+| [T-19D](t-19d-block-picker-previews.md) | Block picker previews | T-17, T-15D |
 | [T-20](t-20-performance-pass.md) | Performance pass | T-16, T-17, T-18, T-19 |
 
 > **Gate 3** — mobile Lighthouse at 90 or above.

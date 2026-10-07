@@ -18,6 +18,7 @@ import type { Block } from 'payload'
  */
 export const Faq: Block = {
   slug: 'faq',
+  admin: { images: { thumbnail: { url: '/block-previews/faq.svg', alt: '' } } },
   labels: {
     singular: { en: 'FAQ', vi: 'Khối câu hỏi thường gặp' },
     plural: { en: 'FAQ blocks', vi: 'Các khối câu hỏi thường gặp' },

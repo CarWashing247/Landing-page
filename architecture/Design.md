@@ -637,6 +637,17 @@ Done when: the map iframe is `loading="lazy"` and does not affect LCP;
 validation messages come from the catalog in the visitor's locale;
 call and directions clicks appear in GA4 DebugView.
 
+
+**T-19D · Block picker previews**
+One schematic SVG preview for each of the seven `Pages.layout` blocks, shown
+through Payload's native `admin.images.thumbnail` option in the Add block
+drawer. The images follow `design/phase3/block-picker.html` and explain the
+block's layout without sample business data or baked-in language.
+Depends on: T-17, T-15D. Independent of the T-19C dashboard branch.
+Done when: Hero, Steps, Pricing, FAQ, CTA, Contact, and Text have distinct 3:2
+previews; the picker shows them with Payload's localized labels and keyboard
+access intact; and adding a block still works in both content locales.
+
 **T-19C · Admin chrome and dashboard**
 The navigation rail in slate with the current section as a red pill, the
 primary action in red, and a dashboard built from Payload's own widget API —
@@ -646,6 +657,7 @@ Depends on: T-19B, T-15D.
 Done when: the rail and dashboard match `design/phase3/dashboard.html`, recent
 content lists real documents or an honest empty state, and Payload still owns
 every view.
+
 
 **T-19B · The admin follows Payload**
 Remove the bespoke admin theme T-19A added and let the Payload panel be
