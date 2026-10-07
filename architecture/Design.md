@@ -664,6 +664,16 @@ Done when: the rail and dashboard match `design/phase3/dashboard.html`, recent
 content lists real documents or an honest empty state, and Payload still owns
 every view.
 
+**T-19F · Dashboard design match**
+Align the existing Payload widget dashboard with the approved Phase 3 desktop
+and mobile captures, including the visible desktop rail, compact mobile brand
+bar, card sizing, and side-by-side lower panels. Keep Payload's native menu,
+collections, editor views, and real recent-content query.
+Depends on: T-19C, T-17A.
+Done when: the dashboard follows `design/phase3/dashboard.html` and its desktop
+and mobile PNGs at 1440px and 390px; the native menu and collection links work;
+no invented data is shown; and no horizontal overflow appears at phone width.
+
 
 **T-19B · The admin follows Payload**
 Remove the bespoke admin theme T-19A added and let the Payload panel be

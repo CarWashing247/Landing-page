@@ -144,6 +144,9 @@ const buildConfigFromVault = async () => {
         ],
       },
       components: {
+        header: ['/components/admin/DashboardMobileHeader.tsx#DashboardMobileHeader'],
+        beforeNav: ['/components/admin/DashboardChrome.tsx#DashboardNavBrand'],
+        beforeNavLinks: ['/components/admin/DashboardNavLink.tsx#DashboardNavLink'],
         graphics: {
           Icon: '/components/admin/Logo.tsx#Icon',
           Logo: '/components/admin/Logo.tsx#Logo',

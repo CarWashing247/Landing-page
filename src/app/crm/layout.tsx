@@ -15,6 +15,8 @@ import type { ReactNode } from 'react'
 import config from '@payload-config'
 import { RootLayout, handleServerFunctions } from '@payloadcms/next/layouts'
 
+import { inter, interTight } from '../../lib/fonts'
+
 /**
  * Payload's own stylesheet, and **the admin had no styles at all without it.**
  *
@@ -52,7 +54,12 @@ const serverFunction: ServerFunctionClient = async function (args) {
 }
 
 const PayloadLayout = ({ children }: Args) => (
-  <RootLayout config={config} importMap={importMap} serverFunction={serverFunction}>
+  <RootLayout
+    config={config}
+    htmlProps={{ className: `${inter.variable} ${interTight.variable}` }}
+    importMap={importMap}
+    serverFunction={serverFunction}
+  >
     {children}
   </RootLayout>
 )

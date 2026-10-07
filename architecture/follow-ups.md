@@ -308,10 +308,11 @@ language, and the test passes. The card titles and row types now come from
 each collection's own `labels`, so the third card reads "Images", as the
 navigation already did, rather than "Media".
 
-**What remains is the Vietnamese**: thirteen `dashboard*` keys in
+**What remains is the Vietnamese**: the `dashboard*` keys in
 `src/i18n/admin-translations.ts` hold `TODO(copy):` placeholders, which a
 Vietnamese-language panel shows verbatim until they are replaced. The two panel
-titles reuse the widget labels that were already approved.
+titles reuse the widget labels that were already approved. T-19F adds the
+Workspace rail caption to this copy queue.
 
 ### A12 · The dashboard cannot put two widgets on one row
 

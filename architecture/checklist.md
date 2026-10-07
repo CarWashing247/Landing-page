@@ -156,7 +156,7 @@ what most affects the next task.
   root. **The home page must be created at slug `home` in each locale** — a page
   titled "Trang chủ" auto-generates `trang-chu` and lands at `/trang-chu`
   instead. The slug field's help text now says so in English; its Vietnamese
-  is still `TODO(copy)` (A14), as are thirteen admin dashboard strings (A11b).
+  is still `TODO(copy)` (A14), as are the admin dashboard strings (A11b).
 - **The 404 renders an empty body (A1).** Four approaches measured, all failing
   identically; the suspected cause is the catch-all rewrite rather than the
   not-found boundary. T-15A wrote the copy, so there is finished wording nobody

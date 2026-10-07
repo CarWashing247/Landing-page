@@ -9,9 +9,9 @@
  * custom properties restyling the whole panel, and T-19B removed it because the
  * direction is that the admin follows Payload's own design. What the design
  * document actually asks for is narrower than either: brand chrome, native
- * everything else. So this file touches the rail, the primary action and the
- * dashboard widgets, and leaves Payload's lists, editors, fields, tables and
- * controls exactly as they ship.
+ * everything else. T-19F also aligns the dashboard shell and native widget
+ * placement to the approved captures. Payload still owns the lists, editors,
+ * fields, tables and controls.
  *
  * **It imports nothing.** `globals.css` would drag in Tailwind's preflight,
  * which resets the elements Payload styles itself — that is why the
@@ -33,6 +33,8 @@
   --pd-rail-text: #dbe6ef;
   --pd-rail-caption: #a8b9c9;
   --pd-action-tint: #fceaea;
+  --pd-page: #edf1f4;
+  --pd-ink: #0f172a;
 }
 
 /* ---- The navigation rail ------------------------------------------------ */
@@ -384,7 +386,21 @@
   }
 }
 
+@media (min-width: 701px) and (max-width: 850px) {
+  .pd-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 700px) {
+  .pd-nav-brand {
+    display: none;
+  }
+
+  .nav__scroll {
+    padding-top: 64px;
+  }
+
   .pd-cards {
     grid-template-columns: 1fr;
   }
@@ -454,5 +470,283 @@
   .pd-welcome__action {
     justify-content: center;
     width: 100%;
+  }
+}
+
+/* ---- Phase 3 dashboard shell -------------------------------------------- */
+
+.pd-mobile-header {
+  display: none;
+}
+
+.pd-brand {
+  align-items: center;
+  color: #fff;
+  display: inline-flex;
+  font-family: var(--font-inter-tight), system-ui, sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  gap: 12px;
+  letter-spacing: -0.04em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.pd-brand svg {
+  flex: 0 0 32px;
+  height: 32px;
+  width: 32px;
+}
+
+.pd-nav-brand {
+  margin: 0 12px 76px;
+}
+
+.pd-nav-dashboard-group {
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.pd-nav-caption {
+  color: var(--pd-rail-caption);
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  margin: 0 12px 8px;
+  text-transform: uppercase;
+}
+
+.pd-nav-dashboard {
+  align-items: center;
+  border-radius: 9px;
+  color: var(--pd-rail-text);
+  display: flex;
+  font-size: 14px;
+  font-weight: 600;
+  min-height: 43px;
+  padding: 9px 12px;
+  text-decoration: none;
+  width: 100%;
+}
+
+.pd-nav-dashboard:hover {
+  background: rgb(255 255 255 / 7%);
+}
+
+.pd-nav-dashboard--active,
+.pd-nav-dashboard--active:hover {
+  background: var(--pd-action);
+  color: #fff;
+}
+
+.pd-brand:focus-visible,
+.pd-nav-dashboard:focus-visible,
+.pd-mobile-header__menu:focus-visible {
+  outline: 3px solid #0369a1;
+  outline-offset: 3px;
+}
+
+.nav__scroll {
+  padding: 28px 16px 40px;
+}
+
+.nav__wrap {
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+.nav-group__toggle {
+  color: var(--pd-rail-caption);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  min-height: 40px;
+  padding-inline: 12px;
+  text-transform: uppercase;
+}
+
+.nav-group__indicator {
+  display: none;
+}
+
+.nav__link {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.template-default:has(.dashboard) .template-default__wrap {
+  background: var(--pd-page);
+}
+
+.template-default:has(.dashboard) .app-header {
+  background: #fff;
+  border-bottom: 1px solid var(--pd-border);
+  min-height: 72px;
+}
+
+.template-default:has(.dashboard) .app-header__content {
+  min-height: 72px;
+  padding-inline: 32px;
+}
+
+.template-default:has(.dashboard) .app-header .step-nav,
+.template-default:has(.dashboard) .app-header .rs__single-value {
+  color: var(--pd-ink);
+}
+
+.template-default:has(.dashboard) .step-nav__home,
+.template-default:has(.dashboard) .step-nav__home + span {
+  display: none;
+}
+
+.template-default:has(.dashboard) .dashboard {
+  color: var(--pd-ink);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  padding: 36px 32px 80px;
+}
+
+.dashboard .modular-dashboard {
+  display: grid !important;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr);
+}
+
+.dashboard .widget {
+  min-width: 0;
+  padding: 0 !important;
+  width: auto !important;
+}
+
+.dashboard .widget[data-slug^='welcome'],
+.dashboard .widget[data-slug^='collections'] {
+  grid-column: 1 / -1;
+}
+
+.dashboard .widget-wrapper,
+.dashboard .widget-content,
+.dashboard .pd-panel {
+  height: 100%;
+  width: 100% !important;
+}
+
+.pd-welcome {
+  align-items: flex-end;
+  margin-bottom: 15px;
+}
+
+.pd-card {
+  min-height: 226px;
+}
+
+.pd-welcome__title,
+.pd-card__title,
+.pd-panel__title {
+  font-family: var(--font-inter-tight), var(--font-inter), system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+}
+
+.pd-welcome__title {
+  font-weight: 800;
+}
+
+.pd-welcome__lead {
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.pd-card__body {
+  line-height: 1.55;
+}
+
+.pd-welcome__action {
+  font-size: 16px;
+}
+
+@media (min-width: 701px) {
+  .template-default--nav-open {
+    grid-template-columns: 244px minmax(0, 1fr);
+  }
+
+  .template-default__nav-toggler-wrapper,
+  .nav__header {
+    display: none;
+  }
+
+  .nav {
+    width: 244px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .dashboard .modular-dashboard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard .widget[data-slug^='welcome'],
+  .dashboard .widget[data-slug^='collections'] {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .pd-mobile-header {
+    align-items: center;
+    background: var(--pd-slate);
+    display: flex;
+    height: 90px;
+    justify-content: space-between;
+    padding: 20px;
+  }
+
+  .pd-mobile-header__menu {
+    background: transparent;
+    border: 1px solid var(--pd-rail-caption);
+    border-radius: 9px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    min-height: 44px;
+    padding: 8px 12px;
+  }
+
+  .template-default__nav-toggler-wrapper,
+  .app-header__mobile-nav-toggler {
+    display: none;
+  }
+
+  .template-default:has(.dashboard) .app-header__content {
+    padding-inline: 20px;
+  }
+
+  .template-default:has(.dashboard) .dashboard {
+    padding: 32px 20px 60px;
+  }
+
+  .dashboard .modular-dashboard {
+    gap: 18px;
+  }
+
+  .pd-welcome {
+    align-items: stretch;
+    margin-bottom: 12px;
+  }
+
+  .pd-welcome__action {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .pd-card {
+    min-height: 224px;
+  }
+
+  .pd-card:nth-child(2) {
+    min-height: 228px;
+  }
+
+  .pd-card:nth-child(3) {
+    min-height: 206px;
   }
 }

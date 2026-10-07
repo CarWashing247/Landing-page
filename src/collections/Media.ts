@@ -19,7 +19,7 @@ export const Media: CollectionConfig = {
   slug: 'media',
   labels: {
     singular: { en: 'Image', vi: 'Hình ảnh' },
-    plural: { en: 'Images', vi: 'Hình ảnh' },
+    plural: { en: 'Media', vi: 'Hình ảnh' },
   },
   admin: {
     group: { en: 'Collections', vi: 'Collections' },
