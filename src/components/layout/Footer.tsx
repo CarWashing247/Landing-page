@@ -64,7 +64,7 @@ export const Footer = async ({ locale }: { locale: Locale }) => {
             {phone ? (
               <p className="mt-3">
                 <span className="opacity-70">{copy.footer.hotline}: </span>
-                <a className="text-ink" href={callHref(phone)}>
+                <a className="text-ink hover:text-action" href={callHref(phone)}>
                   {phone}
                 </a>
               </p>

@@ -536,6 +536,15 @@ zero errors; changing opening hours in `/admin` changes the rendered
 > components use them by name — never a hex value. Product behaviour, dependency
 > gates and the non-negotiable rules in `AGENT.md` still apply. See T-15C.
 
+**T-15E · Interaction polish**
+Hover, focus and menu transitions on shared motion tokens, hover states on
+every interactive element, and touch targets to the WCAG rule. No entrance
+animation — the design source limits motion to those three.
+Depends on: T-15D.
+Done when: every interactive element has hover and visible focus, no component
+sets its own duration, no target is under 24px or within 8px of another, and
+the mobile menu panel spans the viewport.
+
 **T-15D · Implement the design prototypes**
 Build the shell and blocks to match `design/phase3/landing.html` — eyebrows,
 section headings with a note column, the two-column hero with its media panel,

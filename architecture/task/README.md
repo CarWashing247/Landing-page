@@ -78,8 +78,9 @@ Branch names are the file names without the `.md`:
 | [T-15](t-15-design-foundation.md) | Design foundation | T-04 |
 | [T-15A](t-15a-message-catalog.md) | Interface message catalog | T-04A, T-15 |
 | [T-15B](t-15b-design-system-regeneration.md) | Design system regeneration | T-15 |
-| [T-15C](../phase3-uiux-promax.md) | Phase 3 interface direction | T-15B, T-16, T-17 |
-| [T-15D](../phase3-uiux-promax.md) | Implement the design prototypes | T-15C |
+| [T-15C](t-15c-phase3-interface-direction.md) | Phase 3 interface direction | T-15B, T-16, T-17 |
+| [T-15D](t-15d-implement-design-prototypes.md) | Implement the design prototypes | T-15C |
+| [T-15E](t-15e-ui-polish.md) | Interaction polish | T-15D |
 | [T-16](t-16-layout-shell.md) | Layout shell | T-05, T-15 |
 | [T-17](t-17-content-blocks.md) | Content blocks | T-06, T-15 |
 | [T-17A](t-17a-home-page.md) | Home page | T-16, T-17 |

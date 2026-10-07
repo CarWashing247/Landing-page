@@ -72,7 +72,7 @@ export const Pricing = ({
             <ServiceIcon />
 
             <h3 className="mt-7">
-              <a className="text-ink no-underline" href={pathForService(service.slug, locale)}>
+              <a className="text-ink hover:text-action no-underline" href={pathForService(service.slug, locale)}>
                 {service.name}
               </a>
             </h3>

@@ -28,7 +28,7 @@ export const Faq = ({ block }: { block: FaqBlock }) => (
       <div>
         {(block.items ?? []).map((item) => (
           <details className="border-border border-b" key={item.id ?? item.question}>
-            <summary className="cursor-pointer py-5 pr-8 font-bold">{item.question}</summary>
+            <summary className="hover:text-action cursor-pointer py-5 pr-8 font-bold">{item.question}</summary>
             <p className="text-secondary max-w-[60ch] pb-5">{item.answer}</p>
           </details>
         ))}
