@@ -330,10 +330,9 @@ and never shares one. `large` resolves to 868px and `medium` to 648px of a
 1308px column, both starting at the same x. No combination of the six
 `WidgetWidth` values produces a row, because nothing lays them out in one.
 
-**Addressed in draft PR #43 (T-19F), pending merge.** The new task explicitly
-requires the reference's 60/40 row. It scopes a grid rule to the dashboard's
-native widget container and keeps Payload's widget API, data source, and other
-admin views. Keep this entry open until the PR merges.
+**Closed by merged PR #43 (T-19F).** The task added the reference's 60/40 row
+through a grid rule scoped to the native dashboard widget container, retaining
+Payload's widget API, data source, and other admin views.
 
 ### A13 · Published state in the list view is not green
 

@@ -81,7 +81,8 @@ file, not here. This file answers one question: **where are we?**
 | T-19C | Admin chrome and dashboard | #37 |
 | T-19D | Block picker previews | #38 |
 | T-19E | Design conformance pass | — |
-| T-19F | Dashboard design match | #43 (draft, in review) |
+| T-19F | Dashboard design match | #43 |
+| T-19G | CMS admin reference designs | in progress |
 | T-17A | Home page | #41 |
 
 **Not done:**
@@ -169,9 +170,9 @@ what most affects the next task.
   the footer's contact block is empty. T-23 fills them.
 - **`/dich-vu` 404s (A10)** — the services index the navigation links to has no
   document behind it.
-- **The dashboard lower-panel layout (A12) is addressed in draft PR #43** and
-  stays open until that PR merges. The list view's published state is still not
-  green (A13); it needs a custom cell component outside this dashboard task.
+- **The dashboard lower-panel layout (A12) was addressed in merged PR #43.**
+  The list view's published state is still not green (A13); it needs a custom
+  cell component outside the dashboard task.
 - **Playwright's Chromium is now installed** in `~/.cache/ms-playwright`. The
   conformance pass needed a browser to measure computed sizes, which is how the
   13px-root defect below was found. `npm run test:e2e` will now run without a
