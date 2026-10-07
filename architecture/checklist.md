@@ -80,6 +80,7 @@ file, not here. This file answers one question: **where are we?**
 | T-19B | The admin follows Payload | #33 |
 | T-19C | Admin chrome and dashboard | #37 |
 | T-19D | Block picker previews | #38 |
+| T-19E | Design conformance pass | — |
 
 **Not done:**
 
@@ -89,6 +90,33 @@ file, not here. This file answers one question: **where are we?**
 | T-20 | Performance pass | T-17A |
 
 > **Gate 3 — not reached.** Mobile Lighthouse at 90 or above, which is T-20.
+
+### What the conformance pass changed
+
+**T-19E compared every implemented surface against `design/phase3/` and closed
+the gaps.** It is not in `Design.md` — it is a sweep, not a feature — and the
+things it found are worth knowing before the next UI task:
+
+- **Section headings were rendering at 30px against the prototype's fluid
+  `clamp(2.2rem, 3.3vw, 3.5rem)`.** `h2` could not simply be enlarged: the same
+  element is a prose heading in CMS rich text and `ServicePage` uses `text-h2`
+  for a price. The fluid sizes are now their own roles, `text-section` and
+  `text-panel`, applied where the prototype draws a section heading. `--text-h3`
+  moved from Tailwind's 20px to the prototype's `1.45rem`.
+- **Every `rem` in `admin.css` was rendering at 81% of its designed size.**
+  Payload's admin sets `html { font-size: 13px }` where the prototype's root is
+  16px, so the card descriptions landed at 10.7px and the eyebrow at 9.8px —
+  both under the readable floor. The widget sizes are absolute px now. Anything
+  added to `admin.css` should be: the design's numbers are absolute, and `rem`
+  silently rescales them. Payload's own components keep Payload's sizing.
+- **The CMS's main action was visibly broken.** A primary button with a dropdown
+  is a wrapper holding a plain `button.btn` and a `.popup-button`, neither
+  carrying the `--style-primary` class, so "Publish changes" rendered as a dark
+  pill with a red plate behind its label. Both inner elements are painted now.
+- **Two defects were invisible in the source and only a browser found them** —
+  that one, and Payload's `:has()` rule out-ranking ours to zero the active rail
+  item's left padding. `curl` is the right check for HTML and metadata; computed
+  style needs a real browser.
 
 ### The design source has moved three times
 
@@ -137,6 +165,15 @@ what most affects the next task.
   the footer's contact block is empty. T-23 fills them.
 - **`/dich-vu` 404s (A10)** — the services index the navigation links to has no
   document behind it.
+- **The admin dashboard still stacks its two lower panels (A12)** and the list
+  view's published state is not green (A13). Both were measured during the
+  design conformance pass and both were left alone on purpose: the first needs
+  Payload's own dashboard container restyled, the second needs a custom cell
+  component. Neither belongs in a styling pass.
+- **Playwright's Chromium is now installed** in `~/.cache/ms-playwright`. The
+  conformance pass needed a browser to measure computed sizes, which is how the
+  13px-root defect below was found. `npm run test:e2e` will now run without a
+  separate `npx playwright install`.
 
 ## Verification debts
 

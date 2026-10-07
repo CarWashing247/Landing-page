@@ -296,6 +296,63 @@ navies one step apart.
 tasks' verification blocks were built on exactly that. Anything about appearance
 needs a rendered page.
 
+### A11b · `no-literals` fails on the admin dashboard widgets
+
+**Owner: T-19C**
+
+`src/i18n/no-literals.test.ts` fails on `master` and on every branch since the
+dashboard widgets landed. Five strings are flagged — the three collection card
+descriptions in `Collections.tsx`, and the empty state's title and detail in
+`RecentContent.tsx`.
+
+They are real literals and the rule is right about them, but the rule's remedy
+does not fit: AGENT.md 5.6 says the admin's chrome language is independent of
+the content locale, and `t(locale)` is the *content* catalog. The admin's own
+strings belong in Payload's `i18n.translations`, which is where the field labels
+and widget labels already are.
+
+Verified identical before and after the T-19E conformance pass (same five
+offenders, diffed), so it is not that pass's doing — recorded because a failing
+test on the branch is otherwise read as the fault of whoever touched it last.
+
+### A12 · The dashboard cannot put two widgets on one row
+
+**Owner: T-19C** (the admin dashboard)
+
+`design/phase3/dashboard.html` draws "Recent content" and the editorial
+checklist side by side — a `.lower` grid at roughly 60/40 that collapses to one
+column at 1100px. The implementation asks for that with `width: 'large'` and
+`width: 'medium'` in `admin.dashboard.defaultLayout`, and gets two stacked
+panels instead.
+
+Measured in Payload 3.90.2: the widget container and every `.widget-wrapper`
+compute to `display: block`, so a widget's width narrows it within its own row
+and never shares one. `large` resolves to 868px and `medium` to 648px of a
+1308px column, both starting at the same x. No combination of the six
+`WidgetWidth` values produces a row, because nothing lays them out in one.
+
+**Not fixed, deliberately.** The only way through is to restyle Payload's own
+dashboard container, which is the re-theme T-19B removed and which
+`phase3-uiux-promax.md` rules out for this view ("configure Payload dashboard
+components; no second CMS or separate data store"). It costs vertical space on
+a screen that is not short of it. Re-check on a Payload upgrade: if the
+container becomes a grid, `large` + `small` should give the design's
+proportions.
+
+### A13 · Published state in the list view is not green
+
+**Owner: T-19C**
+
+`phase3-uiux-promax.md` says published state is "green with a visible text
+label", and `--color-success` (`#116B52`) exists for it. Payload's list renders
+the Status column as plain text — "Published" and "Draft" in the body colour —
+so the label is there and the green is not.
+
+The honest fix is a custom cell component on the `_status` column, which is
+Payload-supported configuration rather than a re-theme, but it is a new
+component with its own localization and a decision about whether Draft gets a
+colour too. Left for a task rather than folded into a styling pass.
+
 ## B. Documentation inconsistencies
 
 ### B1 · T-16 and T-17 omit T-15A from their dependencies
