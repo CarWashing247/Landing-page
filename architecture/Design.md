@@ -637,6 +637,16 @@ Done when: the map iframe is `loading="lazy"` and does not affect LCP;
 validation messages come from the catalog in the visitor's locale;
 call and directions clicks appear in GA4 DebugView.
 
+**T-19C · Admin chrome and dashboard**
+The navigation rail in slate with the current section as a red pill, the
+primary action in red, and a dashboard built from Payload's own widget API —
+welcome block, collection cards, recent content, editorial checklist. Brand
+chrome only; no list, edit or field view is replaced.
+Depends on: T-19B, T-15D.
+Done when: the rail and dashboard match `design/phase3/dashboard.html`, recent
+content lists real documents or an honest empty state, and Payload still owns
+every view.
+
 **T-19B · The admin follows Payload**
 Remove the bespoke admin theme T-19A added and let the Payload panel be
 Payload's: its own stylesheet, its own light/dark choice, its own
@@ -645,7 +655,9 @@ browser-tab title, which are Payload configuration rather than design.
 Depends on: T-19A, T-15B.
 Done when: `/admin` renders in Payload's own design with the project's mark
 and title, no project stylesheet themes it, and the light/dark choice is
-back in the account menu.
+back in the account menu. **Partly superseded by T-19C**, which restores the
+brand chrome the design does ask for — the rail and the primary action — while
+keeping Payload's views.
 
 **T-19A · Admin interface**
 The Payload admin configured and themed to the Canva "AutoWash247 CMS

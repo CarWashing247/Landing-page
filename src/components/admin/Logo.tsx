@@ -54,7 +54,7 @@ export const Logo = () => (
  * the public site's token system — there is no `@theme` in this document to read
  * from, and `src/app/brand.css` was deleted with the bespoke theme it existed to
  * feed. These are the same values as `src/app/icon.svg`, from
- * `design/phase3/tokens.css`: the action colour, and the white it is
+ * `design/phase3/tokens.css`: the action red, and the white it is
  * paired with. A logo is also the one thing that should *not* follow the
  * surrounding theme — it is the same mark whether the panel is light or dark.
  */
@@ -76,11 +76,19 @@ export const Icon = () => (
     width="100%"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <rect fill="#059669" height="32" rx="8" width="32" />
-    {/* A water droplet, in the colour the accent is paired with. */}
-    <path
-      d="M16 7c3.6 4.2 6 7.4 6 10.2a6 6 0 0 1-12 0C10 14.4 12.4 11.2 16 7Z"
+    <rect fill="#c62929" height="32" rx="8" width="32" />
+    {/* The `A/` glyph the prototypes use as the mark. */}
+    <text
       fill="#ffffff"
-    />
+      fontFamily="system-ui, sans-serif"
+      fontSize="15"
+      fontWeight="800"
+      letterSpacing="-1.2"
+      textAnchor="middle"
+      x="16"
+      y="21"
+    >
+      A/
+    </text>
   </svg>
 )

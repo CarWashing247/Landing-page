@@ -94,6 +94,49 @@ const buildConfigFromVault = async () => {
         icons: [{ rel: 'icon', type: 'image/svg+xml', url: '/favicon.svg' }],
         titleSuffix: '· AutoWash247',
       },
+      /**
+       * The dashboard, as widgets rather than a replaced view.
+       *
+       * Payload 3 takes `admin.dashboard.widgets`, which is exactly the boundary
+       * the design document draws for this screen — "configure Payload dashboard
+       * components; no second CMS or separate data store". Replacing
+       * `components.views.dashboard` would have been the other option and is the
+       * thing both that document and T-19B rule out: it swaps Payload's own view
+       * for one this project then owns across every upgrade.
+       *
+       * `defaultLayout` is the order the prototype shows: the three collection
+       * cards across the top, then recent content beside the checklist.
+       */
+      dashboard: {
+        defaultLayout: [
+          { widgetSlug: 'welcome', width: 'full' },
+          { widgetSlug: 'collections', width: 'full' },
+          { widgetSlug: 'recent-content', width: 'large' },
+          { widgetSlug: 'editorial-checklist', width: 'medium' },
+        ],
+        widgets: [
+          {
+            Component: '/components/admin/widgets/Welcome.tsx#WelcomeWidget',
+            label: { en: 'Welcome', vi: 'Chào mừng' },
+            slug: 'welcome',
+          },
+          {
+            Component: '/components/admin/widgets/Collections.tsx#CollectionsWidget',
+            label: { en: 'Collections', vi: 'Nội dung' },
+            slug: 'collections',
+          },
+          {
+            Component: '/components/admin/widgets/RecentContent.tsx#RecentContentWidget',
+            label: { en: 'Recent content', vi: 'Nội dung gần đây' },
+            slug: 'recent-content',
+          },
+          {
+            Component: '/components/admin/widgets/Checklist.tsx#ChecklistWidget',
+            label: { en: 'Editorial checklist', vi: 'Danh sách kiểm tra' },
+            slug: 'editorial-checklist',
+          },
+        ],
+      },
       components: {
         graphics: {
           Icon: '/components/admin/Logo.tsx#Icon',
