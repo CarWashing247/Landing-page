@@ -67,60 +67,153 @@
  * The indicator bar itself is hidden: the pill is the stronger marker and the
  * design shows a pill rather than a rule.
  */
+/*
+ * `padding-inline` is restated here, and it is not redundant. Payload's own
+ * `.nav__link:has(.nav__link-indicator)` sets `padding-left: 0` to make room
+ * for the indicator bar, and that selector outranks the plain `.nav__link`
+ * below it — so the current item's label sat flush against the left edge of
+ * the red pill while every other row was inset 12px. Found by reading the
+ * served stylesheet rather than the source: both rules are ours and Payload's
+ * in the same cascade, and only the built file shows which won.
+ */
 .nav__link:has(.nav__link-indicator) {
   background: var(--pd-action);
   color: #fff;
+  padding-inline: 12px;
 }
 
 .nav__link:has(.nav__link-indicator) .nav__link-indicator {
   display: none;
 }
 
+/*
+ * `dashboard.html` sets `.rail a { min-height: 43px; padding: 9px 12px }`. The
+ * radius and inline padding were here; the height was not, which left the
+ * rail's rows shorter than the design and under the touch-target floor.
+ *
+ * Its `font-size` is deliberately **not** copied. This is Payload's own
+ * component and Payload sizes its navigation on its own scale; overriding that
+ * is the re-theme T-19B removed, not the brand chrome this file is.
+ */
 .nav__link {
   border-radius: 9px;
+  min-height: 43px;
+  padding-block: 9px;
   padding-inline: 12px;
 }
 
 /* ---- The primary action ------------------------------------------------- */
 
-.btn--style-primary .btn__content,
-.btn--style-primary {
+/*
+ * **The inner button and the popup half, not the label span.**
+ *
+ * A primary action with a dropdown — "Publish changes" on every editor screen,
+ * the most important control in the CMS — is not one element. Payload renders
+ * a `.btn--style-primary` *wrapper* holding a plain `button.btn` and a separate
+ * `.popup-button` for the caret, and neither inner element carries the
+ * `--style-primary` class. So our red landed on the wrapper, Payload's own
+ * `#2f2f2f` painted both halves over it, and the old rule on `.btn__content`
+ * painted red back behind the label alone: a near-black pill with a red plate
+ * through the middle of it. Measured in the browser; the computed style of the
+ * wrapper reads as red, which is why reading the source could not find this.
+ *
+ * `.btn__content` is deliberately no longer painted — it is the label's own box
+ * and it is what drew the plate.
+ */
+.btn--style-primary,
+.btn--style-primary .btn,
+.btn--style-primary .popup-button {
   --color: #fff;
   background-color: var(--pd-action);
   border-color: var(--pd-action);
+  color: #fff;
 }
 
-.btn--style-primary:hover {
+.btn--style-primary:hover,
+.btn--style-primary .btn:hover,
+.btn--style-primary .popup-button:hover {
   background-color: var(--pd-action-hover);
   border-color: var(--pd-action-hover);
 }
 
 /* ---- The dashboard widgets --------------------------------------------- */
 
+/*
+ * **Our links carry no underline.** Payload underlines `a` in the work area,
+ * and `dashboard.html` draws these as bold red actions with an arrow — the
+ * "Create page" button came out underlined through its middle, which no design
+ * shows for a filled button.
+ *
+ * Removing it is safe here and only here: each of these is a standalone action
+ * with its own weight, colour and arrow, not a link inside a paragraph, so it
+ * is not distinguished by colour alone. The underline returns on hover and
+ * focus, which is the affordance the flat state gives up.
+ */
+.pd-card__link,
+.pd-panel__action,
+.pd-list__link,
+.pd-welcome__action {
+  text-decoration: none;
+}
+
+.pd-card__link:hover,
+.pd-card__link:focus-visible,
+.pd-panel__action:hover,
+.pd-panel__action:focus-visible,
+.pd-list__link:hover,
+.pd-list__link:focus-visible {
+  text-decoration: underline;
+}
+
+/*
+ * **These sizes are px, and that is the point.**
+ *
+ * `dashboard.html` is drawn against `tokens.css`, whose root is 16px, so its
+ * `.82rem` body text means 13px. Payload's admin sets `html { font-size: 13px }`
+ * — so the same `.82rem` copied in here rendered at 10.7px, and the whole
+ * dashboard came out at 81% of the drawing. The eyebrow landed at 9.8px and the
+ * card descriptions at 10.7px, both under the 12px floor for readable text.
+ *
+ * Measured in a real browser; it is invisible in the source, because the file
+ * matches the prototype value for value. The design's numbers are absolute, so
+ * they are written absolutely. `rem` is right for Payload's own components,
+ * which is why the rail above keeps Payload's sizing instead of ours.
+ */
+
+/*
+ * A panel carries no padding of its own. In `dashboard.html` the head is a
+ * band with its own `20px 24px` and a bottom rule, and each body — the list,
+ * the checklist, the empty state — pads itself. One uniform `24px` on the
+ * panel collapsed that into a flat box and dropped the rule under the head,
+ * which is the line that separates "Recent content" from its rows.
+ *
+ * `.pd-card` is the exception and restores it: a card has a head but no rule.
+ */
 .pd-panel {
   background: #fff;
   border: 1px solid var(--pd-border);
   border-radius: 16px;
   box-shadow: 0 4px 15px rgb(15 23 42 / 3%);
-  padding: 24px;
+  overflow: hidden;
 }
 
 .pd-panel__head {
   align-items: center;
+  border-bottom: 1px solid var(--pd-border);
   display: flex;
   gap: 12px;
   justify-content: space-between;
-  margin-bottom: 16px;
+  padding: 20px 24px;
 }
 
 .pd-panel__title {
-  font-size: 1.2rem;
+  font-size: 19px;
   margin: 0;
 }
 
 .pd-panel__action {
   color: var(--pd-action);
-  font-size: 0.83rem;
+  font-size: 13px;
   font-weight: 800;
 }
 
@@ -128,6 +221,17 @@
   display: grid;
   gap: 16px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/*
+ * The card's own padding and the `206px` floor from `.card` in the prototype.
+ * The floor is what keeps the three cards the same height when one description
+ * wraps to a third line — and Vietnamese labels wrap sooner than the English
+ * the prototype was drawn with.
+ */
+.pd-card {
+  min-height: 206px;
+  padding: 24px;
 }
 
 .pd-card__top {
@@ -143,8 +247,6 @@
   border-radius: 12px;
   color: var(--pd-action);
   display: grid;
-  font-size: 1.3rem;
-  font-weight: 700;
   height: 42px;
   place-items: center;
   width: 42px;
@@ -155,18 +257,18 @@
 }
 
 .pd-card__title {
-  font-size: 1.45rem;
+  font-size: 23px;
   margin: 24px 0 6px;
 }
 
 .pd-card__body {
   color: var(--pd-secondary);
-  font-size: 0.82rem;
+  font-size: 13px;
 }
 
 .pd-card__link {
   color: var(--pd-action);
-  font-size: 0.83rem;
+  font-size: 13px;
   font-weight: 800;
 }
 
@@ -174,21 +276,30 @@
  * The empty state. Centred and quiet — it is the normal state of a new install,
  * not an error, and it should not look like one.
  */
+/*
+ * `.empty` in the prototype: a centred block on a `245px` floor, so the panel
+ * holds the height it will have once there are rows in it and the dashboard
+ * does not reflow the first time content exists.
+ */
 .pd-empty {
-  padding: 32px 16px;
+  display: grid;
+  min-height: 245px;
+  padding: 28px;
+  place-items: center;
   text-align: center;
 }
 
 .pd-empty__mark {
   align-items: center;
-  border: 1px solid var(--pd-border);
+  border: 2px solid var(--pd-border);
   border-radius: 12px;
   color: var(--pd-secondary);
   display: inline-grid;
-  height: 44px;
-  margin-bottom: 12px;
+  font-weight: 800;
+  height: 48px;
+  margin-bottom: 14px;
   place-items: center;
-  width: 44px;
+  width: 48px;
 }
 
 .pd-empty__title {
@@ -198,46 +309,73 @@
 
 .pd-empty__detail {
   color: var(--pd-secondary);
-  font-size: 0.82rem;
-  margin: 0 auto;
-  max-width: 44ch;
+  font-size: 13px;
+  margin: 6px auto 0;
+  max-width: 38ch;
 }
 
+/*
+ * The two panel bodies. They pad themselves now that `.pd-panel` does not, and
+ * the rule between rows is a `border-bottom` with the last one removed — the
+ * prototype's `.checklist div:last-child { border: 0 }`. A `border-top` on
+ * every row, which is what this was, drew a second line immediately under the
+ * head's own rule.
+ */
 .pd-list,
 .pd-steps {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 16px 24px 24px;
 }
 
 .pd-list__row,
 .pd-steps__row {
   align-items: center;
-  border-top: 1px solid var(--pd-border);
+  border-bottom: 1px solid var(--pd-border);
   display: flex;
+  font-size: 13px;
   gap: 12px;
   min-height: 48px;
-  padding: 10px 0;
+  padding: 13px 0;
+}
+
+.pd-list__row:last-child,
+.pd-steps__row:last-child {
+  border-bottom: 0;
+}
+
+.pd-list__link {
+  color: var(--pd-slate);
+  font-weight: 600;
+}
+
+.pd-list__link:hover {
+  color: var(--pd-action);
 }
 
 .pd-list__meta {
   color: var(--pd-secondary);
-  font-size: 0.78rem;
+  font-size: 12.5px;
   margin-left: auto;
 }
 
+/*
+ * `.checklist b` in the prototype: a 24px circle on `--mist`. It was 26px on a
+ * hand-picked `#eef2f6`, which is a fourth near-white in a palette that already
+ * names one.
+ */
 .pd-steps__number {
   align-items: center;
-  background: #eef2f6;
+  background: #e9edf1;
   border-radius: 50%;
   color: var(--pd-secondary);
   display: grid;
   flex: 0 0 auto;
-  font-size: 0.75rem;
+  font-size: 11px;
   font-weight: 700;
-  height: 26px;
+  height: 24px;
   place-items: center;
-  width: 26px;
+  width: 24px;
 }
 
 @media (max-width: 1100px) {
@@ -264,14 +402,20 @@
 .pd-welcome__eyebrow {
   color: var(--pd-action);
   display: block;
-  font-size: 0.75rem;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
+/*
+ * The prototype's dashboard `h1`, `clamp(2.2rem, 3vw, 3.25rem)`, in the pixels
+ * those rem resolve to there. A flat 2.2rem took the clamp's floor and threw
+ * away its top, so the heading never grew on the wide screens an editor works
+ * on.
+ */
 .pd-welcome__title {
-  font-size: 2.2rem;
+  font-size: clamp(35px, 3vw, 52px);
   letter-spacing: -0.035em;
   margin: 8px 0 6px;
 }
