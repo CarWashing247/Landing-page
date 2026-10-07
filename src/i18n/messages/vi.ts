@@ -72,6 +72,13 @@ export const vi = {
     directions: 'Chỉ đường',
     viewOnMap: 'Xem trên bản đồ',
     sendMessage: 'Gửi tin nhắn',
+    /**
+     * The service card's action. Both halves are words the catalog already
+     * holds — `Xem` from `viewOnMap` and `gói dịch vụ` from
+     * `sections.servicePackage` — so this composes written vocabulary rather
+     * than translating anything new.
+     */
+    viewPackage: 'Xem gói dịch vụ',
   },
 
   /** Section headings used across the pages. Verbatim from the designs. */

@@ -24,9 +24,12 @@ Payload's stock appearance.
 > mark, and the browser-tab title, both of which are first-class Payload
 > configuration. Everything else is Payload's.
 >
-> Colour values for the mark come from `design-system/autowash247/MASTER.md`.
-> The admin does **not** participate in the public site's token system — there is
-> no Tailwind `@theme` in that document to read from.
+> **Design source: the prototypes in [`design/phase3/`](../../design/phase3/)** —
+> `landing.html`, `admin.html`, `dashboard.html`, `tokens.css` and the PNG
+> captures beside them, described by
+> [`phase3-uiux-promax.md`](../phase3-uiux-promax.md). They are the only UI
+> design source. Tokens are implemented in `src/app/globals.css`; components use
+> them by name and never carry a hex value.
 
 > **Remapped from `DAHXNnCsHfc` ("AutoWash247 Admin CMS UI", 8 pages) on
 > 2026-10-06.** The two decks are different designs, not revisions of one, and

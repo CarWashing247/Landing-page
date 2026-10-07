@@ -34,8 +34,8 @@ export const Footer = async ({ locale }: { locale: Locale }) => {
   const runs = groupOpeningHours(business?.openingHours)
 
   return (
-    <footer className="bg-surface text-ink border-border mt-16 border-t">
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 md:grid-cols-3">
+    <footer className="border-border text-secondary mt-20 border-t text-[0.875rem]">
+      <div className="mx-auto grid w-[min(1120px,calc(100%-40px))] gap-8 py-12 md:grid-cols-3">
         <div>
           <p className="text-h3">{settings?.brandName ?? 'AutoWash247'}</p>
           {/*
@@ -105,7 +105,7 @@ export const Footer = async ({ locale }: { locale: Locale }) => {
       </div>
 
       <div className="border-border border-t">
-        <p className="text-label mx-auto max-w-6xl px-4 py-6 opacity-70">
+        <p className="mx-auto w-[min(1120px,calc(100%-40px))] py-6">
           © {settings?.brandName ?? 'AutoWash247'}. {copy.footer.rights}
         </p>
       </div>

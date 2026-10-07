@@ -45,9 +45,9 @@ const renderBlock = (block: Block, locale: Locale): React.ReactNode => {
       return (
         <Pricing
           block={block}
-          duration={copy.sections.estimatedDuration}
-          includes={copy.sections.includes}
+          durationLabel={copy.sections.estimatedDuration}
           locale={locale}
+          viewLabel={copy.actions.viewPackage}
         />
       )
     case 'steps':

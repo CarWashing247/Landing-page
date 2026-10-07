@@ -19,6 +19,18 @@ export const Hero: Block = {
   labels: { singular: { en: 'Hero', vi: 'Khối mở đầu' }, plural: { en: 'Heroes', vi: 'Các khối mở đầu' } },
   fields: [
     {
+      name: 'eyebrow',
+      type: 'text',
+      label: { en: 'Small label above the heading', vi: 'Nhãn nhỏ phía trên tiêu đề' },
+      admin: {
+        placeholder: 'Dịch vụ',
+        description: {
+          en: 'Two or three words in small capitals above the heading. Leave empty to show none.',
+          vi: 'Hai đến ba chữ in hoa nhỏ phía trên tiêu đề. Bỏ trống nếu không cần.',
+        },
+      },
+    },
+    {
       name: 'heading',
       type: 'text',
       required: true,
@@ -55,6 +67,52 @@ export const Hero: Block = {
           vi: 'Hiển thị cạnh tiêu đề. Đây là ảnh lớn nhất của trang và được tải trước, nên hãy chọn ảnh rõ nét.',
         },
       },
+    },
+    {
+      name: 'highlights',
+      type: 'array',
+      maxRows: 4,
+      label: { en: 'Short points under the buttons', vi: 'Các ý ngắn dưới nút bấm' },
+      labels: { singular: { en: 'Point', vi: 'Ý' }, plural: { en: 'Points', vi: 'Các ý' } },
+      admin: {
+        description: {
+          en: 'Two or three words each — the reassurances a visitor scans before clicking. Leave empty to show none.',
+          vi: 'Mỗi ý hai đến ba chữ — những điều khách yên tâm trước khi bấm. Bỏ trống nếu không cần.',
+        },
+      },
+      fields: [
+        {
+          name: 'text',
+          type: 'text',
+          required: true,
+          label: { en: 'Point', vi: 'Ý' },
+          admin: { placeholder: 'Quét QR là rửa' },
+        },
+      ],
+    },
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'secondaryCtaLabel',
+          type: 'text',
+          label: { en: 'Second button text', vi: 'Chữ trên nút phụ' },
+          admin: { width: '50%', placeholder: 'Xem quy trình' },
+        },
+        {
+          name: 'secondaryCtaHref',
+          type: 'text',
+          label: { en: 'Second button link', vi: 'Đường dẫn nút phụ' },
+          admin: {
+            width: '50%',
+            placeholder: '/huong-dan',
+            description: {
+              en: 'The quieter action beside the main one. Leave both empty for a single button.',
+              vi: 'Hành động phụ bên cạnh nút chính. Bỏ trống cả hai nếu chỉ cần một nút.',
+            },
+          },
+        },
+      ],
     },
     {
       type: 'row',

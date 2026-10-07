@@ -54,7 +54,7 @@ export const Logo = () => (
  * the public site's token system — there is no `@theme` in this document to read
  * from, and `src/app/brand.css` was deleted with the bespoke theme it existed to
  * feed. These are the same values as `src/app/icon.svg`, from
- * `design-system/autowash247/MASTER.md`: primary green, and the card white it is
+ * `design/phase3/tokens.css`: the action colour, and the white it is
  * paired with. A logo is also the one thing that should *not* follow the
  * surrounding theme — it is the same mark whether the panel is light or dark.
  */

@@ -6,6 +6,18 @@ export const Cta: Block = {
   labels: { singular: { en: 'Call to action', vi: 'Khối kêu gọi hành động' }, plural: { en: 'Calls to action', vi: 'Các khối kêu gọi hành động' } },
   fields: [
     {
+      name: 'eyebrow',
+      type: 'text',
+      label: { en: 'Small label above the heading', vi: 'Nhãn nhỏ phía trên tiêu đề' },
+      admin: {
+        placeholder: 'Dịch vụ',
+        description: {
+          en: 'Two or three words in small capitals above the heading. Leave empty to show none.',
+          vi: 'Hai đến ba chữ in hoa nhỏ phía trên tiêu đề. Bỏ trống nếu không cần.',
+        },
+      },
+    },
+    {
       name: 'heading',
       type: 'text',
       required: true,

@@ -48,7 +48,7 @@ Token names changed with the palette: `ink` → `foreground`, `surface` →
 
 **In scope**
 
-- `design-system/autowash247/MASTER.md`, generated and committed.
+- `design/phase3/`, generated and committed.
 - `src/app/globals.css` rebuilt from it: palette, shadows, reduced-motion.
 - Every component migrated to the new token names.
 - A logo mark and a favicon from the generated logo brief.
@@ -79,7 +79,7 @@ outstanding, each against `MASTER.md`:
 
 - [ ] No component carries a hex value or a retired token name.
 - [ ] Every text/background pair in the shell measures at least 4.5:1.
-- [ ] `design-system/autowash247/MASTER.md` is the only place a colour is chosen.
+- [ ] `design/phase3/` is the only place a colour is chosen.
 - [ ] The site makes zero requests to `fonts.googleapis.com`.
 - [ ] A visible focus indicator survives.
 

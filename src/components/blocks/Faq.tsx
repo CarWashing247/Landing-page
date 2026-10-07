@@ -1,31 +1,38 @@
 import type { Page } from '../../payload-types'
-import { Band } from './shared'
+import { Band, Eyebrow } from './shared'
 
 type FaqBlock = Extract<NonNullable<Page['layout']>[number], { blockType: 'faq' }>
 
 /**
- * The questions, as native disclosures.
+ * The questions, as native disclosures in the prototype's two-column layout:
+ * the heading holds the narrow column, the questions the wide one.
  *
  * `<details>`/`<summary>` rather than a React accordion: it expands with no
  * JavaScript, the answers are in the HTML for a crawler whether or not anything
- * hydrates, and it needs no `aria-expanded` bookkeeping because the browser owns
- * the state. The same reasoning as the header's mobile menu in T-16 — and there,
- * it was measured working with JavaScript disabled.
+ * hydrates, and the browser owns the expanded state so there is no
+ * `aria-expanded` to keep in sync.
  *
  * The answers are also the input to T-14's `FAQPage` schema, which reads the
- * stored block rather than this markup. The two never disagree because neither
+ * stored block rather than this markup — the two cannot disagree because neither
  * derives from the other.
  */
 export const Faq = ({ block }: { block: FaqBlock }) => (
-  <Band>
-    {block.heading ? <h2 className="text-h2">{block.heading}</h2> : null}
-    <div className="border-border mt-10 border-t">
-      {(block.items ?? []).map((item) => (
-        <details className="border-border border-b py-4" key={item.id ?? item.question}>
-          <summary className="text-h3 cursor-pointer py-1">{item.question}</summary>
-          <p className="text-body text-secondary mt-3">{item.answer}</p>
-        </details>
-      ))}
+  <Band id="faq" tone="white">
+    <div className="grid gap-8 md:grid-cols-[0.75fr_1.25fr] md:gap-12">
+      <div>
+        {block.eyebrow ? <Eyebrow>{block.eyebrow}</Eyebrow> : null}
+        {block.heading ? <h2 className="mt-2">{block.heading}</h2> : null}
+        {block.note ? <p className="text-secondary mt-4">{block.note}</p> : null}
+      </div>
+
+      <div>
+        {(block.items ?? []).map((item) => (
+          <details className="border-border border-b" key={item.id ?? item.question}>
+            <summary className="cursor-pointer py-5 pr-8 font-bold">{item.question}</summary>
+            <p className="text-secondary max-w-[60ch] pb-5">{item.answer}</p>
+          </details>
+        ))}
+      </div>
     </div>
   </Band>
 )
