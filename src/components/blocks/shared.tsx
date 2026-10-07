@@ -72,7 +72,7 @@ export const SectionHeading = ({
     <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-8">
       <div>
         {eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}
-        {heading ? <h2 className="mt-2 max-w-[15ch] text-balance">{heading}</h2> : null}
+        {heading ? <h2 className="text-section mt-2 max-w-[15ch] text-balance">{heading}</h2> : null}
       </div>
       {note ? <p className="text-secondary max-w-[27rem] md:mb-1">{note}</p> : null}
     </div>

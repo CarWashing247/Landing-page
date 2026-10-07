@@ -20,7 +20,7 @@ export const Cta = ({ block }: { block: CtaBlock }) => (
       <div className="bg-slate text-on-slate rounded-[24px] p-8 md:flex md:items-center md:justify-between md:gap-8 md:p-12">
         <div>
           {block.eyebrow ? <Eyebrow tone="soft">{block.eyebrow}</Eyebrow> : null}
-          <h2 className="mt-2 max-w-[18ch] text-balance">{block.heading}</h2>
+          <h2 className="text-panel mt-2 max-w-[18ch] text-balance">{block.heading}</h2>
           {block.body ? <p className="mt-3 opacity-80">{block.body}</p> : null}
         </div>
         <Action className="mt-6 w-full md:mt-0 md:w-auto" href={block.ctaHref} label={block.ctaLabel} />

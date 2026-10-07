@@ -14,8 +14,8 @@ import { notFound } from 'next/navigation'
  * deleting the page would mean deleting the only thing that makes that cheap.
  * It is development-only and `noindex`, so it costs a 404 in production.
  *
- * The Vietnamese on this page is taken from the Canva UI Foundation deck, which
- * is designer-written copy rather than anything machine-translated (CLAUDE.md).
+ * The Vietnamese on this page is the designer-written copy that came from the
+ * retired UI Foundation deck, not anything machine-translated (CLAUDE.md).
  * It is a developer tool, not interface copy, so it is not part of T-15A's
  * catalog.
  */
@@ -34,20 +34,32 @@ const WEIGHTS = [
   { label: 'Bold 700', value: 700 },
 ] as const
 
-/** The six roles from page 3 of the deck, with the deck's own examples. */
+/**
+ * Every type role, with the size `globals.css` actually gives it.
+ *
+ * **The specs are read off the tokens, not off a deck.** They used to quote the
+ * retired Canva deck — 64/44/28/20px — none of which matched the tokens the
+ * page was rendering, so the one screen whose job is to show the type scale was
+ * labelling it wrongly. The two fluid roles are the prototype's section and
+ * closing-panel headings; their spec is the clamp, because a single number is
+ * not what they are.
+ */
 const ROLES = [
-  { cls: 'text-display', sample: 'Rửa xe tự động 24/7, mọi lúc.', spec: '64px / 120% / Bold', role: 'Display' },
-  { cls: 'text-h1', sample: 'Sạch nhanh. An tâm lái.', spec: '44px / 120% / Bold', role: 'H1' },
-  { cls: 'text-h2', sample: 'Công nghệ tiên tiến', spec: '28px / 130% / Semi Bold', role: 'H2' },
-  { cls: 'text-h3', sample: 'Gói rửa phù hợp cho bạn', spec: '20px / 140% / Semi Bold', role: 'H3' },
+  { cls: 'text-display', sample: 'Rửa xe tự động 24/7, mọi lúc.', spec: '56px / 108% / Extra Bold', role: 'Display' },
+  { cls: 'text-h1', sample: 'Sạch nhanh. An tâm lái.', spec: '40px / 112% / Extra Bold', role: 'H1' },
+  { cls: 'text-section', sample: 'Chọn gói rửa phù hợp.', spec: 'clamp(2.2rem, 3.3vw, 3.5rem) / 112% / Bold', role: 'Section heading' },
+  { cls: 'text-panel', sample: 'Sẵn sàng khi bạn cần.', spec: 'clamp(2rem, 3vw, 3rem) / 112% / Bold', role: 'Closing panel' },
+  { cls: 'text-h2', sample: 'Công nghệ tiên tiến', spec: '30px / 115% / Bold', role: 'H2' },
+  { cls: 'text-h3', sample: 'Gói rửa phù hợp cho bạn', spec: '23.2px / 130% / Bold', role: 'H3' },
   {
     cls: 'text-body',
     sample:
       'Công nghệ cảm biến thông minh, hoạt động 24/7, mang lại trải nghiệm rửa xe nhanh, sạch và an toàn.',
-    spec: '16px / 160% / Regular',
+    spec: '16px / 155% / Regular',
     role: 'Body',
   },
   { cls: 'text-label', sample: 'ĐANG HOẠT ĐỘNG 24/7', spec: '14px / 150% / Medium', role: 'Label' },
+  { cls: 'text-eyebrow uppercase', sample: 'Dịch vụ', spec: '12px / 140% / Extra Bold / 0.16em', role: 'Eyebrow' },
 ] as const
 
 /**
@@ -130,7 +142,11 @@ const Specimen = () => {
       <div className="mt-4 flex flex-wrap gap-4">
         {RADII.map((radius) => (
           <div
-            className={`${radius.cls} bg-primary text-on-primary text-label p-6`}
+            // `bg-mist`, not the `bg-primary`/`text-on-primary` this carried:
+            // the palette is cleared with `--color-*: initial` and no `primary`
+            // token was ever defined for it, so these swatches rendered with no
+            // background at all and showed nothing.
+            className={`${radius.cls} bg-mist text-ink text-label p-6`}
             key={radius.cls}
           >
             {radius.label}

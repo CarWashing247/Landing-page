@@ -21,7 +21,7 @@ export const Faq = ({ block }: { block: FaqBlock }) => (
     <div className="grid gap-8 md:grid-cols-[0.75fr_1.25fr] md:gap-12">
       <div>
         {block.eyebrow ? <Eyebrow>{block.eyebrow}</Eyebrow> : null}
-        {block.heading ? <h2 className="mt-2">{block.heading}</h2> : null}
+        {block.heading ? <h2 className="text-section mt-2">{block.heading}</h2> : null}
         {block.note ? <p className="text-secondary mt-4">{block.note}</p> : null}
       </div>
 

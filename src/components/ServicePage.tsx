@@ -122,7 +122,7 @@ export const ServicePage = async ({ locale, slug }: { locale: Locale; slug: stri
       */}
       {service.includes && service.includes.length > 0 ? (
         <Band>
-          <h2 className="text-h2">{copy.sections.includes}</h2>
+          <h2 className="text-section">{copy.sections.includes}</h2>
           <ul className="text-body mt-6 grid gap-2 md:grid-cols-2">
             {service.includes.map((entry) => (
               <li key={entry.id ?? entry.item}>{entry.item}</li>

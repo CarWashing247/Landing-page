@@ -28,7 +28,13 @@ export const Hero = ({ block }: { block: HeroBlock }) => {
         <div>
           {block.eyebrow ? <Eyebrow>{block.eyebrow}</Eyebrow> : null}
 
-          <h1 className="mt-4 mb-5 max-w-[11ch] text-[clamp(3rem,5.4vw,5.8rem)] leading-[1.02] text-balance">
+          {/*
+            `clamp(3.1rem, 5.4vw, 5.8rem)` and the h1's own 1.12 leading, both
+            straight from the prototype — the floor was 3rem and the leading was
+            overridden to 1.02, which set the phone heading a step small and the
+            wide one tighter than anything else on the page.
+          */}
+          <h1 className="mt-4 mb-5 max-w-[11ch] text-[clamp(3.1rem,5.4vw,5.8rem)] text-balance">
             {block.heading}
           </h1>
 
