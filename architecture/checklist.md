@@ -81,7 +81,7 @@ file, not here. This file answers one question: **where are we?**
 | T-19C | Admin chrome and dashboard | #37 |
 | T-19D | Block picker previews | #38 |
 | T-19E | Design conformance pass | — |
-| T-17A | Home page | — (branch `t-17a-home-page`, PR not yet opened) |
+| T-17A | Home page | #41 |
 
 **Not done:**
 
