@@ -423,6 +423,11 @@ for the layout, the rotation procedure and the consequences.
 
 ## 8. Definition of done
 
+**Read [`architecture/checklist.md`](./architecture/checklist.md) before you
+start** — it records what is already done, what the last task left behind, and
+which claims are still unverified. A task that duplicates finished work or
+rebuilds something another task already shipped is the failure this prevents.
+
 A task is complete when all of these hold:
 
 - [ ] `npm run lint`, `npm run typecheck` and `npm run build` pass
@@ -444,6 +449,9 @@ A task is complete when all of these hold:
 - [ ] Every route handler, hook and external connection the change touches
       logs through `logger()` in the section 5.8 format — connections on
       success as well as failure
+- [ ] [`architecture/checklist.md`](./architecture/checklist.md) updated: the
+      task moved to done with its PR number, and anything it left behind added
+      to "Still open" or to `follow-ups.md`
 
 ---
 
