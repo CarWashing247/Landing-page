@@ -75,7 +75,7 @@ export const Contact = async ({
       <div className="flex flex-col gap-10">
         <div className="max-w-3xl">
           {/* `<h2>`, never `<h1>` — the page's `Hero` or its title owns that. */}
-          <h2 className="text-h2">{block.heading}</h2>
+          <h2 className="text-section">{block.heading}</h2>
           {block.body ? <p className="text-body mt-3">{block.body}</p> : null}
         </div>
 

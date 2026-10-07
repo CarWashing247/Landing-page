@@ -36,13 +36,30 @@ export const MobileMenu = ({ children, label }: { children: ReactNode; label: st
   <details className="nav:hidden">
     <summary
       // `list-none` plus the webkit rule removes the default disclosure
-      // triangle; the glyph below is the control's visible affordance.
+      // triangle; the mark below is the control's visible affordance.
       className="border-border text-ink hover:border-slate hover:bg-mist grid min-h-11 min-w-11 cursor-pointer list-none place-items-center rounded-[10px] border marker:content-none [&::-webkit-details-marker]:hidden"
     >
       <span className="sr-only">{label}</span>
-      <span aria-hidden="true" className="text-h3 leading-none">
-        ☰
-      </span>
+      {/*
+        Three bars drawn as an SVG, which is what the prototype's `.menu__lines`
+        draws: 18×2px, 2px radius, in ink. It was a `☰` character, and a glyph
+        is whatever the platform font has — different weight and width on
+        Android, iOS and Windows, and sized by the type scale rather than by the
+        design. `aria-hidden` because the `sr-only` label above names the
+        control.
+      */}
+      <svg
+        aria-hidden="true"
+        fill="currentColor"
+        height="14"
+        viewBox="0 0 18 14"
+        width="18"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <rect height="2" rx="1" width="18" y="0" />
+        <rect height="2" rx="1" width="18" y="6" />
+        <rect height="2" rx="1" width="18" y="12" />
+      </svg>
     </summary>
 
     <div className="bg-surface border-border absolute inset-x-0 top-full z-50 border-t p-4 shadow-card">

@@ -118,12 +118,14 @@ const LanguageSwitch = ({ locale }: { locale: Locale }) => (
           <span
             aria-current="true"
             /*
-             * Marked by weight and an underline, not by colour. The accent is
-             * orange and the header is green: measured at 1.06:1 against each
-             * other, which is invisible. Two greens or a green and an orange
-             * cannot carry this distinction, so it is carried by something that
-             * is not hue — which is the right answer anyway, because colour
-             * alone never conveys state.
+             * Marked by weight and an underline, not by colour. The two
+             * states sit side by side in a 14px control, and the only colours
+             * available for them here are ink and secondary — a 2.6:1 pair,
+             * which is a tint rather than a distinction. Action red is the
+             * other candidate and it is reserved for things you press. So the
+             * current locale is carried by weight, an underline and
+             * `aria-current`, none of which is hue — which is the right answer
+             * regardless, because colour alone never conveys state.
              */
             className="text-ink grid min-h-11 min-w-8 place-items-center font-semibold underline underline-offset-4"
           >

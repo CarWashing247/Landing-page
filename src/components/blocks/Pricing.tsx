@@ -85,7 +85,14 @@ export const Pricing = ({
               Price and duration on one line, as the prototype sets them —
               together they are the comparison a visitor is actually making.
             */}
-            <p className="text-secondary text-label mt-auto pt-6 font-bold uppercase">
+            {/*
+              Not uppercased. The prototype's `.service__price` sets no
+              `text-transform` — its sample text is literally
+              "PRICE FROM CMS · DURATION FROM CMS", and reading that as a style
+              put `uppercase` on a line that in production holds a formatted
+              price and a Vietnamese duration label.
+            */}
+            <p className="text-secondary text-label mt-auto pt-6 font-bold">
               {formatPrice(service.price, service.currency, locale)} · {durationLabel}{' '}
               {service.durationMinutes}′
             </p>

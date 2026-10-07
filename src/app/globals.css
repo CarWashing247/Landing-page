@@ -146,10 +146,42 @@
   --text-h2--font-weight: 700;
   --text-h2--letter-spacing: -0.03em;
 
-  --text-h3: 20px;
+  /*
+   * `.step h3`, `.service h3` and the dashboard card's title are all 1.45rem in
+   * the prototypes. It was 20px here, which is Tailwind's `text-xl` and not a
+   * value this design uses — close enough to look intentional and wrong enough
+   * that every card heading sat a step below the drawing.
+   */
+  --text-h3: 1.45rem;
   --text-h3--line-height: 1.3;
   --text-h3--font-weight: 700;
   --text-h3--letter-spacing: -0.02em;
+
+  /*
+   * **The section heading, and it is fluid.** `landing.html` sets every
+   * `.section-heading h2` and the FAQ heading to
+   * `clamp(2.2rem, 3.3vw, 3.5rem)` — 35px on a phone up to 56px on a wide
+   * screen. `h2` alone cannot carry that: the same element is a 30px prose
+   * heading inside CMS rich text, where 56px would be absurd in a 768px column,
+   * and `ServicePage` uses `text-h2` for a *price*. So the fluid size is its
+   * own role, applied where the prototype draws a section heading, and the
+   * plain `h2` element keeps the prose size.
+   */
+  --text-section: clamp(2.2rem, 3.3vw, 3.5rem);
+  --text-section--line-height: 1.12;
+  --text-section--font-weight: 700;
+  --text-section--letter-spacing: -0.03em;
+
+  /*
+   * The closing panel's heading, which the prototype sets one step smaller than
+   * a section heading — `clamp(2rem, 3vw, 3rem)` on `.closing h2`. It sits
+   * inside a padded card rather than against the full column, so it is sized to
+   * the card.
+   */
+  --text-panel: clamp(2rem, 3vw, 3rem);
+  --text-panel--line-height: 1.12;
+  --text-panel--font-weight: 700;
+  --text-panel--letter-spacing: -0.03em;
 
   --text-body: 16px;
   --text-body--line-height: 1.55;
