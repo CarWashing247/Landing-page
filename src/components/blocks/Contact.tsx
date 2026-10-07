@@ -87,7 +87,7 @@ export const Contact = async ({
         <div className="grid gap-6 lg:grid-cols-3">
           {phone ? (
             <Card heading={copy.contact.callHeading} note={copy.contact.callNote}>
-              <a className="text-h3 text-action no-underline" data-ga-event="call" href={callHref(phone)}>
+              <a className="text-h3 text-action hover:text-action-hover no-underline" data-ga-event="call" href={callHref(phone)}>
                 {phone}
               </a>
             </Card>

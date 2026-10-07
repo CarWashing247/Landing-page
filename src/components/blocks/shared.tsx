@@ -134,7 +134,7 @@ export const Action = ({
 }) =>
   label && href ? (
     <a
-      className={`text-label rounded-control inline-flex min-h-12 items-center justify-center px-5 font-bold no-underline transition-colors ${
+      className={`text-label rounded-control inline-flex min-h-12 items-center justify-center px-5 font-bold no-underline ${
         tone === 'primary'
           ? 'bg-action hover:bg-action-hover text-on-action'
           : 'bg-surface border-border text-ink hover:border-slate border'

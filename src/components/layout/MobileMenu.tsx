@@ -15,7 +15,15 @@ import type { ReactNode } from 'react'
  * This opens with no script, which was verified in a real browser with
  * JavaScript turned off.
  *
- * **It is `md:hidden`, and the desktop navigation is a separate list.** The
+ * **The panel is positioned against the header, not against this element.**
+ * `absolute inset-x-0` resolves to the nearest positioned ancestor; while that
+ * was this `<details>`, the panel inherited the width of the hamburger — a 44px
+ * sliver beside the button, with every link wrapped to one character per line.
+ * It had been that way since the menu was built, because every check asserted
+ * the links were present and visible and none measured them. The header carries
+ * `relative` now, so `inset-x-0` spans the page.
+ *
+ * **It is `nav:hidden`, and the desktop navigation is a separate list.** The
  * first attempt put one list inside this element and tried to reveal it at
  * desktop width with `md:block` on the panel. Measured in Chrome: the links were
  * invisible on desktop. A closed `<details>` hides its content through the user
@@ -25,11 +33,11 @@ import type { ReactNode } from 'react'
  * no way for the two to drift, because neither is a copy of the other.
  */
 export const MobileMenu = ({ children, label }: { children: ReactNode; label: string }) => (
-  <details className="relative nav:hidden">
+  <details className="nav:hidden">
     <summary
       // `list-none` plus the webkit rule removes the default disclosure
       // triangle; the glyph below is the control's visible affordance.
-      className="border-border text-ink grid min-h-11 min-w-11 cursor-pointer list-none place-items-center rounded-[10px] border marker:content-none [&::-webkit-details-marker]:hidden"
+      className="border-border text-ink hover:border-slate hover:bg-mist grid min-h-11 min-w-11 cursor-pointer list-none place-items-center rounded-[10px] border marker:content-none [&::-webkit-details-marker]:hidden"
     >
       <span className="sr-only">{label}</span>
       <span aria-hidden="true" className="text-h3 leading-none">

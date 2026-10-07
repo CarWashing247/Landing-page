@@ -54,7 +54,7 @@ export const DraftBanner = async ({ locale, path }: { locale: Locale; path?: str
     >
       <span>{copy.draft.message}</span>
       <form action={`/api/draft/exit?${exit.toString()}`} method="post">
-        <button className="cursor-pointer underline" type="submit">
+        <button className="cursor-pointer underline hover:no-underline" type="submit">
           {copy.draft.exit}
         </button>
       </form>

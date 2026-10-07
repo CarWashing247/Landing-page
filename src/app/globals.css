@@ -284,6 +284,58 @@
   }
 
   /*
+   * Every interactive element transitions, in one place.
+   *
+   * Put here rather than repeated as `transition-colors` on each component for
+   * the reason the guidance gives: motion belongs on shared tokens, and a
+   * duration copied per component is one that drifts. It also means a new link
+   * or button is smooth by default instead of being the one that was forgotten.
+   *
+   * Only colour-ish properties are listed. Animating layout properties is what
+   * makes an interface feel slow, and nothing in this design moves on hover.
+   */
+  a,
+  button,
+  summary {
+    transition:
+      color var(--duration-feedback),
+      background-color var(--duration-control),
+      border-color var(--duration-control),
+      opacity var(--duration-control);
+  }
+
+  /* Anything that responds to a click says so before it is clicked. */
+  button,
+  summary,
+  [role="button"] {
+    cursor: pointer;
+  }
+
+  /*
+   * The disclosure animates its height where the browser can, and snaps where it
+   * cannot — `interpolate-size` and `::details-content` are recent, so this is
+   * additive polish rather than something the menu depends on. The menu works
+   * with no CSS at all; this only makes it travel.
+   */
+  @supports (interpolate-size: allow-keywords) {
+    :root {
+      interpolate-size: allow-keywords;
+    }
+
+    details::details-content {
+      block-size: 0;
+      overflow: hidden;
+      transition:
+        block-size var(--duration-menu) ease,
+        content-visibility var(--duration-menu) allow-discrete;
+    }
+
+    details[open]::details-content {
+      block-size: auto;
+    }
+  }
+
+  /*
    * The focus indicator, on its own token. 3px at 3px offset, from the
    * prototypes — thicker than a default ring because it has to be visible
    * against both paper and the dark bands.
