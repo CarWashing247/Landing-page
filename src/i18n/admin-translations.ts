@@ -1,5 +1,6 @@
 import type { PayloadRequest } from 'payload'
 
+import type { Locale } from '../lib/locales'
 import { DEFAULT_LOCALE, isLocale } from '../lib/locales'
 
 /**
@@ -37,6 +38,33 @@ export const adminTranslations = {
         'The description cannot be longer than 180 characters. Aim for 140 to 160 — Google cuts it off around there.',
       onlyOneHero:
         'A page can have only one Hero block, because it is the page’s main heading. Remove the extra one, or change it to another block.',
+      /**
+       * The home-page hint on the `Pages` slug field (T-17A, A14). The slug is
+       * generated from the title, so without this a page titled "Trang chủ"
+       * becomes `/trang-chu` and the editor never learns why `/` did not change.
+       */
+      homeSlugHint:
+        'To make this the home page, set the address to "home" in each language. It is then shown at the site root, not at /home.',
+      /** The admin dashboard (T-19C). Panel titles mirror the widget labels. */
+      dashboardEyebrow: 'Content workspace',
+      dashboardTitle: 'Manage your site.',
+      dashboardLead: 'Publish pages, maintain services, and review the content visitors see.',
+      dashboardCreatePage: 'Create page',
+      dashboardPagesBody: 'Build and update landing content with reusable blocks.',
+      dashboardServicesBody: 'Keep packages, prices, durations, and included items accurate.',
+      dashboardMediaBody: 'Manage images and localized alternative text.',
+      /** `{collection}` is the collection's own plural label, lower-cased. */
+      dashboardOpenCollection: 'Open {collection} →',
+      dashboardRecentTitle: 'Recent content',
+      dashboardViewAll: 'View all',
+      dashboardRecentEmptyTitle: 'Content appears here when available.',
+      dashboardRecentEmptyDetail:
+        'Nothing has been created yet. This panel lists real documents only — it does not invent pages, dates, or publication states.',
+      dashboardChecklistTitle: 'Editorial checklist',
+      dashboardStepLocales: 'Add content in both locales',
+      dashboardStepSeo: 'Review SEO fields and social image',
+      dashboardStepPreview: 'Check the live preview',
+      dashboardStepPublish: 'Publish when ready',
     },
   },
   vi: {
@@ -57,6 +85,27 @@ export const adminTranslations = {
         'Mô tả không được dài hơn 180 ký tự. Nên viết 140 đến 160 ký tự — Google cắt bớt quanh mức đó.',
       onlyOneHero:
         'Mỗi trang chỉ được có một khối mở đầu, vì đó là tiêu đề chính của trang. Hãy xoá bớt một khối hoặc đổi sang loại khác.',
+      homeSlugHint: 'TODO(copy): set the address to "home" in each language to make this the home page',
+      dashboardEyebrow: 'TODO(copy): content workspace',
+      dashboardTitle: 'TODO(copy): manage your site',
+      dashboardLead: 'TODO(copy): publish pages, maintain services, review what visitors see',
+      dashboardCreatePage: 'TODO(copy): create page',
+      dashboardPagesBody: 'TODO(copy): build and update landing content with reusable blocks',
+      dashboardServicesBody: 'TODO(copy): keep packages, prices, durations and included items accurate',
+      dashboardMediaBody: 'TODO(copy): manage images and localized alternative text',
+      dashboardOpenCollection: 'TODO(copy): open {collection} →',
+      // Already approved; `payload.config.ts` reads the widget label from here.
+      dashboardRecentTitle: 'Nội dung gần đây',
+      dashboardViewAll: 'TODO(copy): view all',
+      dashboardRecentEmptyTitle: 'TODO(copy): content appears here when available',
+      dashboardRecentEmptyDetail:
+        'TODO(copy): nothing created yet; this panel lists real documents only and invents nothing',
+      // Already approved; `payload.config.ts` reads the widget label from here.
+      dashboardChecklistTitle: 'Danh sách kiểm tra',
+      dashboardStepLocales: 'TODO(copy): add content in both locales',
+      dashboardStepSeo: 'TODO(copy): review SEO fields and social image',
+      dashboardStepPreview: 'TODO(copy): check the live preview',
+      dashboardStepPublish: 'TODO(copy): publish when ready',
     },
   },
 } as const
@@ -67,9 +116,40 @@ export type AdminMessageKey = keyof (typeof adminTranslations)['vi']['custom']
  * The message in the language the editor has their panel set to, falling back
  * to Vietnamese for any language we do not carry.
  */
-export const adminMessage = (req: PayloadRequest, key: AdminMessageKey): string => {
-  const language = req.i18n?.language
-  const locale = typeof language === 'string' && isLocale(language) ? language : DEFAULT_LOCALE
+export const adminMessage = (
+  req: Pick<PayloadRequest, 'i18n'>,
+  key: AdminMessageKey,
+  vars: Record<string, string> = {},
+): string =>
+  Object.entries(vars).reduce(
+    (message, [name, value]) => message.replace(`{${name}}`, value),
+    adminTranslations[adminLanguage(req)].custom[key] as string,
+  )
 
-  return adminTranslations[locale].custom[key]
+/** The panel language as one of our locales, Vietnamese for any we do not carry. */
+const adminLanguage = (req: Pick<PayloadRequest, 'i18n'>): Locale => {
+  const language = req.i18n?.language
+
+  return typeof language === 'string' && isLocale(language) ? language : DEFAULT_LOCALE
+}
+
+/**
+ * A config label — `{ en, vi }` or a plain string — in the panel language.
+ *
+ * For reusing wording the config already carries, such as a collection's
+ * plural label, rather than copying it into the table above where the two
+ * could drift.
+ */
+export const adminLabel = (
+  req: Pick<PayloadRequest, 'i18n'>,
+  label: unknown,
+  fallback: string,
+): string => {
+  if (typeof label === 'string') {
+    return label
+  }
+
+  const value = (label as Partial<Record<Locale, unknown>> | null | undefined)?.[adminLanguage(req)]
+
+  return typeof value === 'string' ? value : fallback
 }

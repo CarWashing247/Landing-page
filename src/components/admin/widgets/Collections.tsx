@@ -1,5 +1,8 @@
+import type { WidgetServerProps } from 'payload'
 import type { ReactNode } from 'react'
 
+import type { AdminMessageKey } from '../../../i18n/admin-translations'
+import { adminLabel, adminMessage } from '../../../i18n/admin-translations'
 import { Panel } from './shared'
 
 /**
@@ -28,7 +31,12 @@ import { Panel } from './shared'
  * platform font happens to have, and the box-drawing block is outside the
  * subset several of them ship. `aria-hidden`, because the card's heading names it.
  */
-type Entry = { description: string; href: string; icon: ReactNode; ordinal: string; title: string }
+type Entry = {
+  collection: 'media' | 'pages' | 'services'
+  description: AdminMessageKey
+  icon: ReactNode
+  ordinal: string
+}
 
 const Frame = ({ children }: { children?: ReactNode }) => (
   <svg
@@ -48,8 +56,8 @@ const Frame = ({ children }: { children?: ReactNode }) => (
 
 const ENTRIES: Entry[] = [
   {
-    description: 'Build and update landing content with reusable blocks.',
-    href: '/admin/collections/pages',
+    collection: 'pages',
+    description: 'dashboardPagesBody',
     // A page: a heading rule and two lines of body.
     icon: (
       <Frame>
@@ -57,11 +65,10 @@ const ENTRIES: Entry[] = [
       </Frame>
     ),
     ordinal: '01',
-    title: 'Pages',
   },
   {
-    description: 'Keep packages, prices, durations, and included items accurate.',
-    href: '/admin/collections/services',
+    collection: 'services',
+    description: 'dashboardServicesBody',
     // A divided frame: the package and its price column.
     icon: (
       <Frame>
@@ -69,11 +76,10 @@ const ENTRIES: Entry[] = [
       </Frame>
     ),
     ordinal: '02',
-    title: 'Services',
   },
   {
-    description: 'Manage images and localized alternative text.',
-    href: '/admin/collections/media',
+    collection: 'media',
+    description: 'dashboardMediaBody',
     // An image: the horizon and the sun every picture placeholder draws.
     icon: (
       <Frame>
@@ -82,26 +88,38 @@ const ENTRIES: Entry[] = [
       </Frame>
     ),
     ordinal: '03',
-    title: 'Media',
   },
 ]
 
-export const CollectionsWidget = () => (
+/**
+ * **The card titles are the collections' own plural labels**, so the dashboard
+ * names each collection exactly as the navigation does, in the panel language,
+ * without a second copy of the wording that could drift from it.
+ */
+export const CollectionsWidget = ({ req }: WidgetServerProps) => (
   <div className="pd-cards">
-    {ENTRIES.map((entry) => (
-      <Panel className="pd-card" key={entry.href}>
-        <div className="pd-card__top">
-          <span aria-hidden="true" className="pd-card__icon">
-            {entry.icon}
-          </span>
-          <span className="pd-card__ordinal">{entry.ordinal}</span>
-        </div>
-        <h2 className="pd-card__title">{entry.title}</h2>
-        <p className="pd-card__body">{entry.description}</p>
-        <a className="pd-card__link" href={entry.href}>
-          Open {entry.title.toLowerCase()} →
-        </a>
-      </Panel>
-    ))}
+    {ENTRIES.map((entry) => {
+      const title = adminLabel(
+        req,
+        req.payload.collections[entry.collection]?.config.labels.plural,
+        entry.collection,
+      )
+
+      return (
+        <Panel className="pd-card" key={entry.collection}>
+          <div className="pd-card__top">
+            <span aria-hidden="true" className="pd-card__icon">
+              {entry.icon}
+            </span>
+            <span className="pd-card__ordinal">{entry.ordinal}</span>
+          </div>
+          <h2 className="pd-card__title">{title}</h2>
+          <p className="pd-card__body">{adminMessage(req, entry.description)}</p>
+          <a className="pd-card__link" href={`/admin/collections/${entry.collection}`}>
+            {adminMessage(req, 'dashboardOpenCollection', { collection: title.toLowerCase() })}
+          </a>
+        </Panel>
+      )
+    })}
   </div>
 )

@@ -116,15 +116,35 @@ export const SERVICE_SEGMENT: Record<Locale, string> = {
   en: 'services',
 }
 
-/** The public path of a CMS page in a locale. `('bang-gia', 'vi')` -> `/bang-gia`. */
-export const pathForPage = (slug: string, locale: Locale): string => urlFor(`/${slug}`, locale)
+/**
+ * The reserved slug of the `Pages` document that is the home page (D1, T-17A).
+ *
+ * The same in both locales, and English rather than `trang-chu`, because it never
+ * appears in a URL: the document is served at `/` and `/en`, and `/home` itself
+ * 404s. A slug is unique per locale, so at most one document per locale can hold
+ * it.
+ */
+export const HOME_SLUG = 'home'
+
+export const isHomeSlug = (slug: string): boolean => slug === HOME_SLUG
+
+/** The public path of the home page in a locale. `'en'` -> `/en`. */
+export const pathForHome = (locale: Locale): string => urlFor('/', locale)
+
+/**
+ * The public path of a CMS page in a locale. `('bang-gia', 'vi')` -> `/bang-gia`.
+ *
+ * **The home document maps to `/`, here and nowhere else.** Preview links,
+ * `hreflang` alternates, the sitemap and canonical URLs all build a page's path
+ * through this function, so routing the reserved slug here is what keeps every
+ * one of them from advertising `/home` — a URL the `[slug]` route refuses.
+ */
+export const pathForPage = (slug: string, locale: Locale): string =>
+  isHomeSlug(slug) ? pathForHome(locale) : urlFor(`/${slug}`, locale)
 
 /** The public path of a service in a locale. `('quick-wash', 'en')` -> `/en/services/quick-wash`. */
 export const pathForService = (slug: string, locale: Locale): string =>
   urlFor(`/${SERVICE_SEGMENT[locale]}/${slug}`, locale)
-
-/** The public path of the home page in a locale. `'en'` -> `/en`. */
-export const pathForHome = (locale: Locale): string => urlFor('/', locale)
 
 /**
  * The public URL of the generated last-resort share image for a locale.

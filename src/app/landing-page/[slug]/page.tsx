@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 
-import { ContentPage, contentPageMetadata } from '../../../components/ContentPage'
-import { publishedSlugs } from '../../../lib/content'
+import { ContentPage, contentPageMetadata, contentPageSlugs } from '../../../components/ContentPage'
 
 /**
  * CMS pages for the `vi` locale. The locale is a literal so the route stays
@@ -29,7 +28,8 @@ export default Page
  * Keyed by locale as well as slug (Design.md section 4): the two locale folders
  * each run this for their own locale, so the route count is locales x
  * documents, and a document with no translation is prerendered only where it
- * has a slug.
+ * has a slug. The home document is left out: it is served at the locale root,
+ * and its slug must not answer here.
  */
 export const generateStaticParams = async (): Promise<{ slug: string }[]> =>
-  (await publishedSlugs('pages', LOCALE)).map((slug) => ({ slug }))
+  contentPageSlugs(LOCALE)

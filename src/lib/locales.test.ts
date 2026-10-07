@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   DEFAULT_LOCALE,
+  HOME_SLUG,
   LOCALES,
   isLocale,
   localeFromPath,
@@ -103,6 +104,13 @@ describe('route shapes', () => {
     expect(pathForHome('en')).toBe('/en')
     expect(pathForPage('bang-gia', 'vi')).toBe('/bang-gia')
     expect(pathForPage('pricing', 'en')).toBe('/en/pricing')
+  })
+
+  it('serves the reserved home document at the locale root, never at /home', () => {
+    // Preview, hreflang and the sitemap all go through pathForPage, so this is
+    // what keeps every one of them off the URL the [slug] route refuses.
+    expect(pathForPage(HOME_SLUG, 'vi')).toBe('/')
+    expect(pathForPage(HOME_SLUG, 'en')).toBe('/en')
   })
 
   it('localizes the service segment, not just the slug', () => {

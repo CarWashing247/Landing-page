@@ -148,10 +148,98 @@ curl -s -o /dev/null -w '%{http_code}\n' localhost:3000/trang-chu    # expect 40
 
 ## Flags
 
-- **D1 is unanswered as of this file being written.** It was recorded during
-  T-09, assigned to T-17, and T-17 merged without deciding it — reasonably, since
-  T-17 built blocks rather than the page that uses them. It cannot be deferred
-  again: this task is the one that needs it.
+- ~~**D1 is unanswered as of this file being written.**~~ Answered (path A) and
+  implemented — see "What was built" below.
 - The home page currently has no `lastModified` of its own in the sitemap and no
   title suffix, both of which are consequences of `/` not being a document. Path
   A resolves both; path B makes them permanent.
+
+## What was built
+
+**No new block and no new section.** Deck pages 4 and 5 are retired; against the
+current source, `design/phase3/landing.html`, every home section maps onto a T-17
+block that T-15D and T-19E had already matched to the prototype:
+
+| Prototype section | Block |
+| --- | --- |
+| Hero, with the dark visual panel | `Hero` |
+| How it works — three numbered cards | `Steps` |
+| Services — "Choose the wash that fits" | `Pricing`, pointed at published services |
+| Questions | `Faq` |
+| Closing panel | `Cta` |
+
+So the home page is a document, not a template, and this task is wiring:
+
+- **`HOME_SLUG` in `src/lib/locales.ts`, and `pathForPage('home', l)` returns
+  `/` or `/en`.** Preview links, `hreflang`, canonicals and the sitemap all build a
+  page's path through that one function, so none of them can advertise `/home`.
+- **`HomePage` reads the `home` document through `loadPage`** and renders it with
+  `PageBody`, the body `ContentPage` already used, now shared — one renderer, one
+  `<h1>` rule. The read carries the existing `page:<locale>:home` tag, so T-11's
+  webhook purges `/` with no new revalidation path. A document counts as a
+  locale's home only if *that locale's own* slug is `home`; Payload's fallback
+  would otherwise serve the Vietnamese document at `/en`.
+- **No home document** (a fresh install) falls back to the previous body and
+  SiteSettings-only metadata, so `/` never 404s.
+- **The `AutoWash` node is untouched** — same component, same `BusinessInfo`
+  input, still on the home route alone. `FAQPage` is added when the document has
+  an FAQ block, through the same `faqSchema` every page uses.
+- **`ContentPage` refuses `home`**, so `/home` and `/en/home` 404, and
+  `generateStaticParams` does not prerender them.
+- **The sitemap's hand-written home entries remain only for a locale with no home
+  document.** Otherwise the document supplies them, with its own per-locale
+  `lastModified` and `noindex` — the T-09 and T-13 flags above are resolved.
+- **`Hero` draws the prototype's abstract wash panel when no image is set**, as an
+  `aria-hidden`, token-only CSS and SVG stand-in. Before, a hero with no image
+  left the right half of the desktop grid empty. An uploaded image replaces it,
+  and keeps `priority`.
+
+### Verification run
+
+Against `npm run build && npm run start` with the local database, which already
+holds a published `home` document (hero, steps, pricing, faq, cta):
+
+| Check | Result |
+| --- | --- |
+| `/`, `/en` stay `○` static in the build output | yes |
+| `<h1>` count on `/` and `/en` | 1 and 1, from the hero |
+| `/home`, `/en/home` | 404, 404 |
+| `<title>` on `/` | `Trang chủ \| AutoWash247` — the suffix is now present |
+| `hreflang` on both | `vi` → `/`, `en` → `/en`, `x-default` → `/` |
+| `/en` | `noindex, nofollow` — the untranslated-locale guardrail, as intended |
+| `/sitemap.xml` home entries | exactly one, `/`; `/en` is absent because it is `noindex` |
+| `FAQPage` on `/` and `/en` | present |
+| Hero image | preloaded (`<link rel="preload" as="image">`) |
+| No horizontal scroll at 390 and 1280px | `scrollWidth` equals the viewport |
+| No-image hero panel | rendered in place, 525×500 at 1280px, 350×330 at 390px |
+| `npm run typecheck`, `npm run lint` | pass |
+| `vitest` | 317 of 318; the failure is A11b, unchanged from `master` |
+
+**`AutoWash` and `provider`, verified with temporary data.** Both are withheld
+while `BusinessInfo` holds `TODO(data)`, so the local row's name, street and
+locality were set to `TEST …` values, the data cache cleared, the site rebuilt
+and checked, and the original row restored. With data present, `/` and `/en`
+both emit `"@type":"AutoWash"` with `@id` `…/#business`, and
+`/dich-vu/rua-xe-co-ban` and `/en/services/ceramic-coating` both carry
+`"provider":{"@id":"…/#business"}` — the same node. Mobile Lighthouse is T-20.
+
+### Fixed in the same branch, by request
+
+The PR was asked to leave nothing open that it could close, so two follow-ups
+outside T-17A's scope are wired here rather than recorded:
+
+- **A11b** — the admin dashboard's strings move into `adminTranslations` and
+  resolve in the panel language; `no-literals` passes (324/324). Checked in a
+  logged-in browser in English. The Vietnamese branch is covered by
+  `admin-translations.test.ts`, because Payload pins scripted sessions to `en`.
+- **A14** — the `Pages` slug field's help text names the `home` slug, checked on
+  the create form.
+
+Both have English only; their Vietnamese is `TODO(copy)`.
+
+### Left for others
+
+- **A11b, A14** — the Vietnamese for fourteen admin strings.
+- The local `home` document's content is seed data: no eyebrows, no hero or CTA
+  buttons, English untranslated. That is T-23's, and the blocks render those
+  fields as soon as they are filled.

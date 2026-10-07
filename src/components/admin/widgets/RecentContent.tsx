@@ -1,3 +1,6 @@
+import type { WidgetServerProps } from 'payload'
+
+import { adminLabel, adminMessage } from '../../../i18n/admin-translations'
 import { getPayload } from '../../../lib/payload'
 import { Empty, Panel, PanelHead } from './shared'
 
@@ -17,7 +20,7 @@ import { Empty, Panel, PanelHead } from './shared'
  * first screen after login, and a broken panel there reads as a broken CMS.
  */
 
-type Row = { collection: string; href: string; id: number | string; title: string; updatedAt: string }
+type Row = { collection: 'pages' | 'services'; href: string; id: number | string; title: string; updatedAt: string }
 
 const recent = async (): Promise<Row[]> => {
   try {
@@ -58,7 +61,7 @@ const recent = async (): Promise<Row[]> => {
   }
 }
 
-export const RecentContentWidget = async () => {
+export const RecentContentWidget = async ({ req }: WidgetServerProps) => {
   const rows = await recent()
 
   return (
@@ -66,16 +69,16 @@ export const RecentContentWidget = async () => {
       <PanelHead
         action={
           <a className="pd-panel__action" href="/admin/collections/pages">
-            View all
+            {adminMessage(req, 'dashboardViewAll')}
           </a>
         }
-        title="Recent content"
+        title={adminMessage(req, 'dashboardRecentTitle')}
       />
 
       {rows.length === 0 ? (
         <Empty
-          detail="Nothing has been created yet. This panel lists real documents only — it does not invent pages, dates, or publication states."
-          title="Content appears here when available."
+          detail={adminMessage(req, 'dashboardRecentEmptyDetail')}
+          title={adminMessage(req, 'dashboardRecentEmptyTitle')}
         />
       ) : (
         <ul className="pd-list">
@@ -84,7 +87,9 @@ export const RecentContentWidget = async () => {
               <a className="pd-list__link" href={row.href}>
                 {row.title}
               </a>
-              <span className="pd-list__meta">{row.collection}</span>
+              <span className="pd-list__meta">
+                {adminLabel(req, req.payload.collections[row.collection]?.config.labels.singular, row.collection)}
+              </span>
             </li>
           ))}
         </ul>

@@ -296,24 +296,22 @@ navies one step apart.
 tasks' verification blocks were built on exactly that. Anything about appearance
 needs a rendered page.
 
-### A11b · `no-literals` fails on the admin dashboard widgets
+### A11b · The admin dashboard's Vietnamese is not written yet
 
-**Owner: T-19C**
+**Owner: whoever supplies the copy** — wiring done in T-17A
 
-`src/i18n/no-literals.test.ts` fails on `master` and on every branch since the
-dashboard widgets landed. Five strings are flagged — the three collection card
-descriptions in `Collections.tsx`, and the empty state's title and detail in
-`RecentContent.tsx`.
+`no-literals` used to fail here: every dashboard string was an English literal,
+so a Vietnamese editor saw an English dashboard. T-17A moved all of them —
+Welcome, the collection cards, Recent content and the checklist — into
+`adminTranslations` and reads them through `adminMessage(req, …)` in the panel
+language, and the test passes. The card titles and row types now come from
+each collection's own `labels`, so the third card reads "Images", as the
+navigation already did, rather than "Media".
 
-They are real literals and the rule is right about them, but the rule's remedy
-does not fit: AGENT.md 5.6 says the admin's chrome language is independent of
-the content locale, and `t(locale)` is the *content* catalog. The admin's own
-strings belong in Payload's `i18n.translations`, which is where the field labels
-and widget labels already are.
-
-Verified identical before and after the T-19E conformance pass (same five
-offenders, diffed), so it is not that pass's doing — recorded because a failing
-test on the branch is otherwise read as the fault of whoever touched it last.
+**What remains is the Vietnamese**: thirteen `dashboard*` keys in
+`src/i18n/admin-translations.ts` hold `TODO(copy):` placeholders, which a
+Vietnamese-language panel shows verbatim until they are replaced. The two panel
+titles reuse the widget labels that were already approved.
 
 ### A12 · The dashboard cannot put two widgets on one row
 
@@ -352,6 +350,18 @@ The honest fix is a custom cell component on the `_status` column, which is
 Payload-supported configuration rather than a re-theme, but it is a new
 component with its own localization and a decision about whether Draft gets a
 colour too. Left for a task rather than folded into a styling pass.
+
+### A14 · The home-slug hint has no Vietnamese yet
+
+**Owner: whoever supplies the copy** — wiring done in T-17A
+
+T-17A serves the `Pages` document with slug `home` at `/` and `/en`. The slug is
+generated from the title, so an editor who creates "Trang chủ" gets
+`trang-chu` — an ordinary page — while `/` keeps rendering whatever it did. The
+`Pages` slug field now appends `homeSlugHint` to its help text saying so. The
+English is written; the Vietnamese is a `TODO(copy):` placeholder in
+`src/i18n/admin-translations.ts`, and it shows verbatim to a Vietnamese-language
+panel until it is replaced.
 
 ## B. Documentation inconsistencies
 
@@ -506,30 +516,6 @@ adds more data-reading components, not after.
 ---
 
 ## D. Decisions still open
-
-### D1 · Is `/` a CMS document, and under what slug?
-
-**Owner: T-17A** (recorded in `task/t-09-build-metadata.md` and
-`task/t-17a-home-page.md`)
-
-T-17 was listed as the owner and merged without deciding it — reasonably, since
-it built the blocks rather than the page that would use them. T-17A is the task
-that cannot start without an answer.
-
-T-23 lists `/` among the documents to create, but nothing in `Design.md` says
-which slug a home document would carry. T-09 did not invent one, because doing
-so commits two later tasks: the `[slug]` route would have to refuse that slug so
-`/` and `/trang-chu` are not one page at two URLs, and the sitemap would have to
-special-case it.
-
-Today the home route reads `SiteSettings` alone — the "blank SEO tab still ships
-complete tags" path. Consequence: the home `<title>` is the brand name with no
-suffix, because `AutoWash247 | AutoWash247` reads like a bug.
-
-A second consequence, added by T-13: the home entries' sitemap `lastModified` is
-`SiteSettings.updatedAt`, which bounds when the indexable part of `/` changed but
-not when its hardcoded body did. Deciding this question replaces that bound with
-a real document timestamp.
 
 ### D2 · What to salvage from the closed Phase 3 PR
 

@@ -1,3 +1,7 @@
+import type { WidgetServerProps } from 'payload'
+
+import type { AdminMessageKey } from '../../../i18n/admin-translations'
+import { adminMessage } from '../../../i18n/admin-translations'
 import { Panel, PanelHead } from './shared'
 
 /**
@@ -12,22 +16,22 @@ import { Panel, PanelHead } from './shared'
  */
 
 const STEPS = [
-  'Add content in both locales',
-  'Review SEO fields and social image',
-  'Check the live preview',
-  'Publish when ready',
-]
+  'dashboardStepLocales',
+  'dashboardStepSeo',
+  'dashboardStepPreview',
+  'dashboardStepPublish',
+] as const satisfies readonly AdminMessageKey[]
 
-export const ChecklistWidget = () => (
+export const ChecklistWidget = ({ req }: WidgetServerProps) => (
   <Panel>
-    <PanelHead title="Editorial checklist" />
+    <PanelHead title={adminMessage(req, 'dashboardChecklistTitle')} />
     <ol className="pd-steps">
       {STEPS.map((step, index) => (
         <li className="pd-steps__row" key={step}>
           <span aria-hidden="true" className="pd-steps__number">
             {index + 1}
           </span>
-          {step}
+          {adminMessage(req, step)}
         </li>
       ))}
     </ol>

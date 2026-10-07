@@ -330,7 +330,7 @@ export interface Page {
     keywordFocus?: string | null;
   };
   /**
-   * The part of the URL after the domain, for example "bang-gia". Left blank, it is generated automatically. Each language has its own address. Once published this cannot be changed, because the old URL is already indexed.
+   * The part of the URL after the domain, for example "bang-gia". Left blank, it is generated automatically. Each language has its own address. Once published this cannot be changed, because the old URL is already indexed. To make this the home page, set the address to "home" in each language. It is then shown at the site root, not at /home.
    */
   slug: string;
   localeUpdatedAt?: string | null;

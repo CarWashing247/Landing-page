@@ -81,13 +81,13 @@ file, not here. This file answers one question: **where are we?**
 | T-19C | Admin chrome and dashboard | #37 |
 | T-19D | Block picker previews | #38 |
 | T-19E | Design conformance pass | — |
+| T-17A | Home page | #41 |
 
 **Not done:**
 
 | Task | | Blocked by |
 | --- | --- | --- |
-| **T-17A** | **Home page** | nothing — D1 is answered |
-| T-20 | Performance pass | T-17A |
+| **T-20** | **Performance pass** | nothing — T-17A is done |
 
 > **Gate 3 — not reached.** Mobile Lighthouse at 90 or above, which is T-20.
 
@@ -139,7 +139,7 @@ decisions still hold; their colours do not.
 | --- | --- | --- |
 | T-21 | Analytics and Search Console | T-19 (done) — ready |
 | T-22 | Admin hardening | nothing — ready, independent of all UI |
-| T-23 | Content seed | T-17A |
+| T-23 | Content seed | nothing — T-17A is done; seed `/` at slug `home` |
 | T-24 | Handover | everything |
 
 ---
@@ -150,10 +150,13 @@ Work that is not a task of its own and that the next person should know about.
 Defects live in [`follow-ups.md`](./follow-ups.md); this is the short list of
 what most affects the next task.
 
-- **T-17A is the next thing on the critical path.** `/` still renders a
-  placeholder heading. D1 is answered — `/` becomes a `Pages` document with
-  reserved slug `home` — but nothing implements it: there is no reserved-slug
-  guard, so a CMS page at `home` would be unreachable, and `/home` does not 404.
+- **T-20 is the next thing on the critical path.** `/` and `/en` are now the
+  `Pages` document with slug `home` (T-17A): `/home` 404s, the sitemap takes the
+  home entries from the document, and `pathForPage` maps the slug to the locale
+  root. **The home page must be created at slug `home` in each locale** — a page
+  titled "Trang chủ" auto-generates `trang-chu` and lands at `/trang-chu`
+  instead. The slug field's help text now says so in English; its Vietnamese
+  is still `TODO(copy)` (A14), as are thirteen admin dashboard strings (A11b).
 - **The 404 renders an empty body (A1).** Four approaches measured, all failing
   identically; the suspected cause is the catch-all rewrite rather than the
   not-found boundary. T-15A wrote the copy, so there is finished wording nobody
