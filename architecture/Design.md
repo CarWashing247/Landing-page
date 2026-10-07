@@ -674,6 +674,17 @@ Done when: the dashboard follows `design/phase3/dashboard.html` and its desktop
 and mobile PNGs at 1440px and 390px; the native menu and collection links work;
 no invented data is shown; and no horizontal overflow appears at phone width.
 
+**T-19G · CMS admin reference designs**
+Extend the merged dashboard's visual system to the other Payload admin views as
+standalone desktop and mobile design references in `design/phase3`. Represent
+the real fields and role permissions; leave business and customer data as
+clearly marked placeholders. This task creates design artifacts, not admin code.
+Depends on: T-19F, T-19D.
+Done when: Pages, Services, Media, Globals, Users, Contact submissions, Account
+and Login have HTML references and 1440px/390px captures; the mobile layouts
+have no horizontal overflow; and a handoff identifies the native Payload
+controls a later implementation must preserve.
+
 
 **T-19B · The admin follows Payload**
 Remove the bespoke admin theme T-19A added and let the Payload panel be

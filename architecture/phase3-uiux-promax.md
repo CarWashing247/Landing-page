@@ -80,6 +80,8 @@ and the lazy map. No invented business details enter either layout.
 
 ## Payload admin
 
+The dashboard shell is now extended by [the T-19G reference index](../design/phase3/README.md): fourteen standalone views with desktop and mobile captures. They cover the Pages and Services lists/editors, Media library/detail, the two Globals, Users list/editor, Contact submissions list/detail, Account, and Login. `admin.html` predates these view-specific references; use `page-editor.html` for the next page-editor enhancement. These artifacts define appearance and responsive hierarchy while Payload continues to provide behavior and permissions.
+
 The admin is a focused editorial workspace. A dark slate navigation rail marks
 the current section clearly; the list and editor canvases are light. The main
 action is red, while published state is green with a visible text label. Error
