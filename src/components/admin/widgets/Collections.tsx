@@ -49,7 +49,7 @@ const Frame = ({ children }: { children?: ReactNode }) => (
     width="20"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <rect height="15" rx="2.5" width="15" x="2.5" y="2.5" />
+    <rect height="13" rx="0.5" width="13" x="3.5" y="3.5" />
     {children}
   </svg>
 )
@@ -58,21 +58,16 @@ const ENTRIES: Entry[] = [
   {
     collection: 'pages',
     description: 'dashboardPagesBody',
-    // A page: a heading rule and two lines of body.
-    icon: (
-      <Frame>
-        <path d="M6 7h5M6 10.5h8M6 14h8" strokeLinecap="round" />
-      </Frame>
-    ),
+    icon: <Frame />,
     ordinal: '01',
   },
   {
     collection: 'services',
     description: 'dashboardServicesBody',
-    // A divided frame: the package and its price column.
+    // The prototype's divided service card.
     icon: (
       <Frame>
-        <path d="M12 2.5v15" />
+        <path d="M10 3.5v13" />
       </Frame>
     ),
     ordinal: '02',
@@ -80,11 +75,10 @@ const ENTRIES: Entry[] = [
   {
     collection: 'media',
     description: 'dashboardMediaBody',
-    // An image: the horizon and the sun every picture placeholder draws.
+    // The prototype's hatched media tile.
     icon: (
       <Frame>
-        <circle cx="7.5" cy="7.5" r="1.6" />
-        <path d="m2.8 14.4 4-3.6 3.4 3 2.6-2.2 4.4 3.8" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="m3.5 5 11.5 11.5M3.5 9l7.5 7.5M3.5 13l3.5 3.5M7.5 3.5l9 9M11.5 3.5l5 5M15.5 3.5l1 1" />
       </Frame>
     ),
     ordinal: '03',

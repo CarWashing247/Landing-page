@@ -46,6 +46,7 @@ export const adminTranslations = {
       homeSlugHint:
         'To make this the home page, set the address to "home" in each language. It is then shown at the site root, not at /home.',
       /** The admin dashboard (T-19C). Panel titles mirror the widget labels. */
+      dashboardWorkspace: 'Workspace',
       dashboardEyebrow: 'Content workspace',
       dashboardTitle: 'Manage your site.',
       dashboardLead: 'Publish pages, maintain services, and review the content visitors see.',
@@ -86,6 +87,7 @@ export const adminTranslations = {
       onlyOneHero:
         'Mỗi trang chỉ được có một khối mở đầu, vì đó là tiêu đề chính của trang. Hãy xoá bớt một khối hoặc đổi sang loại khác.',
       homeSlugHint: 'TODO(copy): set the address to "home" in each language to make this the home page',
+      dashboardWorkspace: 'TODO(copy): workspace navigation group',
       dashboardEyebrow: 'TODO(copy): content workspace',
       dashboardTitle: 'TODO(copy): manage your site',
       dashboardLead: 'TODO(copy): publish pages, maintain services, review what visitors see',
