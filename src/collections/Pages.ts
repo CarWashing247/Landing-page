@@ -230,7 +230,8 @@ export const Pages: CollectionConfig = {
         },
       ],
     },
-    slugField({ collection: 'pages', example: 'bang-gia', from: 'title' }),
+    // The hint is how an editor learns `home` is the home page (T-17A, A14).
+    slugField({ collection: 'pages', example: 'bang-gia', from: 'title', hint: 'homeSlugHint' }),
     localeUpdatedAtField,
   ],
 }

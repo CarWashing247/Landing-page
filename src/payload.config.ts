@@ -127,12 +127,18 @@ const buildConfigFromVault = async () => {
           },
           {
             Component: '/components/admin/widgets/RecentContent.tsx#RecentContentWidget',
-            label: { en: 'Recent content', vi: 'Nội dung gần đây' },
+            label: {
+              en: adminTranslations.en.custom.dashboardRecentTitle,
+              vi: adminTranslations.vi.custom.dashboardRecentTitle,
+            },
             slug: 'recent-content',
           },
           {
             Component: '/components/admin/widgets/Checklist.tsx#ChecklistWidget',
-            label: { en: 'Editorial checklist', vi: 'Danh sách kiểm tra' },
+            label: {
+              en: adminTranslations.en.custom.dashboardChecklistTitle,
+              vi: adminTranslations.vi.custom.dashboardChecklistTitle,
+            },
             slug: 'editorial-checklist',
           },
         ],

@@ -7,7 +7,8 @@ import type {
 } from 'payload'
 import { APIError } from 'payload'
 
-import { adminMessage } from '../i18n/admin-translations'
+import type { AdminMessageKey } from '../i18n/admin-translations'
+import { adminMessage, adminTranslations } from '../i18n/admin-translations'
 import { logger } from './log'
 import { LOCALES } from './locales'
 import { slugify } from './slugify'
@@ -238,15 +239,19 @@ export const recordSlugsAfterRestore =
  *   per-locale value back
  * @param from the field the slug is generated from on create (`title`, `name`)
  * @param example a slug to show the editor, in that collection's shape
+ * @param hint an extra sentence for this collection's editors, appended to the
+ *   help text in both languages
  */
 export const slugField = ({
   collection,
   example,
   from,
+  hint,
 }: {
   collection: CollectionSlug
   example: string
   from: string
+  hint?: AdminMessageKey
 }): Field => ({
   name: 'slug',
   type: 'text',
@@ -282,11 +287,13 @@ export const slugField = ({
         `The part of the URL after the domain, for example "${example}". Left ` +
         'blank, it is generated automatically. Each language has its own ' +
         'address. Once published this cannot be changed, because the old URL is ' +
-        'already indexed.',
+        'already indexed.' +
+        (hint ? ` ${adminTranslations.en.custom[hint]}` : ''),
       vi:
         `Phần URL sau tên miền, ví dụ "${example}". Để trống thì hệ thống tự ` +
         'tạo. Mỗi ngôn ngữ có đường dẫn riêng. Sau khi xuất bản thì không đổi ' +
-        'được, vì đường dẫn cũ đã được lập chỉ mục.',
+        'được, vì đường dẫn cũ đã được lập chỉ mục.' +
+        (hint ? ` ${adminTranslations.vi.custom[hint]}` : ''),
     },
   },
 })
