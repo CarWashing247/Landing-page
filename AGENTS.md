@@ -11,6 +11,10 @@
 
 ## Before you start a task
 
+0. Read [`architecture/checklist.md`](./architecture/checklist.md). It says what
+   is done, what the previous task left open, and which claims are not yet
+   backed by a check that was run. Start there, not from memory of this
+   conversation.
 1. Open `Design.md`, find the task ID, read its acceptance criteria.
 2. Check its `Depends on` list. If a dependency is not merged, say so and
    stop rather than stubbing it out.
@@ -89,7 +93,13 @@ State the uncertainty rather than guessing. Specifically:
 
 ## Finishing a task
 
-Your final message should contain, in this order:
+**Update [`architecture/checklist.md`](./architecture/checklist.md) first**:
+move the task to done with its PR number, and add whatever it left behind to
+"Still open" or to `follow-ups.md`. The checklist is how the next task knows
+where things stand; a task that is finished but not recorded is one the next
+person repeats.
+
+Then your final message should contain, in this order:
 
 1. What changed, in one or two sentences.
 2. The verification you actually ran, with its result.

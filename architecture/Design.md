@@ -333,6 +333,12 @@ Untranslated copy stays `TODO(copy)` and the locale stays `noindex`.
 Every task also inherits the definition of done in `AGENT.md` section 8 —
 the criteria below are *in addition* to it.
 
+> **Status lives in [`checklist.md`](./checklist.md), not here.** This file is
+> the plan — what each task is, what it depends on, and the gates. The checklist
+> records what is actually done, what the last task left behind, and which
+> claims are still unverified. Read it before starting a task and update it when
+> one is finished.
+
 ### Phase 1 — Foundation
 
 **T-01 · Bootstrap the app**

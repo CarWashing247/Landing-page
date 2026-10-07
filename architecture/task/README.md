@@ -14,12 +14,16 @@ section 8. The criteria in each file are *in addition* to it.
 
 ## How to use one
 
+0. Read [`../checklist.md`](../checklist.md) — what is done, what is open, and
+   what is still unverified.
 1. Open the task file for your ID. Read its `Depends on` row.
 2. If a dependency is not **merged**, stop and say so. Do not stub it out.
 3. Re-read `AGENT.md` section 5 (non-negotiable rules).
 4. Work the steps. Run the commands in the Verification section — the real
    ones, against a production build.
-5. Report per `CLAUDE.md` "Finishing a task": what changed, what you
+5. Update [`../checklist.md`](../checklist.md): move the task to done with its
+   PR number, and record what it left behind.
+6. Report per `CLAUDE.md` "Finishing a task": what changed, what you
    verified with its result, what you found but did not fix, what you
    flagged as `TODO(copy)` or placeholder data.
 
