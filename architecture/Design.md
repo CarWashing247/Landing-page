@@ -685,6 +685,19 @@ and Login have HTML references and 1440px/390px captures; the mobile layouts
 have no horizontal overflow; and a handoff identifies the native Payload
 controls a later implementation must preserve.
 
+**T-19H · Admin views design match**
+Implement the T-19G references in the live Payload admin: the dashboard shell
+on every view, the collection lists as white cards with status pills (closing
+A13) and card rows on phones, the document and global editors, Account and
+Login. Styling through `admin.css` plus Payload-supported configuration only;
+Payload keeps every view, control and data source. The Media grid stays out of
+scope, as the handoff asks.
+Depends on: T-19F, T-19G.
+Done when: each view matches its `design/phase3` reference at 1440px and 390px;
+Published and Draft read as labelled coloured pills at 4.5:1 or better; no view
+scrolls sideways at phone width; native search, filters, tabs, save/publish,
+locale switching and logout still work; and the dashboard is unchanged.
+
 
 **T-19B · The admin follows Payload**
 Remove the bespoke admin theme T-19A added and let the Payload panel be

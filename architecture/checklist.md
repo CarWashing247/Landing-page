@@ -82,7 +82,8 @@ file, not here. This file answers one question: **where are we?**
 | T-19D | Block picker previews | #38 |
 | T-19E | Design conformance pass | — |
 | T-19F | Dashboard design match | #43 |
-| T-19G | CMS admin reference designs | #44 (in review) |
+| T-19G | CMS admin reference designs | #44 |
+| T-19H | Admin views design match | #45 (in review) |
 | T-17A | Home page | #41 |
 
 **Not done:**
@@ -119,6 +120,22 @@ things it found are worth knowing before the next UI task:
   that one, and Payload's `:has()` rule out-ranking ours to zero the active rail
   item's left padding. `curl` is the right check for HTML and metadata; computed
   style needs a real browser.
+
+### What the admin views pass changed
+
+**T-19H carried the dashboard's shell to every other Payload view** and styled
+the lists, editors, Account and Login after the T-19G references, in
+`admin.css`, plus one config key. Three things the next admin task should know:
+the admin is pinned to the light theme (`admin.theme: 'light'`), because the
+references are light only and a dark operating system otherwise showed none of
+the design; every value in `admin.css` should be the one in
+`design/phase3/admin-reference.css`, not a rounded one; and Payload's bleeds
+run on `--gutter-h`, so anything placed in a card should redefine it. The
+details are in the T-19H task file.
+
+**Still open from T-19H:** A15 (English-only admin) and A16 (sort button
+labels). A17 (the open phone menu widening the page) was closed in its review
+pass.
 
 ### The design source has moved three times
 
@@ -170,8 +187,11 @@ what most affects the next task.
   the footer's contact block is empty. T-23 fills them.
 - **`/dich-vu` 404s (A10)** — the services index the navigation links to has no
   document behind it.
-- **The list view's published state is still not green (A13).** It needs a
-  custom cell component outside the dashboard task.
+- **The admin is English-only (A15).** No `i18n.supportedLanguages`, so the
+  Vietnamese admin labels everywhere have never rendered. A decision, not a
+  styling fix; it also surfaces the `TODO(copy)` strings in A11b and A14.
+- **Sort buttons announce "[object Object]" (A16)** — Payload stringifies our
+  localized field labels in their `aria-label`.
 - **Playwright's Chromium is now installed** in `~/.cache/ms-playwright`. The
   conformance pass needed a browser to measure computed sizes, which is how the
   13px-root defect below was found. `npm run test:e2e` will now run without a
