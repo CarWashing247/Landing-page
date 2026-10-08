@@ -35,6 +35,17 @@
   --pd-action-tint: #fceaea;
   --pd-page: #edf1f4;
   --pd-ink: #0f172a;
+  --pd-paper: #f8fafc;
+  --pd-mist: #e9edf1;
+  --pd-control-border: #b9c8d3;
+  --pd-focus: #0369a1;
+
+  /*
+   * Inter, as `tokens.css` sets on `body`. Payload's own `--font-body` is the
+   * system stack, which is Arial on Linux and Segoe on Windows, so every label,
+   * input and table cell rendered in a face the design never uses.
+   */
+  --font-body: var(--font-inter), system-ui, sans-serif;
 }
 
 /* ---- The navigation rail ------------------------------------------------ */
@@ -52,7 +63,7 @@
 
 .nav a:hover,
 .nav button:hover {
-  background: rgb(255 255 255 / 7%);
+  background: rgb(255 255 255 / 8%);
 }
 
 /*
@@ -393,14 +404,6 @@
 }
 
 @media (max-width: 700px) {
-  .pd-nav-brand {
-    display: none;
-  }
-
-  .nav__scroll {
-    padding-top: 64px;
-  }
-
   .pd-cards {
     grid-template-columns: 1fr;
   }
@@ -531,7 +534,7 @@
 }
 
 .pd-nav-dashboard:hover {
-  background: rgb(255 255 255 / 7%);
+  background: rgb(255 255 255 / 8%);
 }
 
 .pd-nav-dashboard--active,
@@ -555,14 +558,39 @@
   font-family: var(--font-inter), system-ui, sans-serif;
 }
 
+/*
+ * A group caption is Payload's collapse toggle, so it stays a 44px button. Its
+ * label sits at the bottom of that box: `.rail-caption` in the reference has
+ * 25px above it and 8px below, and Payload's `align-items: flex-start` had put
+ * the space under the label instead, detaching it from its own links.
+ */
+.nav-group {
+  margin: 0;
+}
+
 .nav-group__toggle {
+  align-items: flex-end;
   color: var(--pd-rail-caption);
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.16em;
-  min-height: 40px;
-  padding-inline: 12px;
+  letter-spacing: 0.15em;
+  margin: 0;
+  min-height: 44px;
+  padding: 0 12px 8px;
   text-transform: uppercase;
+}
+
+/* Payload darkens it to `--theme-elevation-1000` — near black on the slate rail. */
+.nav-group__toggle:hover,
+.nav-group__toggle:focus-visible {
+  color: #fff;
+}
+
+/* Payload removes the outline; the reference keeps a visible one on the rail. */
+.nav-group__toggle:focus-visible,
+.nav__link:focus-visible {
+  outline: 3px solid #8bd3ff;
+  outline-offset: -3px;
 }
 
 .nav-group__indicator {
@@ -716,6 +744,36 @@
     display: none;
   }
 
+  /*
+   * **The open phone menu (A17).** The slate bar above already carries the
+   * brand and the Menu button, which also closes the drawer, so the drawer
+   * starts at its first caption, as `.admin-rail` does in the references.
+   *
+   * - The brand is hidden *here*, after `.pd-brand { display: inline-flex }`.
+   *   A hiding rule placed before it had the same specificity and lost, which
+   *   drew a second logo under the slate bar.
+   * - `.nav__header` is Payload's own close button, which was hidden only
+   *   above 700px and sat on top of the drawer's first row.
+   * - Payload opens the menu by giving the rail the grid's whole width and the
+   *   work area a 0px column. The work area's own contents — the top bar's
+   *   padding, the breadcrumb, the locale switcher — still overflowed that
+   *   column and widened the page to 577px. `clip` hides them while the menu
+   *   covers them; unlike `hidden` it creates no scroll container, so it
+   *   cannot break the sticky save bar once the menu closes.
+   */
+  .pd-nav-brand,
+  .nav__header {
+    display: none;
+  }
+
+  .nav__scroll {
+    padding-top: 28px;
+  }
+
+  .template-default--nav-open .template-default__wrap {
+    overflow: clip;
+  }
+
   .template-default:has(.dashboard) .app-header__content {
     padding-inline: 20px;
   }
@@ -755,26 +813,38 @@
 
 /*
  * **Source: the T-19G references in `design/phase3/`** — `pages-list.html`,
- * `page-editor.html`, `login.html` and their siblings. They extend the
- * dashboard's shell to every other view, and this section is that extension.
+ * `page-editor.html`, `login.html` and their siblings, all drawn with
+ * `admin-reference.css`. Every value below is that file's value: when this
+ * section and the reference disagree, the reference is right. The first pass
+ * rounded many of them (20px cards for 16px, 12px inputs for 9px, its own pill
+ * colours), and side by side the admin no longer looked like the drawing.
  *
  * **Payload still owns every view.** Nothing here replaces a list, an editor or
  * a control; it restyles Payload's own markup. Search, filters, columns,
  * pagination, bulk selection, tabs, save and publish, the locale selector and
  * login all keep their native behaviour.
  *
- * **Scoped to `[data-theme='light']`.** Payload lets each user choose a dark
- * theme in the account menu, and the references are light. Painting a white
- * canvas over the dark theme would break it rather than brand it, so a dark-theme
- * user keeps Payload's own design and the brand chrome above.
+ * **Scoped to `[data-theme='light']`**, and `payload.config.ts` now pins the
+ * admin to light: the references are light only, and an admin that followed a
+ * dark operating system showed none of this.
  *
  * Every size is absolute px. Payload's root is 13px, so a `rem` here renders at
  * 81% of the designed size (T-19E).
  */
 
-/* The shell: the dashboard's canvas and top bar, on every view. */
+/*
+ * The shell: the dashboard's canvas and top bar, on every view.
+ *
+ * `--gutter-h` is the reference's 32px page gutter (20px on a phone). Payload's
+ * is 60px, which put every editor's title 28px right of the cards beneath it.
+ * Not on the dashboard, whose gutters T-19F matched to its own capture.
+ */
 [data-theme='light'] .template-default__wrap {
   background: var(--pd-page);
+}
+
+[data-theme='light'] .template-default:not(:has(.dashboard)) .template-default__wrap {
+  --gutter-h: 32px;
 }
 
 [data-theme='light'] .app-header {
@@ -788,11 +858,40 @@
   padding-inline: 32px;
 }
 
-/* Not on the dashboard, whose header T-19F matched to its own capture. */
+/* `.admin-topbar strong`: 13px, extra bold, in ink. */
 [data-theme='light'] .template-default:not(:has(.dashboard)) .app-header .step-nav {
   color: var(--pd-ink);
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+/*
+ * `.topbar-meta`: the locale reads as quiet secondary text, not as Payload's
+ * grey chip, and the account sits in a 34px circle on `--mist`.
+ */
+[data-theme='light'] .localizer-button {
+  background: transparent;
+  color: var(--pd-secondary);
+  font-size: 13px;
+  min-height: 44px;
+}
+
+[data-theme='light'] .localizer-button__label {
+  color: var(--pd-secondary);
+}
+
+[data-theme='light'] .app-header__account {
+  align-items: center;
+  display: inline-grid;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+[data-theme='light'] .app-header__account img {
+  background: var(--pd-mist);
+  height: 34px;
+  width: 34px;
 }
 
 /*
@@ -820,20 +919,20 @@
   white-space: nowrap;
 }
 
-/* The page title, on lists and on editors. */
+/* `.page-head h1` and `.page-head p`, on lists and on editors. */
 [data-theme='light'] .list-header__title,
 [data-theme='light'] .doc-header__title {
   color: var(--pd-ink);
   font-family: var(--font-inter-tight), var(--font-inter), system-ui, sans-serif;
-  font-size: 44px;
+  font-size: clamp(34px, 3vw, 46px);
   font-weight: 800;
-  letter-spacing: -0.045em;
-  line-height: 1.05;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
 }
 
 [data-theme='light'] .custom-view-description {
   color: var(--pd-secondary);
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.55;
   max-width: 68ch;
 }
@@ -842,7 +941,7 @@
 
 [data-theme='light'] .collection-list__wrap {
   font-family: var(--font-inter), system-ui, sans-serif;
-  padding: 36px 32px 80px;
+  padding: 34px 32px 80px;
 }
 
 [data-theme='light'] .list-header__title-and-actions {
@@ -850,16 +949,16 @@
   gap: 16px;
 }
 
-/* "Create New" is the view's primary action, so it takes the primary red. */
+/* `.head-actions .button--primary`: the view's primary action, in the primary red. */
 [data-theme='light'] .list-create-new-doc__create-new-button {
   background: var(--pd-action);
   border: 1px solid var(--pd-action);
   border-radius: 12px;
   color: #fff;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
   min-height: 44px;
-  padding: 10px 18px;
+  padding: 10px 17px;
 }
 
 [data-theme='light'] .list-create-new-doc__create-new-button:hover {
@@ -868,52 +967,59 @@
 }
 
 /*
- * The search row and the table are two white cards. The reference joins them
+ * The search row and the table are two `.panel` cards. The reference joins them
  * into one, but Payload puts the column and filter drawers between them, and
  * those open and close with an animated height: one card stretched across
  * that gap would tear every time a drawer moved.
  */
 [data-theme='light'] .list-controls {
-  margin-top: 24px;
+  margin-top: 26px;
 }
 
 [data-theme='light'] .search-bar {
   background: #fff;
   border: 1px solid var(--pd-border);
-  border-radius: 20px;
-  min-height: 76px;
-  padding: 16px 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgb(15 23 42 / 3%);
+  padding: 18px 22px;
 }
 
+/* `.filter-bar input`. */
 [data-theme='light'] .search-filter__input {
   background: #fff;
-  border: 1px solid #c8d3dd;
-  border-radius: 12px;
+  border: 1px solid var(--pd-control-border);
+  border-radius: 9px;
   color: var(--pd-ink);
-  font-size: 15px;
+  font-size: 13px;
   min-height: 44px;
-  padding-inline: 40px 14px;
+  padding-inline: 40px 12px;
 }
 
+[data-theme='light'] .search-filter__input::placeholder {
+  color: #64748b;
+}
+
+/* `.filter-bar .button--outline`. */
 [data-theme='light'] .search-bar .pill {
   background: #fff;
-  border: 1px solid #c8d3dd;
+  border: 1px solid var(--pd-border);
   border-radius: 12px;
   color: var(--pd-ink);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   min-height: 44px;
-  padding-inline: 14px;
+  padding-inline: 16px;
 }
 
 [data-theme='light'] .search-bar .pill:hover {
-  background: var(--pd-page);
+  border-color: var(--pd-slate);
 }
 
 [data-theme='light'] .table-wrap {
   background: #fff;
   border: 1px solid var(--pd-border);
-  border-radius: 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgb(15 23 42 / 3%);
   overflow: hidden;
 }
 
@@ -922,15 +1028,17 @@
   width: 100%;
 }
 
+/* `.data-table th`. */
 [data-theme='light'] .table thead th {
-  background: #f8fafc;
-  border-block: 1px solid var(--pd-border);
+  background: var(--pd-paper);
+  border-block: 0;
   color: var(--pd-secondary);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.1em;
-  padding: 14px 22px;
+  letter-spacing: 0.08em;
+  padding: 13px 22px;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 [data-theme='light'] .table thead .field-label {
@@ -944,23 +1052,25 @@
   background: #fff;
 }
 
-[data-theme='light'] .table tbody tr + tr td {
+[data-theme='light'] .table tbody td {
   border-top: 1px solid var(--pd-border);
 }
 
 [data-theme='light'] .table tbody tr:hover {
-  background: #f8fafc;
+  background: var(--pd-paper);
 }
 
+/* `.data-table td`, with the title as `td strong`. */
 [data-theme='light'] .table td {
   color: var(--pd-ink);
-  font-size: 15px;
-  padding: 22px;
+  font-size: 13px;
+  padding: 18px 22px;
   vertical-align: middle;
 }
 
 [data-theme='light'] .table td a {
   color: var(--pd-ink);
+  font-size: 14px;
   font-weight: 700;
   text-decoration: none;
 }
@@ -971,30 +1081,29 @@
 }
 
 [data-theme='light'] .table td a:focus-visible {
-  outline: 3px solid #0369a1;
+  outline: 3px solid var(--pd-focus);
   outline-offset: 3px;
 }
 
 /*
- * **Published and Draft as labelled pills (closes A13).** Payload already marks
- * the state on the cell as `selected--<value>` (`DefaultCell`, `_temp`), so
- * this needs no custom cell component: the text label is Payload's own,
- * translated in both admin languages, and the colour is added beside it, never
- * instead of it.
+ * **Published and Draft as labelled pills (closes A13)**, `.status` in the
+ * reference. Payload already marks the state on the cell as `selected--<value>`
+ * (`DefaultCell`, `_temp`), so this needs no custom cell component: the text
+ * label is Payload's own, and the colour is added beside it, never instead of
+ * it. The dot is decoration, and the label carries the meaning.
  *
- * Contrast, measured on computed styles in Chromium: Published `#116b52` on
- * `#e3f3ec` is 5.63:1 and Draft `#5b4200` on `#fff4da` is 8.63:1, both at
- * 13px bold. The dot is decoration, and the label carries the meaning.
+ * The reference's colours, contrast computed: Published `#116b52` on `#e1f4ed`
+ * 5.6:1, Draft `#855000` on `#fff3dd` 6.1:1.
  */
 .cell-_status [class^='selected--'] {
   align-items: center;
-  border-radius: 999px;
+  border-radius: 99px;
   display: inline-flex;
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 800;
   gap: 7px;
-  line-height: 1;
-  padding: 7px 11px;
+  line-height: 1.4;
+  padding: 5px 9px;
   vertical-align: middle;
   white-space: nowrap;
 }
@@ -1008,19 +1117,20 @@
 }
 
 .cell-_status .selected--published {
-  background: #e3f3ec;
+  background: #e1f4ed;
   color: #116b52;
 }
 
 .cell-_status .selected--draft {
-  background: #fff4da;
-  color: #5b4200;
+  background: #fff3dd;
+  color: #855000;
 }
 
+/* `.table-foot`. */
 [data-theme='light'] .page-controls,
 [data-theme='light'] .collection-list__page-controls {
   color: var(--pd-secondary);
-  font-size: 14px;
+  font-size: 12px;
   padding-top: 16px;
 }
 
@@ -1028,18 +1138,54 @@
 
 [data-theme='light'] .doc-header {
   font-family: var(--font-inter), system-ui, sans-serif;
-  padding-top: 32px;
+  padding-top: 34px;
 }
 
-/* The save bar keeps Payload's position and stickiness; only its skin changes. */
+/*
+ * The save bar sits on the canvas, as the reference's head actions do, rather
+ * than on a white band. It keeps Payload's position and stickiness, so its
+ * background stays opaque — the canvas colour — or fields would scroll through
+ * it.
+ */
 [data-theme='light'] .doc-controls {
-  background: #fff;
-  border-block: 1px solid var(--pd-border);
+  background: var(--pd-page);
+  border-block: 0;
+}
+
+/* Payload paints the bar with a white `::before` and rules the header off with an `::after`. */
+[data-theme='light'] .doc-controls::before {
+  background: var(--pd-page);
+}
+
+[data-theme='light'] .doc-header::after {
+  display: none;
+}
+
+/* Payload fades the bar's overflowing edge into white, which drew a white smear on the canvas. */
+[data-theme='light'] :is(.doc-controls__meta, .doc-controls__controls)::after {
+  background: linear-gradient(to right, transparent, var(--pd-page));
+}
+
+/*
+ * Email and the password actions, as the reference's `.soft-box`: `--paper` on a
+ * 12px-radius card with the design's border, not Payload's grey `#f5f5f5` plate.
+ */
+[data-theme='light'] .auth-fields {
+  background: var(--pd-paper);
+  border: 1px solid var(--pd-border);
+  border-radius: 12px;
+  padding: 22px;
+}
+
+[data-theme='light'] .doc-controls__meta {
+  color: var(--pd-secondary);
+  font-size: 12px;
 }
 
 [data-theme='light'] .doc-controls .btn,
 [data-theme='light'] .doc-controls .btn--style-primary {
   border-radius: 12px;
+  font-size: 13px;
   font-weight: 700;
   min-height: 44px;
 }
@@ -1053,10 +1199,17 @@
   border-radius: 0;
 }
 
-[data-theme='light'] .doc-controls .save-draft {
+/* `.button--outline`. */
+[data-theme='light'] .doc-controls .save-draft,
+[data-theme='light'] .doc-controls :is(.live-preview-toggler, .preview-btn, .doc-controls__popup .popup-button) {
   background: #fff;
-  border: 1px solid #c8d3dd;
+  border: 1px solid var(--pd-border);
+  border-radius: 12px;
   color: var(--pd-ink);
+}
+
+[data-theme='light'] .doc-controls .save-draft:hover {
+  border-color: var(--pd-slate);
 }
 
 /*
@@ -1068,18 +1221,40 @@
  */
 [data-theme='light'] .doc-controls :is(.live-preview-toggler, .preview-btn, .doc-controls__popup .popup-button) {
   align-items: center;
+  display: inline-flex;
   justify-content: center;
   min-height: 44px;
   min-width: 44px;
 }
 
-[data-theme='light'] .document-fields :is(.auth-fields .btn, .upload__createNewToggler, .upload__listToggler, .array-field__add-row, .blocks-field__drawer-toggler) {
+[data-theme='light'] .document-fields :is(.auth-fields .btn, .upload__createNewToggler, .upload__listToggler, .array-field__add-row) {
   border-radius: 12px;
   min-height: 44px;
   padding-inline: 14px;
 }
 
-/* The form as a white card on the canvas, and the sidebar as a second card. */
+/*
+ * Uploads as `.upload-area`: a dashed `#8fa4b5` box on `--paper`, with the two
+ * choosers as outline buttons rather than Payload's grey plates.
+ */
+[data-theme='light'] .document-fields .dropzone {
+  background: var(--pd-paper);
+  border: 1px dashed #8fa4b5;
+  border-radius: 11px;
+}
+
+[data-theme='light'] .document-fields :is(.upload__createNewToggler, .upload__listToggler) {
+  background: #fff;
+  border: 1px solid var(--pd-border);
+  color: var(--pd-ink);
+  font-weight: 700;
+}
+
+[data-theme='light'] .document-fields :is(.upload__createNewToggler, .upload__listToggler):hover {
+  border-color: var(--pd-slate);
+}
+
+/* The form as a white `.panel` on the canvas, and the sidebar as a second one. */
 [data-theme='light'] .document-fields__main {
   background: var(--pd-page);
 }
@@ -1089,17 +1264,18 @@
  * keeps the tabs inside it. Payload's tabs field bleeds to the edge of the
  * page with `margin-inline: calc(var(--gutter-h) * -1)`; left at the page
  * gutter, that pushed Site settings 3px past the viewport and the tab rule out
- * of the card. At the card's padding, the rule runs exactly edge to edge of
- * the card, as the reference draws it.
+ * of the card. At the card's padding (`.panel-body`, 22px), the rule runs
+ * exactly edge to edge of the card, as the reference draws it.
  */
 [data-theme='light'] .document-fields__edit {
-  --gutter-h: 24px;
+  --gutter-h: 22px;
 
   background: #fff;
   border: 1px solid var(--pd-border);
-  border-radius: 20px;
-  margin: 24px 32px 48px;
-  padding: 28px var(--gutter-h) 32px;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgb(15 23 42 / 3%);
+  margin: 26px 32px 48px;
+  padding: 22px var(--gutter-h) 28px;
 }
 
 /*
@@ -1130,76 +1306,147 @@
 }
 
 [data-theme='light'] .document-fields__sidebar {
-  padding: 24px 32px 24px 0;
+  padding: 26px 32px 24px 0;
 }
 
 [data-theme='light'] .document-fields__sidebar-fields {
   background: #fff;
   border: 1px solid var(--pd-border);
-  border-radius: 20px;
-  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgb(15 23 42 / 3%);
+  padding: 22px;
 }
 
-/* The current tab in red, with a red rule under it. */
+/*
+ * `.tabs a`: secondary text at full strength, the current tab in red over a 3px
+ * red rule. Payload greys the others out with `opacity: 0.5`, which drew them
+ * at roughly 2:1 against white.
+ */
 [data-theme='light'] .tabs-field__tab-button {
   align-items: center;
-  font-size: 15px;
+  color: var(--pd-secondary);
+  font-size: 13px;
   font-weight: 700;
-  min-height: 44px;
+  letter-spacing: 0;
+  min-height: 50px;
+  opacity: 1;
+  padding-bottom: 0;
 }
 
-[data-theme='light'] .tabs-field__tab-button--active {
+[data-theme='light'] .tabs-field__tab-button:hover {
+  color: var(--pd-ink);
+  opacity: 1;
+}
+
+[data-theme='light'] .tabs-field__tab-button--active,
+[data-theme='light'] .tabs-field__tab-button--active:hover {
   color: var(--pd-action);
+}
+
+[data-theme='light'] .tabs-field__tab-button::after {
+  height: 3px;
 }
 
 [data-theme='light'] .tabs-field__tab-button--active::after {
   background: var(--pd-action);
+  opacity: 1;
 }
 
 [data-theme='light'] .tabs-field__tab-button:focus-visible {
-  outline: 3px solid #0369a1;
+  outline: 3px solid var(--pd-focus);
   outline-offset: 3px;
 }
 
-/* Fields: a bold label, and 44px controls with the card radius's smaller sibling. */
+/* `.field label` and `.field input`: a 13px bold label over a 44px, 9px-radius control. */
 [data-theme='light'] .document-fields .field-label,
 [data-theme='light'] .login .field-label {
   color: var(--pd-ink);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
 }
 
 [data-theme='light'] .document-fields .field-type__wrap :is(input:not([type='checkbox'], [type='radio']), textarea),
 [data-theme='light'] .login .field-type__wrap input {
-  border-color: #c8d3dd;
-  border-radius: 12px;
+  background: #fff;
+  border-color: var(--pd-control-border);
+  border-radius: 9px;
   color: var(--pd-ink);
-  font-size: 15px;
+  font-size: 14px;
   min-height: 44px;
 }
 
 [data-theme='light'] .document-fields .rs__control {
-  border-color: #c8d3dd;
-  border-radius: 12px;
+  background: #fff;
+  border-color: var(--pd-control-border);
+  border-radius: 9px;
   min-height: 44px;
 }
 
 [data-theme='light'] .document-fields .field-type__wrap :is(input, textarea):focus-visible,
 [data-theme='light'] .login .field-type__wrap input:focus-visible {
-  outline: 3px solid #0369a1;
+  outline: 3px solid var(--pd-focus);
   outline-offset: 1px;
 }
 
 [data-theme='light'] .document-fields .field-description {
   color: var(--pd-secondary);
+  font-size: 12px;
+}
+
+/*
+ * Blocks and array rows as `.block-row`: a `--paper` header on a 10px-radius
+ * card with the design's border, not Payload's grey `--theme-elevation-50`.
+ */
+[data-theme='light'] .document-fields .collapsible--style-default {
+  border-color: var(--pd-border);
+  border-radius: 10px;
+}
+
+[data-theme='light'] .document-fields .collapsible--style-default:hover {
+  border-color: #8fa4b5;
+}
+
+[data-theme='light'] .document-fields .collapsible__toggle-wrap {
+  background: var(--pd-paper);
+  border-radius: 10px 10px 0 0;
+}
+
+[data-theme='light'] .document-fields .collapsible--collapsed .collapsible__toggle-wrap {
+  border-radius: 10px;
+}
+
+[data-theme='light'] .document-fields .collapsible__toggle-wrap:not(.toggle-disabled):hover {
+  background: var(--pd-mist);
+}
+
+/* `.dashed-button`: "Add block" as a dashed, full-width slate action. */
+[data-theme='light'] .document-fields .blocks-field__drawer-toggler {
+  width: 100%;
+}
+
+[data-theme='light'] .document-fields .blocks-field__drawer-toggler .btn {
+  background: transparent;
+  border: 1px dashed #8fa4b5;
+  border-radius: 10px;
+  color: var(--pd-slate);
+  font-size: 13px;
+  font-weight: 700;
+  justify-content: center;
+  min-height: 48px;
+  width: 100%;
+}
+
+[data-theme='light'] .document-fields .blocks-field__drawer-toggler:hover .btn {
+  background: var(--pd-paper);
+  border-color: var(--pd-slate);
 }
 
 /* ---- Login ---- */
 
 /*
- * A white card with the brand on a slate band across its top. The form, its
- * validation, "Forgot password?" and the recovery screens that share this
- * template are Payload's own.
+ * `.login-card`: a white card with the brand on a slate `.login-head` band. The
+ * form, its validation, "Forgot password?" and the recovery screens that share
+ * this template are Payload's own.
  */
 [data-theme='light'] .template-minimal {
   background: var(--pd-page);
@@ -1209,17 +1456,17 @@
 [data-theme='light'] .template-minimal__wrap {
   background: #fff;
   border: 1px solid var(--pd-border);
-  border-radius: 20px;
-  box-shadow: 0 24px 60px rgb(15 23 42 / 12%);
-  max-width: 444px;
+  border-radius: 18px;
+  box-shadow: 0 20px 50px rgb(15 23 42 / 7%);
+  max-width: 445px;
   overflow: hidden;
-  padding: 0 30px 34px;
+  padding: 0 30px 30px;
 }
 
 [data-theme='light'] .login__brand {
   background: var(--pd-slate);
   justify-content: flex-start;
-  margin: 0 -30px 30px;
+  margin: 0 -30px 28px;
   padding: 28px 30px;
   width: calc(100% + 60px);
 }
@@ -1228,7 +1475,7 @@
   align-items: center;
   color: var(--theme-text);
   display: flex;
-  gap: 12px;
+  gap: 11px;
 }
 
 .pd-logo svg {
@@ -1238,7 +1485,7 @@
 
 .pd-logo__name {
   font-family: var(--font-inter-tight), var(--font-inter), system-ui, sans-serif;
-  font-size: 22px;
+  font-size: 19px;
   font-weight: 800;
   letter-spacing: -0.04em;
 }
@@ -1264,17 +1511,29 @@
 /* ---- Phone width ---- */
 
 @media (max-width: 700px) {
+  [data-theme='light'] .template-default:not(:has(.dashboard)) .template-default__wrap {
+    --gutter-h: 20px;
+  }
+
   [data-theme='light'] .app-header__content {
     padding-inline: 20px;
   }
 
+  /*
+   * Payload places the locale switcher 40px from the edge, sized for its own
+   * 25px avatar. The 44px account target above needs the room it took.
+   */
+  [data-theme='light'] .localizer {
+    right: 64px;
+  }
+
   [data-theme='light'] .collection-list__wrap {
-    padding: 32px 20px 60px;
+    padding: 27px 20px 60px;
   }
 
   [data-theme='light'] .list-header__title,
   [data-theme='light'] .doc-header__title {
-    font-size: 36px;
+    font-size: 35px;
   }
 
   [data-theme='light'] .list-header__title-actions,
@@ -1287,7 +1546,7 @@
   }
 
   [data-theme='light'] .search-bar {
-    padding: 16px;
+    padding: 17px 18px;
   }
 
   /*
@@ -1300,9 +1559,40 @@
   }
 
   /*
-   * **Rows become cards**, as `pages-list-mobile.png` draws them: the first
-   * column (whatever the collection uses as its title) and the status pill on
-   * one line, everything else as a quiet line beneath.
+   * The actions wrap too. In one row "Publish changes" ran under the fade and
+   * was cut off at "Publish ch" — the main action of the editor, unreadable.
+   */
+  [data-theme='light'] .doc-controls__controls {
+    flex-wrap: wrap;
+    overflow: visible;
+    row-gap: 8px;
+  }
+
+  [data-theme='light'] .doc-controls__controls::after {
+    display: none;
+  }
+
+  /* Payload fixes this row's height for one line of buttons, and paints it white. */
+  [data-theme='light'] .doc-controls__controls-wrapper {
+    align-items: flex-start;
+    background: var(--pd-page);
+    border-top-color: var(--pd-border);
+    height: auto;
+    padding-block: 10px;
+  }
+
+  [data-theme='light'] .doc-controls__content {
+    padding-inline: var(--gutter-h);
+  }
+
+  [data-theme='light'] .auth-fields {
+    padding: 18px;
+  }
+
+  /*
+   * **Rows become cards**, `.list-card` in `pages-list.html`: the first column
+   * (whatever the collection uses as its title) and the status pill on one
+   * line, everything else as a quiet 12px line beneath.
    *
    * Positioned by cell order and class, never by content, because an editor
    * can reorder and hide columns. The header row is visually hidden rather
@@ -1326,10 +1616,10 @@
 
   [data-theme='light'] .table tbody tr {
     align-items: center;
-    column-gap: 12px;
+    column-gap: 10px;
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
-    padding: 18px 16px;
+    padding: 17px 18px;
     row-gap: 6px;
   }
 
@@ -1337,13 +1627,13 @@
     border-top: 1px solid var(--pd-border);
   }
 
-  [data-theme='light'] .table tbody tr + tr td {
+  [data-theme='light'] .table tbody td {
     border-top: 0;
   }
 
   [data-theme='light'] .table td {
     color: var(--pd-secondary);
-    font-size: 14px;
+    font-size: 12px;
     grid-column: 2 / -1;
     min-width: 0;
     overflow-wrap: anywhere;
@@ -1362,6 +1652,10 @@
     grid-row: 1;
   }
 
+  [data-theme='light'] .table td:nth-child(2) a {
+    font-size: 16px;
+  }
+
   [data-theme='light'] .table td.cell-_status {
     grid-column: 3;
     grid-row: 1;
@@ -1371,10 +1665,14 @@
     --gutter-h: 18px;
 
     margin: 16px 20px 32px;
-    padding: 22px var(--gutter-h) 26px;
+    padding: 18px var(--gutter-h) 24px;
   }
 
   [data-theme='light'] .document-fields__sidebar {
     padding: 0 20px 24px;
+  }
+
+  [data-theme='light'] .document-fields__sidebar-fields {
+    padding: 18px;
   }
 }

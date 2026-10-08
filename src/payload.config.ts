@@ -78,13 +78,16 @@ const buildConfigFromVault = async () => {
         importMapFile: path.resolve(dirname, 'app/crm/admin/importMap.js'),
       },
       /*
-       * **No `theme` override, deliberately.** T-19A forced `'dark'` because
-       * every page of the Canva admin deck was dark. That deck is retired
-       * (T-15B), and the direction now is that the admin follows Payload's own
-       * design — which includes letting Payload pick the theme and leaving the
-       * light/dark choice in the account menu where it belongs. Forcing one
-       * also took that choice away from editors working in a bright workshop.
+       * **Light only, because the design is light only.** Every T-19G reference
+       * in `design/phase3/` is drawn on the light `#edf1f4` canvas, and
+       * `admin.css` styles the views under `[data-theme='light']`. Left at
+       * Payload's default, the admin followed the operating system: an editor
+       * whose machine was in dark mode got Payload's dark panel with none of the
+       * design applied, which is the "colours are wrong" report that reopened
+       * T-19H. T-19A once forced `'dark'` for the retired Canva deck; this is
+       * the opposite choice, for the current source.
        */
+      theme: 'light',
       /**
        * The browser tab. Without this it says "Payload", which tells an editor
        * which software they are in rather than whose site they are editing.
