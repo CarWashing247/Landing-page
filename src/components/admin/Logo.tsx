@@ -1,10 +1,14 @@
 /**
  * The brand mark on the admin login screen.
  *
- * Design source: the Canva deck "AutoWash247 CMS Admin UI" (`DAHXOjaoczk`),
- * page 1 — the login card sits on a dark surface with the product name above
- * the form. Payload's slot for this is `admin.components.graphics.Logo`, and
- * `.Icon` (next door) is the small mark in the navigation.
+ * Design source: `design/phase3/login.html` (T-19G) — the mark and the product
+ * name in a row, white on the slate band across the top of the login card.
+ * Payload's slot for this is `admin.components.graphics.Logo`, and `.Icon`
+ * (next door) is the small mark in the navigation.
+ *
+ * **Styled from `admin.css` (`.pd-logo`), not inline.** The band's colour is
+ * scoped to Payload's light theme there, and an inline colour could not follow
+ * it.
  *
  * **It is a server component with no `'use client'`.** Payload renders both
  * graphics on the server, and neither has any behaviour; the admin is not
@@ -20,25 +24,9 @@
  * form — and a blank screen if that read failed.
  */
 export const Logo = () => (
-  <div
-    style={{
-      alignItems: 'center',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '0.5rem',
-    }}
-  >
+  <div className="pd-logo">
     <Icon />
-    <span
-      style={{
-        color: 'var(--theme-text)',
-        fontSize: '1.5rem',
-        fontWeight: 700,
-        letterSpacing: '-0.01em',
-      }}
-    >
-      AutoWash247
-    </span>
+    <span className="pd-logo__name">AutoWash247</span>
   </div>
 )
 
