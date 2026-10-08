@@ -698,6 +698,17 @@ Published and Draft read as labelled coloured pills at 4.5:1 or better; no view
 scrolls sideways at phone width; native search, filters, tabs, save/publish,
 locale switching and logout still work; and the dashboard is unchanged.
 
+**T-19I · Brand visual assets and icon mapping**
+Replace the old A/ mark with a car entering an automatic wash gantry; use the
+same SVG geometry for the public header, Payload admin and browser icons. Add
+matching pictograms to the existing site items and update the affected Payload
+block previews. The icon mapping and Canva references live in
+`design/phase3/brand-assets.md`.
+Depends on: T-15D, T-17, T-19D.
+Done when: all nine pictograms map to their corresponding content; public
+pages render them in server HTML in both locales; the four changed block
+previews remain 3:2; and typecheck, lint and the production build pass.
+
 
 **T-19B · The admin follows Payload**
 Remove the bespoke admin theme T-19A added and let the Payload panel be
