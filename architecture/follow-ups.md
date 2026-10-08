@@ -348,6 +348,12 @@ Payload-supported configuration rather than a re-theme, but it is a new
 component with its own localization and a decision about whether Draft gets a
 colour too. Left for a task rather than folded into a styling pass.
 
+**Closed by T-19H, without a custom cell.** Payload already puts the value on the
+cell as a class, `selected--published` or `selected--draft` (`DefaultCell`'s
+`_temp` in `@payloadcms/ui`), so `admin.css` colours it beside Payload's own
+translated label. Published is green at 5.63:1 and Draft amber at 8.63:1,
+measured on computed styles in Chromium.
+
 ### A14 · The home-slug hint has no Vietnamese yet
 
 **Owner: whoever supplies the copy** — wiring done in T-17A
@@ -359,6 +365,33 @@ generated from the title, so an editor who creates "Trang chủ" gets
 English is written; the Vietnamese is a `TODO(copy):` placeholder in
 `src/i18n/admin-translations.ts`, and it shows verbatim to a Vietnamese-language
 panel until it is replaced.
+
+### A15 · The admin offers English only, though the config means Vietnamese too
+
+**Owner: unassigned** — found in T-19H
+
+`src/payload.config.ts` sets `i18n.fallbackLanguage` to `vi` and a comment says
+a Vietnamese-speaking editor should not have to read the CMS chrome in English.
+It sets no `i18n.supportedLanguages`, though, and Payload's default for that is
+English alone. The account screen's language select offers one option,
+"English", so every bilingual admin label (`{ en, vi }` on every collection,
+field and the dashboard catalog) has only ever rendered in English.
+
+The fix is one import and one key (`supportedLanguages: { en, vi }` from
+`@payloadcms/translations/languages/*`). It changes what every editor sees and
+puts the Vietnamese strings still marked `TODO(copy)` (A11b, A14) on screen,
+so it needs a decision rather than a drive-by fix in a styling task.
+
+### A16 · Payload's sort buttons read "[object Object]" to a screen reader
+
+**Owner: unassigned** — found in T-19H
+
+Every sortable column header's buttons carry
+`aria-label="Sort by [object Object] Ascending"`. Payload builds the label from
+the field's `label`, and ours are localized objects (`{ en, vi }`), which it
+stringifies instead of translating. Sighted users see the right header text;
+a screen-reader user hears "object Object" on every list. Payload's own markup,
+so the fix is upstream or a custom header component; no CSS can reach it.
 
 ## B. Documentation inconsistencies
 
