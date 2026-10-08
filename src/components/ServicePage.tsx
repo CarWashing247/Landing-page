@@ -11,6 +11,7 @@ import { serviceSchema } from '../lib/schema/service'
 import { publishable } from '../lib/schema/shared'
 import { Cta } from './blocks/Cta'
 import { Band, BlockImage, asMedia } from './blocks/shared'
+import { SiteIcon } from './brand/SiteIcon'
 import { JsonLd } from './seo/JsonLd'
 import { buildMetadata } from './seo/metadata'
 
@@ -101,8 +102,9 @@ export const ServicePage = async ({ locale, slug }: { locale: Locale; slug: stri
             <p className="text-h2 text-action mt-6">
               {formatPrice(service.price, service.currency, locale)}
             </p>
-            <p className="text-label mt-1 opacity-80">
-              {copy.sections.estimatedDuration}: {service.durationMinutes}′
+            <p className="text-label mt-1 flex items-center gap-2 opacity-80">
+              <SiteIcon name="clock" size={20} />
+              <span>{copy.sections.estimatedDuration}: {service.durationMinutes}′</span>
             </p>
           </div>
 
@@ -122,7 +124,10 @@ export const ServicePage = async ({ locale, slug }: { locale: Locale; slug: stri
       */}
       {service.includes && service.includes.length > 0 ? (
         <Band>
-          <h2 className="text-section">{copy.sections.includes}</h2>
+          <h2 className="text-section flex items-center gap-3">
+            <SiteIcon name="sparkle" size={40} />
+            {copy.sections.includes}
+          </h2>
           <ul className="text-body mt-6 grid gap-2 md:grid-cols-2">
             {service.includes.map((entry) => (
               <li key={entry.id ?? entry.item}>{entry.item}</li>

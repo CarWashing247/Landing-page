@@ -1,4 +1,5 @@
 import type { Page } from '../../payload-types'
+import { SiteIcon } from '../brand/SiteIcon'
 import { Band, Eyebrow } from './shared'
 
 type FaqBlock = Extract<NonNullable<Page['layout']>[number], { blockType: 'faq' }>
@@ -20,6 +21,7 @@ export const Faq = ({ block }: { block: FaqBlock }) => (
   <Band id="faq" tone="white">
     <div className="grid gap-8 md:grid-cols-[0.75fr_1.25fr] md:gap-12">
       <div>
+        <SiteIcon className="mb-4" name="help" />
         {block.eyebrow ? <Eyebrow>{block.eyebrow}</Eyebrow> : null}
         {block.heading ? <h2 className="text-section mt-2">{block.heading}</h2> : null}
         {block.note ? <p className="text-secondary mt-4">{block.note}</p> : null}

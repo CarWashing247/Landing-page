@@ -1,6 +1,7 @@
 import type { Locale } from '../../lib/locales'
 import { pathForService } from '../../lib/locales'
 import type { Page, Service } from '../../payload-types'
+import { SiteIcon } from '../brand/SiteIcon'
 import { Action, Band, SectionHeading } from './shared'
 
 type PricingBlock = Extract<NonNullable<Page['layout']>[number], { blockType: 'pricing' }>
@@ -31,22 +32,6 @@ const formatPrice = (amount: number, currency: string, locale: Locale): string =
 const asService = (value: number | Service): Service | undefined =>
   typeof value === 'object' && value !== null ? value : undefined
 
-/** The droplet in its tinted square, from the prototype's `.service__icon`. */
-const ServiceIcon = () => (
-  <span
-    aria-hidden="true"
-    className="bg-action-tint text-action grid h-12 w-12 place-items-center rounded-[14px]"
-  >
-    <svg fill="none" height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg">
-      <path
-        d="M10 2.5c3 3.5 5 6.2 5 8.5a5 5 0 0 1-10 0c0-2.3 2-5 5-8.5Z"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-    </svg>
-  </span>
-)
-
 export const Pricing = ({
   block,
   durationLabel,
@@ -69,7 +54,7 @@ export const Pricing = ({
             className="border-border rounded-card bg-surface flex min-h-[310px] flex-col border p-7"
             key={service.id}
           >
-            <ServiceIcon />
+            <SiteIcon name="droplet" />
 
             <h3 className="mt-7">
               <a className="text-ink hover:text-action no-underline" href={pathForService(service.slug, locale)}>
@@ -92,9 +77,10 @@ export const Pricing = ({
               put `uppercase` on a line that in production holds a formatted
               price and a Vietnamese duration label.
             */}
-            <p className="text-secondary text-label mt-auto pt-6 font-bold">
-              {formatPrice(service.price, service.currency, locale)} · {durationLabel}{' '}
-              {service.durationMinutes}′
+            <p className="text-secondary text-label mt-auto flex flex-wrap items-center gap-1.5 pt-6 font-bold">
+              <span>{formatPrice(service.price, service.currency, locale)} ·</span>
+              <SiteIcon name="clock" size={20} />
+              <span>{durationLabel} {service.durationMinutes}′</span>
             </p>
 
             <Action

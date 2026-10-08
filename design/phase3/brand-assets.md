@@ -17,6 +17,22 @@ gantry as bold shapes so the favicon remains legible at 16 px.
   wash package, automatic gantry, water, opening time, location, phone, clean
   finish, and help. They are individual SVG assets, not a sliced raster sheet.
 
+| Icon | Rendered item |
+| --- | --- |
+| `qr-scan` | QR scanning step |
+| `package` | Choose a wash package step |
+| `wash-arch` | Automatic wash step |
+| `droplet` | Service cards in the pricing block |
+| `clock` | Service duration and opening-hours card |
+| `location` | Address and directions card |
+| `phone` | Call card |
+| `sparkle` | Service inclusions |
+| `help` | FAQ section |
+
+Step icons follow the editor's Vietnamese or English action title, so moving a
+step keeps its icon. A title with no known action keeps its automatic number
+without a guessed icon.
+
 ## Canva explorations
 
 - [Automatic-wash favicon concept](https://www.canva.com/M/MAHXbp8mEMM)

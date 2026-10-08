@@ -5,4 +5,9 @@
 <rect x="39" y="35" width="12" height="12" rx="4" fill="#C62929"/>
 <circle cx="429" cy="41" r="3" fill="#B7C3CF"/><circle cx="440" cy="41" r="3" fill="#B7C3CF"/>
 <rect x="44" y="76" width="108" height="12" rx="4" fill="#0F172A"/><rect x="44" y="97" width="160" height="7" rx="3" fill="#B7C3CF"/><rect x="44" y="125" width="174" height="38" rx="8" fill="#FFFFFF" stroke="#D8E1E8" stroke-width="2"/><circle cx="65" cy="144" r="9" fill="#C62929"/><rect x="83" y="138" width="102" height="6" rx="3" fill="#0F172A"/><rect x="83" y="149" width="80" height="4" rx="3" fill="#B7C3CF"/><rect x="44" y="171" width="174" height="38" rx="8" fill="#FFFFFF" stroke="#D8E1E8" stroke-width="2"/><circle cx="65" cy="190" r="9" fill="#C62929"/><rect x="83" y="184" width="102" height="6" rx="3" fill="#0F172A"/><rect x="83" y="195" width="80" height="4" rx="3" fill="#B7C3CF"/><rect x="44" y="217" width="174" height="38" rx="8" fill="#FFFFFF" stroke="#D8E1E8" stroke-width="2"/><circle cx="65" cy="236" r="9" fill="#C62929"/><rect x="83" y="230" width="102" height="6" rx="3" fill="#0F172A"/><rect x="83" y="241" width="80" height="4" rx="3" fill="#B7C3CF"/><rect x="239" y="122" width="197" height="140" rx="10" fill="#FFFFFF" stroke="#D8E1E8" stroke-width="2"/><rect x="251" y="136" width="173" height="23" rx="5" fill="#FFFFFF" stroke="#D8E1E8" stroke-width="2"/><rect x="251" y="167" width="173" height="23" rx="5" fill="#FFFFFF" stroke="#D8E1E8" stroke-width="2"/><rect x="251" y="198" width="173" height="25" rx="5" fill="#FFFFFF" stroke="#D8E1E8" stroke-width="2"/><rect x="344" y="232" width="80" height="20" rx="5" fill="#C62929"/>
+<g stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="m61 140-2 2c-.5.5 0 1.5 2 3.5s3 2.5 3.5 2l2-2-2-2-1.5 1.5-2-2L62.5 142l-1.5-2Z"/>
+  <path d="M65 195s4-3.5 4-6a4 4 0 0 0-8 0c0 2.5 4 6 4 6Z"/><circle cx="65" cy="189" r="1"/>
+  <circle cx="65" cy="236" r="5"/><path d="M65 233v3l2 1"/>
+</g>
 </svg>
