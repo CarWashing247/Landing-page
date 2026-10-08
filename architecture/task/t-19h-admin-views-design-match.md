@@ -115,6 +115,8 @@ What was learned, for the next admin UI task:
   who picks Dark in the account menu keeps Payload's dark design; the rail,
   primary button and status pills (which carry their own background) are
   brand-wide.
+  *Superseded by the review pass below:* the admin is now pinned to light, so
+  no editor reaches the dark theme.
 
 Fixed on the way, because this task owns phone-width overflow on every view:
 a long breadcrumb (a user's email) and the save bar's metadata row both pushed
@@ -142,8 +144,52 @@ Postgres, with an admin probe user created for the run and deleted afterwards.
 - `npm run lint`, `npm run typecheck`, `npm test` (324 passed) and
   `npm run build` all pass.
 
+### Review pass: colours and values brought back to the reference
+
+The admin was reported as not matching the references' colours. Comparing the
+captures with `admin-reference.css` side by side found three causes:
+
+- **The admin followed the operating system's theme.** Payload's default is
+  `theme: 'all'`, so on a machine in dark mode the panel rendered Payload's
+  dark design and none of the `[data-theme='light']` rules applied. The
+  references are light only, so `payload.config.ts` now sets `theme: 'light'`.
+  This removes Payload's Appearance setting from Account, although
+  `account.html` draws one. A design that is only drawn in light cannot also
+  follow a dark system.
+- **The body font was Payload's system stack** (Arial on Linux), not Inter.
+  `--font-body` now points at Inter, as `tokens.css` sets on `body`.
+- **Many values had been rounded away from the reference**: cards with 20px
+  radii where the reference has 16px, inputs at 12px radius with a `#c8d3dd`
+  border where it has 9px and `#b9c8d3`, table cells at 15px with 22px padding
+  where it has 13px and `18px 22px`, its own pill colours, tabs at
+  `opacity: 0.5`, Payload's 60px gutter beside a 32px canvas, a white save bar
+  and white overflow fades on the grey canvas, Payload's grey `#f5f5f5`
+  auth-field plate and grey upload buttons, rail captions with the space under
+  the label rather than above it, and captions that turned near-black on hover.
+  Each now uses the value in `admin-reference.css`.
+
+Also fixed: at 390px the editor's "Publish changes" was cut off under the save
+bar's fade. The actions now wrap onto a second line.
+
+Also fixed, on request: **A17**, the open phone menu widening the page to
+577px, plus the duplicate logo and stray close button inside the drawer. The
+drawer now starts at its first caption under the slate bar, as `.admin-rail`
+does in the references.
+
+Verified against `npm run build && npm run start`, with a Chromium context
+set to **dark** colour scheme and an admin probe user, deleted afterwards. All
+14 views were captured at 1440×900 and 390×844 and compared against the PNGs.
+All of them render light, and none scrolls sideways with the menu closed.
+Computed: canvas `rgb(237, 241, 244)`, Published pill `#116b52` on `#e1f4ed`,
+active tab `rgb(198, 41, 41)`, inactive tab `rgb(71, 85, 105)` at full opacity,
+a focused input 44px high with a 9px radius and a 3px solid outline. Search
+(6 rows to 0), the SEO tab switch and the phone menu still work. `npm run lint`,
+`npm run typecheck`, `npm test` (324 passed) and `npm run build` pass.
+
 ### Found, not fixed
 
 - **A15** — the admin offers English only; Vietnamese is configured as the
   fallback but never supported.
 - **A16** — sort buttons' `aria-label` reads "Sort by [object Object]".
+- **A17** — with the phone menu open, the page was 577px wide (T-19F shell).
+  Closed in the review pass, at the user's request: see `follow-ups.md`.

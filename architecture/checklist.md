@@ -125,10 +125,17 @@ things it found are worth knowing before the next UI task:
 
 **T-19H carried the dashboard's shell to every other Payload view** and styled
 the lists, editors, Account and Login after the T-19G references, in
-`admin.css` alone. Two things the next admin task should know: every view rule
-is scoped to `[data-theme='light']`, so the dark theme stays Payload's; and
-Payload's bleeds run on `--gutter-h`, so anything placed in a card should
-redefine it. The details are in the T-19H task file.
+`admin.css`, plus one config key. Three things the next admin task should know:
+the admin is pinned to the light theme (`admin.theme: 'light'`), because the
+references are light only and a dark operating system otherwise showed none of
+the design; every value in `admin.css` should be the one in
+`design/phase3/admin-reference.css`, not a rounded one; and Payload's bleeds
+run on `--gutter-h`, so anything placed in a card should redefine it. The
+details are in the T-19H task file.
+
+**Still open from T-19H:** A15 (English-only admin) and A16 (sort button
+labels). A17 (the open phone menu widening the page) was closed in its review
+pass.
 
 ### The design source has moved three times
 

@@ -354,6 +354,11 @@ cell as a class, `selected--published` or `selected--draft` (`DefaultCell`'s
 translated label. Published is green at 5.63:1 and Draft amber at 8.63:1,
 measured on computed styles in Chromium.
 
+*Revised in the T-19H review pass:* the pills now use the reference's own
+`.status` colours from `admin-reference.css` — Published `#116b52` on `#e1f4ed`
+(5.6:1) and Draft `#855000` on `#fff3dd` (6.1:1) — instead of the values the
+first pass picked.
+
 ### A14 · The home-slug hint has no Vietnamese yet
 
 **Owner: whoever supplies the copy** — wiring done in T-17A
@@ -392,6 +397,28 @@ the field's `label`, and ours are localized objects (`{ en, vi }`), which it
 stringifies instead of translating. Sighted users see the right header text;
 a screen-reader user hears "object Object" on every list. Payload's own markup,
 so the fix is upstream or a custom header component; no CSS can reach it.
+
+### A17 · The open phone menu widens the page to 577px
+
+**Owner: unassigned** — found in the T-19H review pass, predates it
+
+At 390px, opening the rail with the slate bar's Menu button makes
+`document.documentElement.scrollWidth` 577. The open drawer covers the
+screen, but Payload slides the work area sideways behind it, and the top bar
+(`.app-header__content`, right edge 430px) ends up past the viewport. The
+dashboard does it too, so it belongs to the T-19F shell, not to one view. While
+the menu is open, the rail also shows a second brand row and Payload's close
+button under the slate bar. T-19H measured overflow only with the menu
+closed, which is why its check missed this.
+
+**Closed in the T-19H review pass.** Three causes, all at ≤700px in
+`admin.css`: the work area's contents overflowed the 0px column Payload gives
+it while the menu is open (now `overflow: clip`, which unlike `hidden` leaves
+the sticky save bar working); `.pd-nav-brand { display: none }` sat before
+`.pd-brand { display: inline-flex }` at the same specificity and lost; and
+Payload's `.nav__header` close button was hidden only above 700px. Measured
+with the menu open: 390px on Pages and on the dashboard. Menu open, close and
+a rail link all still work.
 
 ## B. Documentation inconsistencies
 
