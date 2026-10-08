@@ -1,3 +1,5 @@
+import { BrandIcon } from '../brand/BrandIcon'
+
 /**
  * The brand mark on the admin login screen.
  *
@@ -37,46 +39,14 @@ export const Logo = () => (
  * admin screen, an uploaded file would be one more request before the panel is
  * usable, and the mark is two shapes.
  *
- * **The two colours are literals, which is correct here and nowhere else.** The
- * admin follows Payload's own design now (T-19B), so it does not participate in
- * the public site's token system — there is no `@theme` in this document to read
- * from, and `src/app/brand.css` was deleted with the bespoke theme it existed to
- * feed. These are the same values as `src/app/icon.svg`, from
- * `design/phase3/tokens.css`: the action red, and the white it is
- * paired with. A logo is also the one thing that should *not* follow the
- * surrounding theme — it is the same mark whether the panel is light or dark.
+ * It shares the public site's vector mark, so the CMS and website use the same
+ * car and wash gantry at every size. The wordmark remains live text beside it.
  */
 export const Icon = () => (
-  /*
-   * Sized by its container, not by itself. Payload's header slot is shorter
-   * than it is wide, and a fixed 32x32 was cropped to a sliver of the rounded
-   * square — `preserveAspectRatio` plus a 100% box lets it scale to whichever
-   * slot it lands in (the header mark and the login graphic are different
-   * sizes).
-   */
-  <svg
-    aria-hidden="true"
-    fill="none"
+  <BrandIcon
     height="100%"
     preserveAspectRatio="xMidYMid meet"
     style={{ maxHeight: '32px', maxWidth: '32px' }}
-    viewBox="0 0 32 32"
     width="100%"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <rect fill="#c62929" height="32" rx="8" width="32" />
-    {/* The `A/` glyph the prototypes use as the mark. */}
-    <text
-      fill="#ffffff"
-      fontFamily="system-ui, sans-serif"
-      fontSize="15"
-      fontWeight="800"
-      letterSpacing="-1.2"
-      textAnchor="middle"
-      x="16"
-      y="21"
-    >
-      A/
-    </text>
-  </svg>
+  />
 )

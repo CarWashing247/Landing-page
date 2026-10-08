@@ -1,11 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
-  <!--
-    The favicon. Fixed colours rather than currentColor: a browser tab has no
-    inherited colour to take, and the tile is what makes the mark readable at
-    16px against an arbitrary tab background.
-    Primary #059669 and card #FFFFFF, from design-system/autowash247/MASTER.md.
-  -->
-  <rect width="32" height="32" rx="7" fill="#059669"/>
-  <path d="M20 7c0 0-6 6.6-6 10.4a6 6 0 0 0 12 0C26 13.6 20 7 20 7Z" fill="#FFFFFF"/>
-  <path d="M4 12.5h7M4 17h5M4 21.5h3" stroke="#FFFFFF" stroke-linecap="round" stroke-width="2.2"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="AutoWash247">
+  <rect width="32" height="32" rx="7" fill="#c62929"/>
+  <path d="M3.7 27 9.8 5h12.4l6.1 22h-4.2l-4.9-18h-6.4L7.9 27H3.7Z" fill="#fff"/>
+  <path d="M13 13v3m6-3v3" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="m10 22 1.8-3.3c.3-.5.9-.8 1.5-.8h5.4c.6 0 1.2.3 1.5.8L22 22v4H10v-4Z" fill="#fff"/>
+  <path d="m12.7 21 1-1.7h4.6l1 1.7h-6.6Z" fill="#c62929"/>
+  <path d="M11.8 24h2m4.4 0h2" stroke="#c62929" stroke-width="1.2" stroke-linecap="round"/>
 </svg>

@@ -6,6 +6,7 @@ import { callHref } from '../../lib/routes'
 import { publishable } from '../../lib/schema/shared'
 import type { Page } from '../../payload-types'
 import { ContactForm } from '../ContactForm'
+import { SiteIcon, type SiteIconName } from '../brand/SiteIcon'
 import { Band } from './shared'
 
 type ContactBlock = Extract<NonNullable<Page['layout']>[number], { blockType: 'contact' }>
@@ -86,7 +87,7 @@ export const Contact = async ({
         */}
         <div className="grid gap-6 lg:grid-cols-3">
           {phone ? (
-            <Card heading={copy.contact.callHeading} note={copy.contact.callNote}>
+            <Card heading={copy.contact.callHeading} icon="phone" note={copy.contact.callNote}>
               <a className="text-h3 text-action hover:text-action-hover no-underline" data-ga-event="call" href={callHref(phone)}>
                 {phone}
               </a>
@@ -94,7 +95,7 @@ export const Contact = async ({
           ) : null}
 
           {street || locality ? (
-            <Card heading={copy.contact.addressHeading} note={copy.contact.addressNote}>
+            <Card heading={copy.contact.addressHeading} icon="location" note={copy.contact.addressNote}>
               {/*
                 Street and locality on separate lines, as `BusinessInfo` stores
                 them — the footer does the same, and joining them with a comma
@@ -122,7 +123,7 @@ export const Contact = async ({
           ) : null}
 
           {runs.length > 0 ? (
-            <Card heading={copy.contact.hoursHeading} note={copy.contact.hoursNote}>
+            <Card heading={copy.contact.hoursHeading} icon="clock" note={copy.contact.hoursNote}>
               <dl className="text-body">
                 {runs.map((run) => (
                   <div className="flex justify-between gap-4" key={run.days.join('-')}>
@@ -181,14 +182,19 @@ export const Contact = async ({
 const Card = ({
   children,
   heading,
+  icon,
   note,
 }: {
   children: React.ReactNode
   heading: string
+  icon: SiteIconName
   note: string
 }) => (
   <section className="bg-surface text-ink border-ink/10 flex flex-col rounded-card border p-6">
-    <h3 className="text-label mb-2 opacity-70">{heading}</h3>
+    <div className="mb-3 flex items-center gap-3">
+      <SiteIcon name={icon} size={40} />
+      <h3 className="text-label opacity-70">{heading}</h3>
+    </div>
     {children}
     <p className="text-label mt-3 opacity-70">{note}</p>
   </section>
