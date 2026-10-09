@@ -84,7 +84,8 @@ file, not here. This file answers one question: **where are we?**
 | T-19F | Dashboard design match | #43 |
 | T-19G | CMS admin reference designs | #44 |
 | T-19H | Admin views design match | #45 (in review) |
-| T-19I | Brand visual assets and icon mapping | #46 (in review) |
+| T-19I | Brand visual assets and icon mapping | #46 |
+| T-19J | 404 page | PR pending |
 | T-17A | Home page | #41 |
 
 **Not done:**
@@ -177,16 +178,24 @@ what most affects the next task.
   titled "Trang chủ" auto-generates `trang-chu` and lands at `/trang-chu`
   instead. The slug field's help text now says so in English; its Vietnamese
   is still `TODO(copy)` (A14), as are the admin dashboard strings (A11b).
-- **The 404 renders an empty body (A1).** Four approaches measured, all failing
-  identically; the suspected cause is the catch-all rewrite rather than the
-  not-found boundary. T-15A wrote the copy, so there is finished wording nobody
-  can see.
+- **T-20 inherits ~1.2 KB gzipped on every page from T-19J.** The 404 boundary's
+  element rides in each page's RSC payload; the T-19J task file has the
+  measurement.
+- **The 404 is designed and visible (T-19J), but slug 404s are not in the
+  server HTML (A1).** A page-level `notFound()` in Next 16 sends 404 + `noindex`
+  with an empty shell and paints the body after hydration. This is the
+  framework, not the rewrite; the T-19J task file has the measurement. Unmatched
+  URLs are fully server-rendered. The Vietnamese lead and suggestions heading are
+  `TODO(copy)`. T-19J also closed A18 (slug 404 titles) and A19 (English
+  multi-segment 404s rendered in Vietnamese).
 - **An open redirect in `safeLocalPath` (A3).** A measured reproduction and a
   one-line fix, still unapplied. It is the oldest unfixed security defect here.
 - **Business data is still `TODO(data)`.** Name, address, phone and hours are
   placeholders, so the `AutoWash` JSON-LD is withheld by its own guardrail and
   the footer's contact block is empty. T-23 fills them.
-- **`/dich-vu` 404s (A10)** — the services index the navigation links to has no
+- **`/dich-vu` 404s (A10)** — T-23 now lists it in its scope table and its
+  verification loop, and says to restore Services to the 404's suggestions.
+  The services index the navigation links to has no
   document behind it.
 - **The admin is English-only (A15).** No `i18n.supportedLanguages`, so the
   Vietnamese admin labels everywhere have never rendered. A decision, not a
