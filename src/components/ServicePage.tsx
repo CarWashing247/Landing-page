@@ -13,7 +13,7 @@ import { Cta } from './blocks/Cta'
 import { Band, BlockImage, asMedia } from './blocks/shared'
 import { SiteIcon } from './brand/SiteIcon'
 import { JsonLd } from './seo/JsonLd'
-import { buildMetadata } from './seo/metadata'
+import { buildMetadata, notFoundMetadata } from './seo/metadata'
 
 /**
  * A service page: how much, how long, what do I get, and what to do next.
@@ -41,8 +41,9 @@ export const servicePageMetadata = async (slug: string, locale: Locale): Promise
   const { isEnabled: draft } = await draftMode()
   const found = await loadService(slug, locale, draft)
 
+  // The 404's metadata, as in `contentPageMetadata` (A18).
   if (!found) {
-    return {}
+    return notFoundMetadata((await loadSiteSettings(locale))?.brandName ?? 'AutoWash247')
   }
 
   return buildMetadata({

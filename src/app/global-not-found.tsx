@@ -1,7 +1,7 @@
+import { NotFoundPage } from '../components/NotFoundPage'
+import { LocaleLayout } from '../components/layout/LocaleLayout'
 import { notFoundMetadata } from '../components/seo/metadata'
-import { t } from '../i18n/t'
 import { DEFAULT_LOCALE } from '../lib/locales'
-import './globals.css'
 
 /**
  * 404 for URLs that match no route at all.
@@ -10,14 +10,18 @@ import './globals.css'
  * render an unmatched URL inside, and Next's default 404 ships `<html>` with no
  * `lang`. This file must return a full document. Enabled by
  * `experimental.globalNotFound` in next.config.mjs.
+ *
+ * `LocaleLayout` is that document — the same `<html lang>`, fonts, stylesheet,
+ * header and footer as every public page — so the two ways of reaching a 404
+ * look identical. Unlike a page's `notFound()`, this one is fully server-rendered.
  */
 
 /**
  * Assembled by `notFoundMetadata()` rather than written here, so the rule that
  * no `Metadata` object is built outside `src/components/seo/metadata.ts` holds
- * with no exception (AGENT.md 5.2). The brand is a literal because this page
- * renders for URLs that match no route, so there is no request context to read
- * `SiteSettings` for and nothing worth a database round trip on a 404.
+ * with no exception (AGENT.md 5.2). The brand is a literal: the header below
+ * reads `SiteSettings` through the cached query layer, but a 404's `<title>` is
+ * not worth turning this export into a `generateMetadata` round trip.
  */
 export const metadata = notFoundMetadata('AutoWash247')
 
@@ -30,20 +34,10 @@ export const metadata = notFoundMetadata('AutoWash247')
  * strings actually rendered, so both come from the same constant rather than
  * `lang` being hardcoded next to copy that could change independently.
  */
-const GlobalNotFound = () => {
-  const copy = t(DEFAULT_LOCALE)
-
-  return (
-    <html lang={DEFAULT_LOCALE}>
-      <body>
-        <main>
-          <h1>{copy.notFound.title}</h1>
-          <p>{copy.notFound.message}</p>
-          <a href="/">{copy.notFound.backHome}</a>
-        </main>
-      </body>
-    </html>
-  )
-}
+const GlobalNotFound = () => (
+  <LocaleLayout locale={DEFAULT_LOCALE}>
+    <NotFoundPage locale={DEFAULT_LOCALE} />
+  </LocaleLayout>
+)
 
 export default GlobalNotFound

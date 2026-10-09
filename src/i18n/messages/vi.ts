@@ -208,6 +208,9 @@ export const vi = {
     title: '404',
     message: 'Không tìm thấy trang này.',
     backHome: 'Về trang chủ',
+    lead: 'TODO(copy): the link may be out of date or mistyped — start again from the home page or try one of the pages below',
+    suggestionsHeading: 'TODO(copy): heading above the suggested pages — "try one of these"',
+    suggestionsLabel: 'TODO(copy): accessible label for the suggested pages list',
   },
 
   /**

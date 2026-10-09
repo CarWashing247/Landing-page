@@ -121,6 +121,9 @@ export const en: Messages = {
     title: '404',
     message: 'We could not find that page.',
     backHome: 'Back to the home page',
+    lead: 'The link may be out of date or mistyped. Start again from the home page, or try one of the pages below.',
+    suggestionsHeading: 'Try one of these',
+    suggestionsLabel: 'Suggested pages',
   },
 
   weekdays: {
