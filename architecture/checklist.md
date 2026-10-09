@@ -85,7 +85,7 @@ file, not here. This file answers one question: **where are we?**
 | T-19G | CMS admin reference designs | #44 |
 | T-19H | Admin views design match | #45 (in review) |
 | T-19I | Brand visual assets and icon mapping | #46 |
-| T-19J | 404 page | PR pending |
+| T-19J | 404 page | #47 (in review) |
 | T-17A | Home page | #41 |
 
 **Not done:**
