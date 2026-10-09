@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AutoWash247 — 404 design preview</title>
+  <link rel="stylesheet" href="./tokens.css">
+  <style>
+    .wrap { width: min(1120px, calc(100% - 40px)); margin-inline: auto; }
+    .site-header { background: var(--surface); border-bottom: 1px solid var(--border); }
+    .site-header__inner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 80px; }
+    .nav { display: flex; align-items: center; gap: 1.75rem; font-size: .875rem; font-weight: 650; }
+    .nav a:hover { color: var(--action); }
+    .header-actions { display: flex; align-items: center; gap: 1rem; }
+    .locale { font-size: .8rem; font-weight: 700; color: var(--secondary); }
+    .menu { display: none; min-width: 44px; min-height: 44px; border: 1px solid var(--border); border-radius: 10px; background: white; }
+    .menu__lines, .menu__lines::before, .menu__lines::after { display: block; width: 18px; height: 2px; border-radius: 2px; background: var(--ink); content: ''; }
+    .menu__lines::before { transform: translateY(-6px); }
+    .menu__lines::after { transform: translateY(4px); }
+    .brand__mark { width: 34px; height: 34px; background: none; border-radius: 0; }
+
+    /* 404 — the hero's two-column grid, with an empty wash bay where the car would be. */
+    .nf { display: grid; grid-template-columns: 1.02fr .98fr; gap: 3rem; align-items: center; padding-block: 72px 88px; }
+    .nf h1 { max-width: 13ch; margin: 1rem 0 1.35rem; font-size: clamp(2.6rem, 4.4vw, 4.4rem); font-weight: 800; }
+    .nf__lead { max-width: 33rem; font-size: 1.15rem; color: var(--secondary); }
+    .nf__actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 2rem; }
+    .nf__links { margin-top: 2.6rem; padding-top: 1.6rem; border-top: 1px solid var(--border); }
+    .nf__links h2 { margin: 0 0 .9rem; color: var(--secondary); font-family: Inter, system-ui, sans-serif; font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .nf__links ul { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+    .nf__links a { display: flex; align-items: center; gap: .75rem; min-height: 64px; padding: 10px 14px 10px 10px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); font-weight: 700; transition: border-color .2s, color .2s; }
+    .nf__links a:hover { border-color: var(--slate); color: var(--action); }
+    .nf__links img { width: 40px; height: 40px; flex: none; }
+    .nf__links a::after { content: '→'; margin-left: auto; color: var(--secondary); }
+
+    .bay { position: relative; display: grid; place-items: center; min-height: 460px; overflow: hidden; border-radius: 28px; background: radial-gradient(circle at 75% 20%, #536b82 0, #263a50 38%, #182536 75%); box-shadow: var(--shadow); }
+    .bay::before, .bay::after { content: ''; position: absolute; width: 650px; height: 650px; border: 1px solid rgb(255 255 255 / 14%); border-radius: 50%; left: 46%; top: -37%; }
+    .bay::after { width: 460px; height: 460px; left: 60%; top: -16%; }
+    .bay__grid { position: absolute; inset: auto 0 0; height: 38%; background: repeating-linear-gradient(90deg, transparent 0 70px, rgb(255 255 255 / 5%) 71px 72px), linear-gradient(transparent, rgb(0 0 0 / 27%)); transform: perspective(240px) rotateX(25deg); transform-origin: bottom; }
+    .bay__code { position: absolute; top: 12%; color: rgb(255 255 255 / 92%); font-family: 'Inter Tight', Inter, sans-serif; font-size: clamp(5.5rem, 11vw, 9.5rem); font-weight: 800; letter-spacing: -.06em; line-height: 1; }
+    .bay__arch { position: relative; width: 58%; margin-top: 34%; }
+
+    .footer { padding-block: 48px; border-top: 1px solid var(--border); color: var(--secondary); font-size: .875rem; }
+    .footer__inner { display: flex; justify-content: space-between; gap: 2rem; }
+
+    .notes { padding-block: 32px 48px; }
+    .note-panel { padding: 19px 21px; border: 1px solid #cbd9e4; border-radius: 13px; background: #eef5f9; color: #334155; font-size: .8rem; }
+    .note-panel strong { font-size: .85rem; color: var(--ink); }
+    .note-panel ul { margin: 8px 0 0; padding-left: 18px; }
+    .note-panel li { margin-top: 6px; }
+
+    @media (max-width: 900px) { .nav, .header-actions > .button { display: none; } .menu { display: inline-grid; place-items: center; } .nf { gap: 1.5rem; } .bay { min-height: 380px; } }
+    @media (max-width: 700px) {
+      .wrap { width: min(100% - 40px, 520px); }
+      .site-header__inner { min-height: 68px; }
+      .nf { display: flex; flex-direction: column; align-items: stretch; padding-block: 40px 56px; }
+      .nf h1 { font-size: clamp(2.4rem, 10vw, 3.4rem); }
+      .nf__actions .button { flex: 1 1 100%; }
+      .nf__links ul { grid-template-columns: 1fr; }
+      .bay { order: -1; min-height: 210px; border-radius: 22px; }
+      .bay__code { top: 9%; font-size: 5rem; }
+      .bay__arch { width: 46%; margin-top: 24%; }
+      .footer__inner { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="preview-note">Design preview · 404 page · Illustrative English copy · TODO(copy) marks wording that does not exist yet</div>
+  <header class="site-header"><div class="wrap site-header__inner">
+    <a class="brand" href="#top"><svg class="brand__mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#c62929"/><path d="M3.7 27 9.8 5h12.4l6.1 22h-4.2l-4.9-18h-6.4L7.9 27H3.7Z" fill="#fff"/><path d="M13 13v3m6-3v3" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="m10 22 1.8-3.3c.3-.5.9-.8 1.5-.8h5.4c.6 0 1.2.3 1.5.8L22 22v4H10v-4Z" fill="#fff"/><path d="m12.7 21 1-1.7h4.6l1 1.7h-6.6Z" fill="#c62929"/><path d="M11.8 24h2m4.4 0h2" stroke="#c62929" stroke-width="1.2" stroke-linecap="round"/></svg>AutoWash247</a>
+    <nav class="nav" aria-label="Preview navigation"><a href="#top">Home</a><a href="#top">Services</a><a href="#top">Pricing</a><a href="#top">Guide</a><a href="#top">Contact</a></nav>
+    <div class="header-actions"><span class="locale">VI / EN</span><button class="menu" aria-label="Menu"><span class="menu__lines" aria-hidden="true"></span></button></div>
+  </div></header>
+
+  <main id="top">
+    <section class="wrap nf">
+      <div>
+        <span class="eyebrow">Error 404</span>
+        <h1>We could not find that page.</h1>
+        <p class="nf__lead">TODO(copy): the link may be out of date or mistyped — start again from the home page or pick one of the pages below.</p>
+        <div class="nf__actions">
+          <a class="button button--primary" href="#top">Back to the home page →</a>
+        </div>
+        <nav class="nf__links" aria-label="TODO(copy): accessible label for the suggested pages">
+          <h2>TODO(copy): Try one of these</h2>
+          <ul>
+            <li><a href="#top"><img src="../../public/brand/icons/package.svg" alt="">Pricing</a></li>
+            <li><a href="#top"><img src="../../public/brand/icons/qr-scan.svg" alt="">Guide</a></li>
+            <li><a href="#top"><img src="../../public/brand/icons/phone.svg" alt="">Contact</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="bay" aria-hidden="true">
+        <div class="bay__grid"></div>
+        <span class="bay__code">404</span>
+        <svg class="bay__arch" viewBox="0 0 48 30" fill="none"><g stroke="#e8eef4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 29V10a8 8 0 0 1 8-8h22a8 8 0 0 1 8 8v19"/><path d="M11 29V12a5 5 0 0 1 5-5h16a5 5 0 0 1 5 5v17"/><path d="M20 10v3m8-3v3"/></g><path d="M2 29h44" stroke="#db4948" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 3"/></svg>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer"><div class="wrap footer__inner"><div class="brand">AutoWash247</div><div>Business identity, address, phone, and hours: TODO(data)</div></div></footer>
+
+  <section class="wrap notes">
+    <aside class="note-panel">
+      <strong>Implementation notes — not product UI</strong>
+      <ul>
+        <li>Renders inside the real locale shell: the shared <code>Header</code>, <code>Footer</code> and skip link. Vietnamese at unprefixed URLs, English under <code>/en</code>.</li>
+        <li>One primary action only; the suggested pages below carry the rest, so Contact is not offered twice.</li>
+        <li>Exactly one <code>h1</code>. The eyebrow carries the code; the heading is the existing catalog sentence (<code>notFound.message</code>). The primary action is the existing <code>notFound.backHome</code>.</li>
+        <li>Suggested links come from the shared <code>NAV</code> list and its catalog labels, never a second hard-coded list. Home is omitted — the primary action already goes there.</li>
+        <li>The wash bay panel is decorative (<code>aria-hidden</code>) and pure CSS/SVG, so it costs no image request on a page nobody meant to visit.</li>
+        <li>The response stays HTTP 404 with <code>noindex</code>. No metadata beyond the brand title; no canonical, <code>hreflang</code> or JSON-LD.</li>
+        <li>Mobile: the panel shrinks to a 210px strip above the copy, actions go full width, suggested links stack. Touch targets ≥ 44px.</li>
+      </ul>
+    </aside>
+  </section>
+</body>
+</html>

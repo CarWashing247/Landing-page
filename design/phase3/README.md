@@ -21,6 +21,10 @@ All new pages use [admin-reference.css](admin-reference.css) and [tokens.css](to
 | Account | [account.html](account.html) | Personal account settings, separate from content locale |
 | Login | [login.html](login.html) | Payload authentication, validation, recovery, password-manager support |
 
+## Public site: 404
+
+[not-found.html](not-found.html), with [desktop](not-found-desktop.png) and [mobile](not-found-mobile.png) captures. It extends [landing.html](landing.html), not the admin references. The hero grid holds the copy on the left; on the right is an empty wash bay (the hero panel without the car) behind a large `404`. Below the copy are one primary action home and three suggested pages with the [brand pictograms](brand-assets.md). Implemented in T-19J as `src/components/NotFoundPage.tsx`.
+
 ## How to implement later
 
 - Keep the 244px slate desktop rail, 90px mobile brand bar, 72px white top bar, red selected item and CTA, card radius, and spacing already established by the dashboard. Existing `admin.html` is an older page-editor concept; use `page-editor.html` for the next pass.
