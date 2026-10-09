@@ -16,52 +16,50 @@ those are safe to find at the point of use. The rest exist only here.
 
 ## A. Open defects
 
-### A1 · The 404 page renders an empty body
+### A1 · A slug 404's body is not in the server HTML
 
-**Owner: T-16** (recorded in `task/t-09-build-metadata.md` and
-`task/t-16-layout-shell.md`)
+**Owner: T-19J** (recorded in `task/t-19j-not-found-page.md`). Narrowed, not
+closed.
 
-T-09's catch-all rewrite (`/:path*` onto the Vietnamese folder) means every URL
-now matches a route, so `app/global-not-found.tsx` — which renders only for a
-URL matching *no* route — stopped being reachable for public paths. An unknown
-slug reaches `[slug]/page.tsx` and calls `notFound()`.
+T-19J designed the 404 and shipped it as a per-locale `not-found.tsx` plus
+`global-not-found.tsx`, so visitors now see the page. For an unknown CMS slug,
+a crawler still gets 404, `noindex` and an empty `<html id="__next_error__">`
+body.
 
-Measured: HTTP 404 with `<meta name="robots" content="noindex">`, so the status
-and the indexing are right, but `<html id="__next_error__">` with no `lang` and
-no visible body.
+**The cause is Next 16, not the catch-all rewrite.** This entry used to suspect
+the rewrite. T-19J measured otherwise. `/type-specimen` is prerendered at build
+and calls `notFound()` with no rewrite involved, and it produces the same empty
+shell. Next's error recovery (`getErrorRSCPayload` in `app-render.js`) always
+answers a page-level `notFound()` with an empty shell. The boundary lives only
+in the RSC payload, because Fizz does not run the client
+`HTTPAccessFallbackErrorBoundary`. Unmatched URLs, which reach
+`global-not-found.tsx`, are fully server-rendered.
 
-Not a quick fix, and not for want of trying. **Four combinations have now been
-measured, and all four produce the same empty SSR body:**
+Moving the throw inside `<Suspense>` puts the body in the HTML, but it returns
+**200** and ISR-caches it, so it is a soft 404. Two approaches are fully
+server-rendered: `dynamicParams = false` (breaks goal 2) and a `proxy.ts` slug
+lookup on every request. The user chose to accept the empty shell. Revisit
+this entry if a Next upgrade changes the error-recovery path. Re-measure with:
+`curl -s localhost:3000/khong-ton-tai | grep -o '<html[^>]*>'`.
 
-| `globalNotFound` | boundary | result |
-| --- | --- | --- |
-| on | `not-found.tsx` per locale | never built (T-09) |
-| off | `not-found.tsx` per locale | renders into the RSC payload only (T-09) |
-| on | `not-found.tsx` at `app/landing-page/` | built (`/_not-found` appears), renders into the RSC payload only (T-16) |
-| off | `not-found.tsx` at `app/landing-page/` | renders into the RSC payload only (T-16) |
+### A18 · Slug 404s have no `<title>`
 
-In every case the response is a correct 404 with `<html id="__next_error__">`, an
-empty `<body>` and the component's markup present only inside
-`self.__next_f.push(...)` — so it would paint after hydration and never for a
-crawler.
+**Closed in T-19J.** `contentPageMetadata()` and `servicePageMetadata()`
+returned `{}` for a missing slug, so the tab showed the bare URL. Both now
+return `notFoundMetadata(brandName)`, the same as `global-not-found.tsx`.
+Measured in Chromium: `document.title` is `AutoWash247` on `/khong-ton-tai` and
+`/dich-vu/khong-co`. The server shell still has no `<title>`, for the A1 reason.
 
-**The suspected cause is the catch-all rewrite, not the boundary.** T-09 rewrites
-`/:path*` onto `/landing-page/:path*`, so no public URL is ever unmatched and
-every 404 comes from `notFound()` inside `[slug]` on a rewritten request. That
-makes `global-not-found.tsx` dead code for public paths and is the one variable
-none of the four tests changed. The next attempt should start by serving a 404
-on a path that bypasses the rewrite and comparing.
+### A19 · `/en/<unmatched>` renders the Vietnamese 404
 
-T-16 built the shell the 404 should render inside, so the page is the only piece
-still missing. It stays a 404 architecture decision.
-
-~~The 404 copy is still `TODO(copy)`~~ **The 404 copy now exists** (T-15A moved it
-into the message catalog: "Không tìm thấy trang này." / "We could not find that
-page."), which makes this entry more visible rather than less — there is now
-finished wording that nobody can see. Re-measured during T-15A: `/khong-ton-tai`
-returns 404 with an empty body and `<html id="__next_error__">`, so none of the
-catalog strings render. T-16 has now built the header and footer it should sit
-inside, so everything but the page itself is ready.
+**Closed in T-19J.** `/en/a/b/c` matched no route, so it reached
+`global-not-found.tsx`. That page has no params, and its `headers()` carry no
+request path (measured by dumping them), so it could only render Vietnamese.
+`landing-page-en/[slug]/[...rest]/page.tsx` now claims every English URL two or
+more segments deep and calls `notFound()`, so the English boundary renders it.
+Measured: `/en/a/b/c` and `/en/services/ceramic-coating/extra` return 404 with
+`lang="en"`, while `/en/pricing` and `/en/services/ceramic-coating` still
+return 200.
 
 ### A2 · `titleSuffix`'s placeholder produces `Liên hệ| AutoWash247`
 

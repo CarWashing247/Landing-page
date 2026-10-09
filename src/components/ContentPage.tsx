@@ -10,7 +10,7 @@ import { isHomeSlug, pathForPage } from '../lib/locales'
 import { faqSchema } from '../lib/schema/faq'
 import { RenderBlocks, hasHero } from './blocks/RenderBlocks'
 import { JsonLd } from './seo/JsonLd'
-import { buildMetadata } from './seo/metadata'
+import { buildMetadata, notFoundMetadata } from './seo/metadata'
 
 /**
  * A CMS page, shared by both locale folders.
@@ -55,11 +55,13 @@ export const contentPageMetadata = async (slug: string, locale: Locale): Promise
   const found = await loadContentPage(slug, locale)
 
   /**
-   * Nothing to describe: the page below calls `notFound()` for this same slug,
-   * so what renders is the 404, whose own metadata is not this route's to set.
+   * The page below calls `notFound()` for this same slug, so this is the 404's
+   * metadata: `noindex` and the brand as the title, as `global-not-found.tsx`
+   * gives an unmatched URL. Without it the tab showed the bare URL (A18). Next
+   * applies it after hydration; the 404's server shell carries no `<title>`.
    */
   if (!found) {
-    return {}
+    return notFoundMetadata((await loadSiteSettings(locale))?.brandName ?? 'AutoWash247')
   }
 
   return buildMetadata({

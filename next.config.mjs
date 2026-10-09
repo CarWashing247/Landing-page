@@ -123,9 +123,9 @@ const nextConfig = {
         // Consequence worth knowing: with this rule, every URL matches a route,
         // so `app/global-not-found.tsx` — which only renders for a URL matching
         // no route at all — no longer runs for public paths. An unknown slug
-        // reaches `[slug]/page.tsx`, which calls `notFound()`. See the T-09 task
-        // file; a per-locale `not-found.tsx` does not fix it while
-        // `globalNotFound` is enabled.
+        // reaches `[slug]/page.tsx`, which calls `notFound()`, and each locale's
+        // `not-found.tsx` renders it. Next 16 sends that as a 404 with an empty
+        // HTML shell and paints the body after hydration (T-19J, follow-up A1).
         { source: '/:path*', destination: '/landing-page/:path*' },
       ],
     }

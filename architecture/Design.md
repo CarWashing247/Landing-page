@@ -709,6 +709,19 @@ Done when: all nine pictograms map to their corresponding content; public
 pages render them in server HTML in both locales; the four changed block
 previews remain 3:2; and typecheck, lint and the production build pass.
 
+**T-19J · 404 page**
+Design the 404 in `design/phase3/not-found.html` (1440px/390px captures). It
+uses the hero's grid with an empty wash bay where the car was. Implement it as
+a per-locale `not-found.tsx` and in `global-not-found.tsx`, inside the real
+locale shell. Next 16 does not put a page-level `notFound()` body into server
+HTML, so unknown slugs paint after hydration. The task file has the
+measurement and the alternatives that were rejected.
+Depends on: T-16, T-15A, T-19I.
+Done when: unknown slugs in both locales return 404 with `noindex` and paint the
+design in the right locale; unmatched URLs return it fully server-rendered;
+there is one `<h1>` and no horizontal scroll at 390px; lint, typecheck, tests
+and build pass.
+
 
 **T-19B · The admin follows Payload**
 Remove the bespoke admin theme T-19A added and let the Payload panel be

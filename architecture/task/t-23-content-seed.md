@@ -30,6 +30,7 @@ one, usually not the intended one.
 | --- | --- | --- |
 | `/` | rửa xe tự động + area name | finding a location: where and what |
 | `/bang-gia` | giá rửa xe tự động | comparing prices, close to deciding |
+| `/dich-vu` (`/en/services`) | the packages side by side — step 1a, A10 | browsing what is offered |
 | `/dich-vu/<slug>` | the specific wash package name | knows what they want |
 | `/huong-dan` | rửa xe tự động có xước sơn không | sceptical, needs reassurance |
 | `/lien-he` | rửa xe tự động gần đây | about to drive over: address, directions |
@@ -64,6 +65,9 @@ one, usually not the intended one.
    matching `SERVICE_SEGMENT`) because an untranslated `en` slug falls back to the
    Vietnamese one and is then dropped from the prerendered set, and the slug is
    read-only once published (T-06), so it has to be right the first time.
+   Once both locales answer 200, add `{ icon: 'droplet', key: 'services' }` back
+   to `SUGGESTIONS` in `src/components/NotFoundPage.tsx` — T-19J left Services
+   out of the 404's suggested pages only because this index 404ed.
 2. Upload images; write a real Vietnamese `alt` for each — descriptive, not
    keyword-stuffed.
 3. Fill the SEO tab on each: title at 50–60 characters, description at
@@ -122,7 +126,7 @@ curl -s 'localhost:3000/api/media?limit=200&depth=0' \
 import sys,json
 print([m['filename'] for m in json.load(sys.stdin)['docs'] if not (m.get('alt') or '').strip()] or 'all have alt')"
 # no placeholders left
-for p in / /bang-gia /huong-dan /lien-he /dich-vu/<slug>; do
+for p in / /bang-gia /huong-dan /lien-he /dich-vu /en/services /dich-vu/<slug>; do
   curl -s "localhost:3000$p" | grep -niE 'TODO\(|lorem ipsum|placeholder' && echo "PLACEHOLDER in $p"
 done
 curl -s localhost:3000/sitemap.xml | grep -c '<loc>'
